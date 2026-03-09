@@ -16,6 +16,8 @@ jobs:
   validate:
     name: Validate Registry YAML
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -110,6 +112,8 @@ jobs:
   notify-gateway:
     name: Notify Email Gateway
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: validate
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
