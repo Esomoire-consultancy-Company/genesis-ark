@@ -1,0 +1,39 @@
+ingress:
+  hosts:
+    - knowledge-hub.internal.example.com
+  tls:
+    - secretName: knowledge-hub-tls
+      hosts: [knowledge-hub.internal.example.com]
+
+proxy:
+  replicaCount: 3
+  image: your-registry/knowledge-hub-proxy:latest
+  resources:
+    requests: { cpu: "250m", memory: "512Mi" }
+    limits:   { cpu: "1",    memory: "1Gi" }
+  env:
+    - name: BACKENDS__GRAPH
+      value: https://graph-gateway.mesh.svc.cluster.local
+    - name: BACKENDS__LLM
+      value: https://llm-gateway.mesh.svc.cluster.local
+    - name: BACKENDS__VECTOR
+      value: https://vector-store.mesh.svc.cluster.local
+  policy:
+    bundleRef: s3://policy-bundles/knowledge-hub/latest.tar.gz
+  cache:
+    redisUrl: redis://redis.mesh.svc.cluster.local:6379
+
+virtualSilkRoad:
+  subArcs:
+    - name: partner-a
+      ingressHost: partner-a.vsr.example.com
+      allowedBackends: [GRAPH, DOCUMENTS]
+      egressPolicies:
+        redactPii: true
+        rateLimitRps: 50
+    - name: partner-b
+      ingressHost: partner-b.vsr.example.com
+      allowedBackends: [GRAPH, ANALYTICS]
+      egressPolicies:
+        redactPii: true
+        rateLimitRps: 20
