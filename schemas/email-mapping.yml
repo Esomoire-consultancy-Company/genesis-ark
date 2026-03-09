@@ -1,0 +1,41 @@
+# JSON Schema (YAML format) for email alias mapping entries.
+# Validates the mappings array in registry/aliases/email-mapping.yml
+
+$schema: "http://json-schema.org/draft-07/schema#"
+title: EmailMappingEntry
+description: A single email alias mapping in the Holy Grail Mail Gateway registry.
+type: object
+required:
+  - id
+  - generated
+  - alias
+  - display_name
+  - target
+  - tristar_key
+  - status
+properties:
+  id:
+    type: string
+    description: Unique mapping identifier.
+  generated:
+    type: string
+    format: email
+    description: The system-generated Arc address (e.g. test@atlas-arc-vjripl-production.arcs.genesis.example).
+  alias:
+    type: string
+    format: email
+    description: The human-readable alias address (e.g. ops@vjripl.genesis.example).
+  display_name:
+    type: string
+    description: Human-readable display name shown in email clients.
+  target:
+    type: string
+    format: uri
+    description: Webhook URL that receives forwarded mail via the gateway.
+  tristar_key:
+    type: string
+    pattern: "^[a-zA-Z0-9-]+:[a-zA-Z0-9-]+:[a-zA-Z0-9-]+$"
+    description: "Tristar key in format namespace:arc-id:environment"
+  status:
+    type: string
+    enum: [active, inactive, suspended]

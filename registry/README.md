@@ -1,10 +1,10 @@
 # Registry
 
-The registry module implements the **Observable Commerce** phygitech asset registry for Genesis Ark.
+The registry module is the source-of-truth for all Genesis Ark identities, assets, and communication mappings.
 
 It tracks physical-digital (phygitech) assets, service endpoints, Arc identities, email aliases, nodes, and licenses across the platform.
 
-## Contents
+## Structure
 
 | File / Folder | Description |
 |---|---|
@@ -53,18 +53,53 @@ mappings:
     status: active | suspended | deregistered
 ```
 
-## Registry Entry Format
+## Identity Stack
 
-```json
-{
-  "id": "asset-<uuid>",
-  "type": "phygitech | service | module",
-  "name": "Human-readable name",
-  "owner": "did:genesis:<owner-id>",
-  "metadata": {},
-  "registered_at": "ISO-8601 timestamp",
-  "status": "active | suspended | deregistered"
-}
+```
+Tristar Key
+      │
+      ▼
+Genesis Ark Registry (registry/arcs/)
+      │
+      ▼
+DNS Layer (_atproto TXT record)
+      │
+      ▼
+AT Protocol Identity (Bluesky DID)
+      │
+      ▼
+Virtual Silk Road Network
+```
+
+## Arc Entry Format
+
+See `schemas/arc.yml` for the full schema.
+
+```yaml
+arc_id: <arc-id>
+tristar_key: <namespace>:<arc-id>:<environment>
+identity:
+  bluesky_handle: <handle>.bsky.social
+  did: did:plc:<identifier>
+  dns_anchor: <domain>
+network:
+  vsr_node: <node-id>
+status: active
+```
+
+## Email Alias Format
+
+See `schemas/email-mapping.yml` for the full schema.
+
+```yaml
+mappings:
+  - id: <mapping-id>
+    generated: <system-address>@<arc>.arcs.genesis.example
+    alias: <human-alias>@<domain>
+    display_name: "Human-readable name"
+    target: http://gateway.genesis.example/ingest/email
+    tristar_key: <namespace>:<arc-id>:<environment>
+    status: active
 ```
 
 ## Integration
