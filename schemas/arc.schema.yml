@@ -1,0 +1,32 @@
+# Arc Identity Schema
+# Validates registry/arcs/*.yml entries
+
+type: map
+mapping:
+  arc_id:
+    type: str
+    required: true
+  tristar_key:
+    type: str
+    required: true
+  identity:
+    type: map
+    required: true
+    mapping:
+      bluesky_handle:
+        type: str
+        required: true
+      did:
+        type: str
+        required: true
+        pattern: /^did:plc:[a-z0-9]+$/
+      dns_anchor:
+        type: str
+        required: true
+  network:
+    type: map
+    required: true
+    mapping:
+      vsr_node:
+        type: str
+        required: true

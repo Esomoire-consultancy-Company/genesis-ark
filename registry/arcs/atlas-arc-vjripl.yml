@@ -1,0 +1,12 @@
+arc_id: atlas-arc-vjripl
+tristar_key: atlas:arc-vjripl:production
+
+identity:
+  bluesky_handle: genesisark.bsky.social
+  # Replace this placeholder DID with the real value retrieved from:
+  # https://bsky.social/xrpc/com.atproto.identity.resolveHandle?handle=genesisark.bsky.social
+  did: did:plc:replacewithrealdid
+  dns_anchor: genesisark.genesis.example
+
+network:
+  vsr_node: node-vjripl-vsr
