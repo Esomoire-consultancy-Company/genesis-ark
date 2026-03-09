@@ -1,0 +1,27 @@
+# Atlas Arc — VJRIPL Production
+#
+# This registry entry anchors the Atlas Tristar Arc identity to:
+#   - the Genesis Ark registry (tristar_key)
+#   - a Bluesky AT Protocol decentralized identifier (DID)
+#   - a DNS identity layer (dns_anchor)
+#
+# DNS verification record required (update once real DID is set):
+#   _atproto.genesisark.genesis.example TXT "did=did:plc:<real-did>"
+#
+# Schema: schemas/arc.yml
+
+arc_id: atlas-arc-vjripl
+tristar_key: atlas:arc-vjripl:production
+
+identity:
+  bluesky_handle: genesisark.bsky.social
+  # Replace the placeholder below with the real DID retrieved from:
+  # https://bsky.social/xrpc/com.atproto.identity.resolveHandle?handle=genesisark.bsky.social
+  # Example response: { "did": "did:plc:abc123..." }
+  did: did:plc:REPLACE_WITH_REAL_DID
+  dns_anchor: genesisark.genesis.example
+
+network:
+  vsr_node: node-vjripl-vsr
+
+status: active

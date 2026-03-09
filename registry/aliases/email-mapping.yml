@@ -1,0 +1,15 @@
+# Email alias mappings for the Genesis Ark communication identity layer.
+#
+# Each mapping connects a generated Arc address to a human-readable alias
+# that is forwarded through the Holy Grail Mail Gateway.
+#
+# Schema: schemas/email-mapping.yml
+
+mappings:
+  - id: mapping-test
+    generated: test@atlas-arc-vjripl-production.arcs.genesis.example
+    alias: ops@vjripl.genesis.example
+    display_name: "VJRIPL Operations"
+    target: http://gateway.genesis.example/ingest/email
+    tristar_key: atlas:arc-vjripl:production
+    status: active

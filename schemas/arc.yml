@@ -1,0 +1,50 @@
+# JSON Schema (YAML format) for Arc registry entries.
+# Validates files under registry/arcs/*.yml
+
+$schema: "http://json-schema.org/draft-07/schema#"
+title: ArcRegistryEntry
+description: A Genesis Ark Arc identity entry linking Tristar key, Bluesky DID, and DNS anchor.
+type: object
+required:
+  - arc_id
+  - tristar_key
+  - identity
+  - network
+  - status
+properties:
+  arc_id:
+    type: string
+    pattern: "^[a-z0-9-]+$"
+    description: Unique Arc identifier (kebab-case).
+  tristar_key:
+    type: string
+    pattern: "^[a-zA-Z0-9-]+:[a-zA-Z0-9-]+:[a-zA-Z0-9-]+$"
+    description: "Tristar key in format namespace:arc-id:environment"
+  identity:
+    type: object
+    required:
+      - bluesky_handle
+      - did
+      - dns_anchor
+    properties:
+      bluesky_handle:
+        type: string
+        description: Bluesky handle (e.g. genesisark.bsky.social or domain handle).
+      did:
+        type: string
+        pattern: "^did:[a-z]+:.+"
+        description: AT Protocol decentralized identifier.
+      dns_anchor:
+        type: string
+        description: Domain used as DNS identity anchor (requires _atproto TXT record).
+  network:
+    type: object
+    required:
+      - vsr_node
+    properties:
+      vsr_node:
+        type: string
+        description: Virtual Silk Road node identifier.
+  status:
+    type: string
+    enum: [active, inactive, suspended]

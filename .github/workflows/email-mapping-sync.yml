@@ -1,0 +1,109 @@
+# Email Mapping Sync
+#
+# Validates and syncs the Holy Grail email alias registry whenever
+# registry/aliases/email-mapping.yml is changed on the main branch
+# or inside a pull request.
+#
+# Steps:
+#   1. Validate YAML syntax of the mapping file
+#   2. Validate entries against the schema (schemas/email-mapping.yml)
+#   3. Notify the Holy Grail Mail Gateway to reload mappings (on push to main only)
+
+name: Email Mapping Sync
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - registry/aliases/email-mapping.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - registry/aliases/email-mapping.yml
+
+jobs:
+  validate:
+    name: Validate email mapping
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install validation dependencies
+        run: pip install pyyaml jsonschema
+
+      - name: Validate YAML syntax
+        run: |
+          python - <<'EOF'
+          import yaml, sys
+          with open("registry/aliases/email-mapping.yml") as f:
+              data = yaml.safe_load(f)
+          if not isinstance(data.get("mappings"), list):
+              print("ERROR: 'mappings' key must be a list")
+              sys.exit(1)
+          print(f"YAML valid — {len(data['mappings'])} mapping(s) found")
+          EOF
+
+      - name: Validate entries against schema
+        run: |
+          python - <<'EOF'
+          import yaml, jsonschema, sys
+
+          with open("schemas/email-mapping.yml") as f:
+              schema = yaml.safe_load(f)
+
+          with open("registry/aliases/email-mapping.yml") as f:
+              data = yaml.safe_load(f)
+
+          errors = []
+          for entry in data.get("mappings", []):
+              try:
+                  jsonschema.validate(instance=entry, schema=schema)
+              except jsonschema.ValidationError as e:
+                  errors.append(f"Entry '{entry.get('id', '?')}': {e.message}")
+
+          if errors:
+              print("Schema validation failed:")
+              for err in errors:
+                  print(f"  - {err}")
+              sys.exit(1)
+
+          print(f"All {len(data['mappings'])} mapping(s) passed schema validation")
+          EOF
+
+  notify-gateway:
+    name: Notify Holy Grail Mail Gateway
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Trigger gateway sync
+        env:
+          GATEWAY_URL: ${{ secrets.HOLY_GRAIL_GATEWAY_URL }}
+          GATEWAY_TOKEN: ${{ secrets.HOLY_GRAIL_GATEWAY_TOKEN }}
+        run: |
+          if [ -z "$GATEWAY_URL" ]; then
+            echo "HOLY_GRAIL_GATEWAY_URL secret not set — skipping gateway notification"
+            exit 0
+          fi
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${GATEWAY_TOKEN}" \
+            --header "Content-Type: application/json" \
+            --data '{"event":"email-mapping-updated","source":"genesis-ark","ref":"'"${GITHUB_SHA}"'"}' \
+            "${GATEWAY_URL}/hooks/email-mapping-sync"
+          echo "Gateway notified successfully"
