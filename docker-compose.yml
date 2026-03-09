@@ -1,0 +1,78 @@
+# Genesis Ark – Platform Control Plane
+# Run with: docker compose up -d
+
+networks:
+  genesis-net:
+    driver: bridge
+
+volumes:
+  telemetry-data:
+  registry-data:
+
+services:
+
+  # ─── Core control plane ────────────────────────────────────────────────────
+  core:
+    image: nginx:alpine
+    container_name: genesis-core
+    restart: unless-stopped
+    networks:
+      - genesis-net
+    ports:
+      - "8080:80"
+    volumes:
+      - ./core:/usr/share/nginx/html:ro
+    labels:
+      com.genesis-ark.component: "core"
+      com.genesis-ark.description: "Platform control plane"
+
+  # ─── Telemetry (RiverOS) ───────────────────────────────────────────────────
+  telemetry:
+    image: prom/prometheus:latest
+    container_name: genesis-telemetry
+    restart: unless-stopped
+    networks:
+      - genesis-net
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./telemetry/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - telemetry-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    labels:
+      com.genesis-ark.component: "telemetry"
+      com.genesis-ark.description: "RiverOS telemetry and observability"
+
+  # ─── Registry (Observable Commerce) ───────────────────────────────────────
+  registry:
+    image: nginx:alpine
+    container_name: genesis-registry
+    restart: unless-stopped
+    networks:
+      - genesis-net
+    ports:
+      - "8081:80"
+    volumes:
+      - ./registry:/usr/share/nginx/html:ro
+      - registry-data:/data
+    labels:
+      com.genesis-ark.component: "registry"
+      com.genesis-ark.description: "Phygitech asset registry"
+
+  # ─── Governance (EmpireOS) ─────────────────────────────────────────────────
+  governance:
+    image: nginx:alpine
+    container_name: genesis-governance
+    restart: unless-stopped
+    networks:
+      - genesis-net
+    ports:
+      - "8082:80"
+    volumes:
+      - ./governance:/usr/share/nginx/html:ro
+    labels:
+      com.genesis-ark.component: "governance"
+      com.genesis-ark.description: "EmpireOS licensing and governance"
