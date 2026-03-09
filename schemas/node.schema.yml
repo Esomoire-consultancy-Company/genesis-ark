@@ -1,0 +1,36 @@
+# Node Registration Schema
+# Validates registry/nodes/*.yml entries
+
+type: map
+mapping:
+  node_id:
+    type: str
+    required: true
+  tristar_key:
+    type: str
+    required: true
+  location:
+    type: map
+    required: true
+    mapping:
+      region:
+        type: str
+        required: true
+      city:
+        type: str
+        required: false
+  network:
+    type: map
+    required: true
+    mapping:
+      hostname:
+        type: str
+        required: true
+      protocol:
+        type: str
+        required: true
+        enum: [vsr]
+  status:
+    type: str
+    required: true
+    enum: [active, suspended, deregistered]

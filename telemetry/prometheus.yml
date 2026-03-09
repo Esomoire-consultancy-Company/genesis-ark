@@ -1,0 +1,36 @@
+# Genesis Ark – RiverOS Prometheus Configuration
+# Scrapes metrics from all core platform services.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    platform: genesis-ark
+
+rule_files:
+  - "alerts/*.yml"
+
+scrape_configs:
+  - job_name: genesis-core
+    static_configs:
+      - targets: ["core:80"]
+        labels:
+          component: core
+
+  - job_name: genesis-registry
+    static_configs:
+      - targets: ["registry:80"]
+        labels:
+          component: registry
+
+  - job_name: genesis-governance
+    static_configs:
+      - targets: ["governance:80"]
+        labels:
+          component: governance
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels:
+          component: telemetry

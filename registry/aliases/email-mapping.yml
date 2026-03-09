@@ -1,0 +1,8 @@
+mappings:
+  - id: mapping-test
+    generated: test@atlas-arc-vjripl-production.arcs.genesis.example
+    alias: ops@vjripl.genesis.example
+    display_name: "VJRIPL Operations"
+    target: http://gateway.genesis.example/ingest/email
+    tristar_key: atlas:arc-vjripl:production
+    status: active

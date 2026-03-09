@@ -1,0 +1,134 @@
+name: Email Mapping Sync
+
+on:
+  push:
+    paths:
+      - 'registry/aliases/email-mapping.yml'
+      - 'registry/arcs/**'
+      - 'schemas/**'
+  pull_request:
+    paths:
+      - 'registry/aliases/email-mapping.yml'
+      - 'registry/arcs/**'
+      - 'schemas/**'
+
+jobs:
+  validate:
+    name: Validate Registry YAML
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Lint email-mapping.yml
+        run: yamllint -c .yamllint.yml registry/aliases/email-mapping.yml
+
+      - name: Lint arc registry entries
+        run: |
+          shopt -s nullglob
+          for f in registry/arcs/*.yml; do
+            echo "Linting $f"
+            yamllint -c .yamllint.yml "$f"
+          done
+
+      - name: Validate required fields in email-mapping.yml
+        run: |
+          python3 - <<'EOF'
+          import yaml, sys
+
+          with open("registry/aliases/email-mapping.yml") as fh:
+              data = yaml.safe_load(fh)
+
+          required_fields = {"id", "generated", "alias", "display_name", "target", "tristar_key", "status"}
+          errors = []
+
+          for entry in data.get("mappings", []):
+              missing = required_fields - entry.keys()
+              if missing:
+                  errors.append(f"Entry '{entry.get('id', '?')}' is missing fields: {missing}")
+              if entry.get("status") not in {"active", "suspended", "deregistered"}:
+                  errors.append(f"Entry '{entry.get('id', '?')}' has invalid status: {entry.get('status')}")
+
+          if errors:
+              for e in errors:
+                  print(f"ERROR: {e}", file=sys.stderr)
+              sys.exit(1)
+
+          print(f"OK: {len(data.get('mappings', []))} mapping(s) validated.")
+          EOF
+
+      - name: Validate required fields in arc entries
+        run: |
+          python3 - <<'EOF'
+          import yaml, sys, glob
+
+          required_top = {"arc_id", "tristar_key", "identity", "network"}
+          required_identity = {"bluesky_handle", "did", "dns_anchor"}
+          required_network = {"vsr_node"}
+          errors = []
+
+          for path in glob.glob("registry/arcs/*.yml"):
+              with open(path) as fh:
+                  entry = yaml.safe_load(fh)
+
+              missing_top = required_top - entry.keys()
+              if missing_top:
+                  errors.append(f"{path}: missing top-level fields: {missing_top}")
+                  continue
+
+              identity = entry.get("identity") or {}
+              network = entry.get("network") or {}
+
+              missing_identity = required_identity - identity.keys()
+              if missing_identity:
+                  errors.append(f"{path}: missing identity fields: {missing_identity}")
+
+              missing_network = required_network - network.keys()
+              if missing_network:
+                  errors.append(f"{path}: missing network fields: {missing_network}")
+
+              did = identity.get("did", "")
+              if not did.startswith("did:plc:"):
+                  errors.append(f"{path}: DID must start with 'did:plc:' (got: {did!r})")
+
+          if errors:
+              for e in errors:
+                  print(f"ERROR: {e}", file=sys.stderr)
+              sys.exit(1)
+
+          print(f"OK: {len(glob.glob('registry/arcs/*.yml'))} arc(s) validated.")
+          EOF
+
+  notify-gateway:
+    name: Notify Email Gateway
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Notify Holy Grail gateway
+        env:
+          GATEWAY_WEBHOOK_URL: ${{ secrets.GATEWAY_WEBHOOK_URL }}
+        run: |
+          if [ -z "$GATEWAY_WEBHOOK_URL" ]; then
+            echo "GATEWAY_WEBHOOK_URL secret not set — skipping gateway notification."
+            exit 0
+          fi
+          curl -X POST "$GATEWAY_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d '{"event": "email-mapping-sync", "ref": "'"$GITHUB_SHA"'", "repository": "'"$GITHUB_REPOSITORY"'"}'
+          echo "Gateway notified."

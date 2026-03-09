@@ -1,0 +1,51 @@
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Build outputs
+dist/
+build/
+out/
+target/
+
+# Dependency directories
+node_modules/
+vendor/
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Container runtime data
+data/
+volumes/
+
+# Logs
+*.log
+logs/
+
+# Secrets (never commit these)
+*.pem
+*.key
+*.p12
+secrets/
+
+# Terraform state
+*.tfstate
+*.tfstate.backup
+.terraform/
+
+# Generated docs
+docs/_site/
+docs/.jekyll-cache/

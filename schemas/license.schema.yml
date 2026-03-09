@@ -1,0 +1,46 @@
+# License Schema
+# Validates registry/licenses/*.yml entries
+
+type: map
+mapping:
+  license_id:
+    type: str
+    required: true
+  tristar_key:
+    type: str
+    required: true
+  holder:
+    type: map
+    required: true
+    mapping:
+      name:
+        type: str
+        required: true
+      did:
+        type: str
+        required: true
+        pattern: /^did:genesis:[a-z0-9-]+$/
+  scope:
+    type: map
+    required: true
+    mapping:
+      modules:
+        type: seq
+        required: false
+        sequence:
+          - type: str
+      arcs:
+        type: seq
+        required: false
+        sequence:
+          - type: str
+  issued_at:
+    type: str
+    required: true
+  expires_at:
+    type: str
+    required: false
+  status:
+    type: str
+    required: true
+    enum: [active, suspended, revoked]
