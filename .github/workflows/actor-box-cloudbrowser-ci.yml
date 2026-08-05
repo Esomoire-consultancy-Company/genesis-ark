@@ -1,4 +1,4 @@
-name: Genesis Actor Box Runtime CI
+name: Genesis Governed Runtime CI
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: genesis-runtime-${{ github.workflow }}-${{ github.ref }}
+  group: genesis-governed-runtime-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -35,6 +35,7 @@ jobs:
           python -m pip install -e './services/warden[postgres,test]'
           python -m pip install -e './services/cloudbrowser[production,test]'
           python -m pip install -e './services/runtime[postgres,test]'
+          python -m pip install -e './services/edge-node[postgres,test]'
 
       - name: Install managed Chromium
         run: python -m playwright install --with-deps chromium
@@ -50,7 +51,6 @@ jobs:
           )"
           test -x "$CHROMIUM_PATH"
           echo "CLOUDBROWSER_TEST_CHROMIUM_EXECUTABLE=$CHROMIUM_PATH" >> "$GITHUB_ENV"
-          echo "Using managed Chromium: $CHROMIUM_PATH"
 
       - name: Validate contracts and migrations
         run: |
@@ -58,6 +58,7 @@ jobs:
           python scripts/validate_cloudbrowser_contracts.py
           python scripts/validate_authoritative_runtime.py
           python scripts/validate_runtime_platform.py
+          python scripts/validate_edge_node_contracts.py
 
       - name: Test Warden
         env:
@@ -76,9 +77,16 @@ jobs:
           PYTHONPATH: services/runtime/src
         run: pytest -q services/runtime/tests
 
+      - name: Test Edge Node
+        if: always()
+        env:
+          PYTHONPATH: services/edge-node/src
+        run: pytest -q services/edge-node/tests
+
       - name: Build distributable wheels
         if: success()
         run: |
           python -m build services/warden
           python -m build services/cloudbrowser
           python -m build services/runtime
+          python -m build services/edge-node

@@ -17,15 +17,30 @@ Root orchestration repository for the Virtual Silk Road and Genesis Stack ecosys
 - PostgreSQL/Supabase hardening migration: `db/authoritative/v1/003_authoritative_runtime_hardening.sql`.
 - Operating and deployment contract: `docs/authoritative-runtime.md`.
 - Runtime validation: `python scripts/validate_authoritative_runtime.py`.
-- Complete verification record: `VALIDATION.md`.
 
 ## Genesis Runtime Platform
 - Capability-aware Runtime Manager: `services/runtime/`.
-- Runtime authority and lifecycle contract: `docs/runtime-platform.md`.
 - Runtime API contract: `openapi/runtime/v1/openapi.yaml`.
 - Runtime object schema: `schemas/runtime/v1/runtime.schema.json`.
-- Private-schema migration: `db/runtime/v1/004_genesis_runtime_platform.sql`.
-- Runtime validation: `python scripts/validate_runtime_platform.py`.
+- Private runtime migration: `db/runtime/v1/004_genesis_runtime_platform.sql`.
+- Architecture contract: `docs/runtime-platform.md`.
+
+## Genesis Edge Node
+- Secure Edge Node controller and host-agent primitives: `services/edge-node/`.
+- Edge Node API contract: `openapi/edge-node/v1/openapi.yaml`.
+- Edge Node object schema: `schemas/edge-node/v1/edge-node.schema.json`.
+- Enrollment, heartbeat, command and evidence migration: `db/edge-node/v1/005_genesis_edge_node.sql`.
+- Architecture contract: `docs/edge-node.md`.
+
+## Ordered migrations
+
+```text
+001 Actor Box foundation
+002 CloudBrowser foundation
+003 Authoritative runtime hardening
+004 Genesis Runtime Platform
+005 Genesis Edge Node
+```
 
 ## Validation
 ```bash
@@ -33,9 +48,11 @@ python scripts/validate_actor_box_contracts.py
 python scripts/validate_cloudbrowser_contracts.py
 python scripts/validate_authoritative_runtime.py
 python scripts/validate_runtime_platform.py
+python scripts/validate_edge_node_contracts.py
 PYTHONPATH=services/warden/src pytest -q services/warden/tests
 PYTHONPATH=services/cloudbrowser/src:services/warden/src pytest -q services/cloudbrowser/tests
 PYTHONPATH=services/runtime/src pytest -q services/runtime/tests
+PYTHONPATH=services/edge-node/src pytest -q services/edge-node/tests
 ```
 
 ## Knowledge Hub Proxy Blueprint
