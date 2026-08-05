@@ -148,6 +148,9 @@ def test_evidence_is_hash_chained(client: TestClient) -> None:
         headers=AUTH_HEADERS,
     )
     events = response.json()
-    assert len(events) == 2
+    assert len(events) == 3
     assert events[0]["previous_event_hash"] is None
+    assert events[1]["event_type"] == "BROWSER_ACTION_AUTHORIZED"
     assert events[1]["previous_event_hash"] == events[0]["evidence_hash"]
+    assert events[2]["event_type"] == "BROWSER_ACTION_EXECUTED"
+    assert events[2]["previous_event_hash"] == events[1]["evidence_hash"]
