@@ -32,6 +32,13 @@ Root orchestration repository for the Virtual Silk Road and Genesis Stack ecosys
 - Enrollment, heartbeat, command and evidence migration: `db/edge-node/v1/005_genesis_edge_node.sql`.
 - Architecture contract: `docs/edge-node.md`.
 
+## Genesis Control Tower
+- Governed fleet operations and dashboards: `services/control-tower/`.
+- Control Tower API contract: `openapi/control-tower/v1/openapi.yaml`.
+- Control Tower JSON Schema: `schemas/control-tower/v1/control-tower.schema.json`.
+- Control Tower migration: `db/control-tower/v1/006_genesis_control_tower.sql`.
+- Authority and operating contract: `docs/control-tower.md`.
+
 ## Ordered migrations
 
 ```text
@@ -40,6 +47,7 @@ Root orchestration repository for the Virtual Silk Road and Genesis Stack ecosys
 003 Authoritative runtime hardening
 004 Genesis Runtime Platform
 005 Genesis Edge Node
+006 Genesis Control Tower
 ```
 
 ## Validation
@@ -49,10 +57,12 @@ python scripts/validate_cloudbrowser_contracts.py
 python scripts/validate_authoritative_runtime.py
 python scripts/validate_runtime_platform.py
 python scripts/validate_edge_node_contracts.py
+python scripts/validate_control_tower_contracts.py
 PYTHONPATH=services/warden/src pytest -q services/warden/tests
 PYTHONPATH=services/cloudbrowser/src:services/warden/src pytest -q services/cloudbrowser/tests
 PYTHONPATH=services/runtime/src pytest -q services/runtime/tests
 PYTHONPATH=services/edge-node/src pytest -q services/edge-node/tests
+PYTHONPATH=services/control-tower/src pytest -q services/control-tower/tests
 ```
 
 ## Knowledge Hub Proxy Blueprint

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.virtualsilkroad.com/genesis/control-tower/v1/control-tower.schema.json",
+  "title": "Genesis Control Tower Schema v1",
+  "oneOf": [
+    {"$ref": "#/$defs/FleetNodeSnapshot"},
+    {"$ref": "#/$defs/ControlCommandRequest"},
+    {"$ref": "#/$defs/ControlIncident"},
+    {"$ref": "#/$defs/PublicationLease"},
+    {"$ref": "#/$defs/DashboardSummary"},
+    {"$ref": "#/$defs/ControlTowerEvent"}
+  ],
+  "$defs": {
+    "Identifier": {"type": "string", "minLength": 3, "maxLength": 200, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"},
+    "Timestamp": {"type": "string", "format": "date-time"},
+    "FleetStatus": {"enum": ["ONLINE", "DEGRADED", "OFFLINE", "QUARANTINED", "DRAINING", "RETIRED", "UNKNOWN"]},
+    "FleetNodeSnapshot": {"type": "object", "additionalProperties": true, "required": ["node_id", "effective_status", "source_fingerprint", "observed_at"], "properties": {"node_id": {"$ref": "#/$defs/Identifier"}, "effective_status": {"$ref": "#/$defs/FleetStatus"}, "source_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "observed_at": {"$ref": "#/$defs/Timestamp"}}},
+    "ControlCommandRequest": {"type": "object", "additionalProperties": true, "required": ["request_id", "node_id", "command_type", "required_capability_action", "status", "expires_at"], "properties": {"request_id": {"$ref": "#/$defs/Identifier"}, "node_id": {"$ref": "#/$defs/Identifier"}, "command_type": {"type": "string"}, "required_capability_action": {"type": "string"}, "status": {"enum": ["AUTHORIZATION_REQUIRED", "AUTHORIZED", "DISPATCHED", "REJECTED", "EXPIRED", "CANCELLED"]}, "expires_at": {"$ref": "#/$defs/Timestamp"}}},
+    "ControlIncident": {"type": "object", "additionalProperties": true, "required": ["incident_id", "node_id", "severity", "status", "opened_at"], "properties": {"incident_id": {"$ref": "#/$defs/Identifier"}, "node_id": {"$ref": "#/$defs/Identifier"}, "severity": {"enum": ["INFO", "WARNING", "CRITICAL"]}, "status": {"enum": ["OPEN", "ACKNOWLEDGED", "MITIGATING", "RESOLVED", "CLOSED"]}, "opened_at": {"$ref": "#/$defs/Timestamp"}}},
+    "PublicationSourceEvent": {"type": "object", "additionalProperties": true, "required": ["stream", "event_id", "aggregate_id", "event_type", "evidence_hash", "occurred_at"], "properties": {"stream": {"enum": ["RUNTIME", "EDGE", "CONTROL_TOWER"]}, "event_id": {"$ref": "#/$defs/Identifier"}, "aggregate_id": {"$ref": "#/$defs/Identifier"}, "event_type": {"type": "string"}, "evidence_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "occurred_at": {"$ref": "#/$defs/Timestamp"}}},
+    "PublicationLease": {"type": "object", "additionalProperties": true, "required": ["lease_id", "publisher_id", "status", "events", "leased_at", "expires_at"], "properties": {"lease_id": {"$ref": "#/$defs/Identifier"}, "publisher_id": {"$ref": "#/$defs/Identifier"}, "status": {"enum": ["LEASED", "ACKNOWLEDGED", "EXPIRED", "FAILED"]}, "events": {"type": "array", "items": {"$ref": "#/$defs/PublicationSourceEvent"}}, "leased_at": {"$ref": "#/$defs/Timestamp"}, "expires_at": {"$ref": "#/$defs/Timestamp"}}},
+    "DashboardSummary": {"type": "object", "additionalProperties": false, "required": ["generated_at", "total_nodes", "nodes_by_status", "open_incidents", "critical_incidents", "authorization_queue", "authorized_commands", "unpublished_evidence"], "properties": {"generated_at": {"$ref": "#/$defs/Timestamp"}, "total_nodes": {"type": "integer", "minimum": 0}, "nodes_by_status": {"type": "object"}, "open_incidents": {"type": "integer", "minimum": 0}, "critical_incidents": {"type": "integer", "minimum": 0}, "authorization_queue": {"type": "integer", "minimum": 0}, "authorized_commands": {"type": "integer", "minimum": 0}, "unpublished_evidence": {"type": "integer", "minimum": 0}}},
+    "ControlTowerEvent": {"type": "object", "additionalProperties": false, "required": ["event_id", "aggregate_type", "aggregate_id", "event_type", "actor_id", "payload", "occurred_at", "evidence_hash"], "properties": {"event_id": {"$ref": "#/$defs/Identifier"}, "aggregate_type": {"type": "string"}, "aggregate_id": {"$ref": "#/$defs/Identifier"}, "event_type": {"type": "string"}, "actor_id": {"$ref": "#/$defs/Identifier"}, "payload": {"type": "object"}, "occurred_at": {"$ref": "#/$defs/Timestamp"}, "previous_event_hash": {"type": ["string", "null"]}, "evidence_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}
+  }
+}
