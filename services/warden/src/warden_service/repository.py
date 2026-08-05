@@ -35,16 +35,28 @@ class RegistryRepository(Protocol):
     def find_consent(self, box_id: str, digitalme_id: str, at: datetime) -> ConsentRecord | None: ...
     def find_delegation(self, box_id: str, agent_id: str, at: datetime) -> DelegationRecord | None: ...
     def boundary_rules(self, box_id: str, at: datetime) -> list[BoundaryRuleRecord]: ...
-    def save_decision(self, record: DecisionRecord) -> None: ...
+    def record_decision(self, record: DecisionRecord, event: EvidenceEvent) -> None: ...
     def get_decision(self, decision_id: str) -> DecisionRecord | None: ...
-    def save_capability(self, capability: CapabilityGrant) -> CapabilityGrant: ...
+    def issue_capability(self, capability: CapabilityGrant, event: EvidenceEvent) -> CapabilityGrant: ...
     def get_capability(self, capability_id: str) -> CapabilityGrant | None: ...
-    def revoke_capability(self, capability_id: str, revocation: Revocation) -> None: ...
-    def lock_box(self, box_id: str, at: datetime) -> None: ...
+    def revoke_capability(
+        self,
+        capability_id: str,
+        revocation: Revocation,
+        event: EvidenceEvent,
+    ) -> None: ...
+    def lock_box(
+        self,
+        box_id: str,
+        at: datetime,
+        reason: str,
+        event: EvidenceEvent,
+    ) -> None: ...
     def append_evidence(self, event: EvidenceEvent) -> None: ...
     def latest_evidence(self, box_id: str) -> EvidenceEvent | None: ...
     def active_capabilities(self, box_id: str, at: datetime) -> list[CapabilityGrant]: ...
     def active_agent_count(self, box_id: str, at: datetime) -> int: ...
+    def close(self) -> None: ...
 
 
 def _effective(status: ControlStatus, start: datetime, end: datetime | None, at: datetime) -> bool:
@@ -142,47 +154,72 @@ class InMemoryRegistry:
             and _effective(item.status, item.effective_from, item.effective_until, at)
         ]
 
-    def save_decision(self, record: DecisionRecord) -> None:
+    def _append_evidence_locked(self, event: EvidenceEvent) -> None:
+        latest = self.latest_evidence(event.box_id)
+        expected = latest.evidence_hash if latest else None
+        if event.previous_event_hash != expected:
+            raise StateConflictError("Evidence event does not continue the Box hash chain")
+        self.evidence.append(event)
+
+    def record_decision(self, record: DecisionRecord, event: EvidenceEvent) -> None:
         with self._lock:
             if record.decision.policy_decision_id in self.decisions:
                 raise StateConflictError("Policy decision ID already exists")
-            if any(existing.request.request_id == record.request.request_id for existing in self.decisions.values()):
+            if any(
+                existing.request.request_id == record.request.request_id
+                for existing in self.decisions.values()
+            ):
                 raise StateConflictError("Request ID has already been evaluated")
+            self._append_evidence_locked(event)
             self.decisions[record.decision.policy_decision_id] = record
 
     def get_decision(self, decision_id: str) -> DecisionRecord | None:
         return self.decisions.get(decision_id)
 
-    def save_capability(self, capability: CapabilityGrant) -> CapabilityGrant:
+    def issue_capability(self, capability: CapabilityGrant, event: EvidenceEvent) -> CapabilityGrant:
         with self._lock:
             existing = self.capabilities.get(capability.capability_id)
             if existing is not None:
                 return existing
+            self._append_evidence_locked(event)
             self.capabilities[capability.capability_id] = capability
             return capability
 
     def get_capability(self, capability_id: str) -> CapabilityGrant | None:
         return self.capabilities.get(capability_id)
 
-    def revoke_capability(self, capability_id: str, revocation: Revocation) -> None:
+    def revoke_capability(
+        self,
+        capability_id: str,
+        revocation: Revocation,
+        event: EvidenceEvent,
+    ) -> None:
         with self._lock:
             capability = self.capabilities.get(capability_id)
             if capability is None:
                 raise NotFoundError(f"Capability {capability_id} does not exist")
             if capability.capability_status == CapabilityStatus.REVOKED:
                 raise StateConflictError("Capability is already revoked")
+            self._append_evidence_locked(event)
             self.capabilities[capability_id] = capability.model_copy(
                 update={"capability_status": CapabilityStatus.REVOKED}
             )
             self.revocations[revocation.revocation_id] = revocation
 
-    def lock_box(self, box_id: str, at: datetime) -> None:
+    def lock_box(
+        self,
+        box_id: str,
+        at: datetime,
+        reason: str,
+        event: EvidenceEvent,
+    ) -> None:
         with self._lock:
             box = self.boxes.get(box_id)
             if box is None:
                 raise NotFoundError(f"Actor Box {box_id} does not exist")
             if box.locked:
                 raise StateConflictError("Actor Box is already locked")
+            self._append_evidence_locked(event)
             self.boxes[box_id] = box.model_copy(
                 update={"locked": True, "status": BoxStatus.SUSPENDED, "updated_at": at}
             )
@@ -197,11 +234,7 @@ class InMemoryRegistry:
 
     def append_evidence(self, event: EvidenceEvent) -> None:
         with self._lock:
-            latest = self.latest_evidence(event.box_id)
-            expected = latest.evidence_hash if latest else None
-            if event.previous_event_hash != expected:
-                raise StateConflictError("Evidence event does not continue the Box hash chain")
-            self.evidence.append(event)
+            self._append_evidence_locked(event)
 
     def latest_evidence(self, box_id: str) -> EvidenceEvent | None:
         return next((event for event in reversed(self.evidence) if event.box_id == box_id), None)
@@ -229,3 +262,6 @@ class InMemoryRegistry:
                 )
             }
         )
+
+    def close(self) -> None:
+        return None
