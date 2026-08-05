@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
+
 from fastapi import Depends, FastAPI, Request
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
+from starlette.concurrency import run_in_threadpool
 
 from .auth import build_auth_dependency
 from .config import Settings
@@ -21,19 +25,52 @@ from .models import (
 from .repository import InMemoryRegistry, RegistryRepository
 
 
+def _build_repository(settings: Settings) -> RegistryRepository:
+    if settings.repository_backend == "memory":
+        return InMemoryRegistry()
+    if settings.repository_backend == "postgres":
+        if not settings.database_url:
+            raise RuntimeError(
+                "WARDEN_DATABASE_URL is required when WARDEN_REPOSITORY_BACKEND=postgres"
+            )
+        from .postgres_repository import PostgresRegistry
+
+        return PostgresRegistry(
+            settings.database_url,
+            min_size=settings.database_pool_min_size,
+            max_size=settings.database_pool_max_size,
+            timeout=settings.database_pool_timeout_seconds,
+            prepare_threshold=settings.database_prepare_threshold,
+        )
+    raise RuntimeError(f"Unsupported Warden repository backend: {settings.repository_backend}")
+
+
 def create_app(
     *,
     registry: RegistryRepository | None = None,
     settings: Settings | None = None,
 ) -> FastAPI:
     resolved_settings = settings or Settings.from_env()
-    resolved_registry = registry or InMemoryRegistry()
+    resolved_registry = registry or _build_repository(resolved_settings)
     engine = WardenEngine(resolved_registry, resolved_settings)
     authenticate = build_auth_dependency(resolved_settings)
 
+    @asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        open_method = getattr(resolved_registry, "open", None)
+        if open_method is not None:
+            await run_in_threadpool(open_method)
+        try:
+            yield
+        finally:
+            close_method = getattr(resolved_registry, "close", None)
+            if close_method is not None:
+                await run_in_threadpool(close_method)
+
     app = FastAPI(
+        lifespan=lifespan,
         title="Warden Actor Box Control API",
-        version="1.0.0",
+        version="1.1.0",
         description="Deny-by-default control plane for Genesis Actor Boxes.",
     )
     app.state.registry = resolved_registry
@@ -88,8 +125,11 @@ def create_app(
     app.openapi = custom_openapi
 
     @app.get("/healthz", include_in_schema=False)
-    async def healthz() -> dict[str, str]:
-        return {"status": "ok"}
+    def healthz() -> dict[str, str]:
+        return {
+            "status": "ok",
+            "repository": resolved_settings.repository_backend,
+        }
 
     @app.post(
         "/v1/policy-decisions/evaluate",
@@ -97,9 +137,7 @@ def create_app(
         response_model=PolicyDecision,
         dependencies=[Depends(authenticate)],
     )
-    async def evaluate_policy(
-        payload: PolicyDecisionRequest,
-    ) -> PolicyDecision:
+    def evaluate_policy(payload: PolicyDecisionRequest) -> PolicyDecision:
         return engine.evaluate(payload)
 
     @app.post(
@@ -109,9 +147,7 @@ def create_app(
         status_code=201,
         dependencies=[Depends(authenticate)],
     )
-    async def issue_capability(
-        payload: CapabilityIssueRequest,
-    ) -> CapabilityGrant:
+    def issue_capability(payload: CapabilityIssueRequest) -> CapabilityGrant:
         return engine.issue_capability(payload)
 
     @app.post(
@@ -120,7 +156,7 @@ def create_app(
         response_model=Revocation,
         dependencies=[Depends(authenticate)],
     )
-    async def revoke_capability(
+    def revoke_capability(
         capabilityId: str,
         payload: RevocationRequest,
     ) -> Revocation:
@@ -132,10 +168,7 @@ def create_app(
         response_model=BoxControlState,
         dependencies=[Depends(authenticate)],
     )
-    async def lock_box(
-        boxId: str,
-        payload: BoxLockRequest,
-    ) -> BoxControlState:
+    def lock_box(boxId: str, payload: BoxLockRequest) -> BoxControlState:
         return engine.lock_box(boxId, payload)
 
     @app.get(
@@ -144,7 +177,7 @@ def create_app(
         response_model=BoxControlState,
         dependencies=[Depends(authenticate)],
     )
-    async def get_control_state(boxId: str) -> BoxControlState:
+    def get_control_state(boxId: str) -> BoxControlState:
         return engine.control_state(boxId)
 
     return app
