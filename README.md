@@ -6,14 +6,28 @@ Root orchestration repository for the Virtual Silk Road and Genesis Stack ecosys
 - Machine-readable control-object schema: `schemas/actor-box/v1/actor-box.schema.json`.
 - Warden control-plane contract: `openapi/warden/v1/openapi.yaml`.
 - Registry foundation DDL: `db/actor-box/v1/001_actor_box_foundation.sql`.
-- Offline validation: `python scripts/validate_actor_box_contracts.py`.
 - Runnable Warden evaluator: `services/warden/`.
-- Warden tests: `cd services/warden && pytest`.
-- Governed CloudBrowser broker: `services/cloudbrowser/`.
-- CloudBrowser contract: `openapi/cloudbrowser/v1/openapi.yaml`.
+
+## Governed CloudBrowser
+- Governed broker and Chromium runtime: `services/cloudbrowser/`.
+- CloudBrowser API contract: `openapi/cloudbrowser/v1/openapi.yaml`.
 - CloudBrowser registry migration: `db/cloudbrowser/v1/002_cloud_browser_foundation.sql`.
-- CloudBrowser validation: `python scripts/validate_cloudbrowser_contracts.py`.
+
+## Authoritative Runtime
+- PostgreSQL/Supabase hardening migration: `db/authoritative/v1/003_authoritative_runtime_hardening.sql`.
+- Operating and deployment contract: `docs/authoritative-runtime.md`.
+- Runtime validation: `python scripts/validate_authoritative_runtime.py`.
+- Complete verification record: `VALIDATION.md`.
+
+## Validation
+```bash
+python scripts/validate_actor_box_contracts.py
+python scripts/validate_cloudbrowser_contracts.py
+python scripts/validate_authoritative_runtime.py
+PYTHONPATH=services/warden/src pytest -q services/warden/tests
+PYTHONPATH=services/cloudbrowser/src:services/warden/src pytest -q services/cloudbrowser/tests
+```
 
 ## Knowledge Hub Proxy Blueprint
-- Reference architecture for an enterprise-wide “holy grail” knowledge hub proxy with Virtual Silk Road sub-arcs: `docs/knowledge-hub-proxy.md`.
-- Example Helm values for deploying the proxy and its partner-facing slices: `docs/snippets/knowledge-hub-proxy.values.yaml`.
+- Reference architecture for an enterprise-wide knowledge hub proxy with Virtual Silk Road sub-arcs: `docs/knowledge-hub-proxy.md`.
+- Example Helm values: `docs/snippets/knowledge-hub-proxy.values.yaml`.
