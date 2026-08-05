@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import importlib.util
+import os
 
 import pytest
 
@@ -15,8 +17,13 @@ from cloudbrowser_service.models import (
     SessionStatus,
 )
 
-CHROMIUM = Path("/usr/bin/chromium")
-pytestmark = pytest.mark.skipif(not CHROMIUM.exists(), reason="system Chromium unavailable")
+CHROMIUM_ENV = os.getenv("CLOUDBROWSER_TEST_CHROMIUM_EXECUTABLE")
+CHROMIUM = Path(CHROMIUM_ENV) if CHROMIUM_ENV else Path("/usr/bin/chromium")
+HAS_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
+pytestmark = pytest.mark.skipif(
+    not HAS_PLAYWRIGHT or (CHROMIUM_ENV is not None and not CHROMIUM.exists()),
+    reason="Playwright Chromium runtime unavailable",
+)
 BASE_URL = "https://allowed.test"
 
 
@@ -70,7 +77,7 @@ def action(action_id: str, action_type: BrowserActionType, url: str) -> BrowserA
 
 def executor(tmp_path) -> PlaywrightChromiumExecutor:
     return PlaywrightChromiumExecutor(
-        chromium_executable=str(CHROMIUM),
+        chromium_executable=str(CHROMIUM) if CHROMIUM.exists() else None,
         quarantine_root=tmp_path,
         route_fulfiller=fixture_route,
     )
