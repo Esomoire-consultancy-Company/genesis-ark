@@ -63,12 +63,37 @@ jobs:
           PYTHONPATH: services/warden/src
         run: pytest -q services/warden/tests
 
-      - name: Test CloudBrowser and Chromium isolation
+      - name: Test CloudBrowser control plane
         env:
           PYTHONPATH: services/cloudbrowser/src:services/warden/src
-        run: pytest -q services/cloudbrowser/tests
+        run: pytest -q services/cloudbrowser/tests --ignore=services/cloudbrowser/tests/test_playwright_executor.py
+
+      - name: Test Chromium cookie isolation
+        if: always()
+        env:
+          PYTHONPATH: services/cloudbrowser/src:services/warden/src
+        run: pytest -q services/cloudbrowser/tests/test_playwright_executor.py::test_non_persistent_contexts_do_not_share_cookies
+
+      - name: Test Chromium domain blocking
+        if: always()
+        env:
+          PYTHONPATH: services/cloudbrowser/src:services/warden/src
+        run: pytest -q services/cloudbrowser/tests/test_playwright_executor.py::test_context_route_blocks_non_allowlisted_network
+
+      - name: Test Chromium pause teardown
+        if: always()
+        env:
+          PYTHONPATH: services/cloudbrowser/src:services/warden/src
+        run: pytest -q services/cloudbrowser/tests/test_playwright_executor.py::test_pause_closes_runtime_context
+
+      - name: Test Chromium quarantine permissions
+        if: always()
+        env:
+          PYTHONPATH: services/cloudbrowser/src:services/warden/src
+        run: pytest -q services/cloudbrowser/tests/test_playwright_executor.py::test_quarantine_directories_are_owner_only
 
       - name: Build distributable wheels
+        if: success()
         run: |
           python -m build services/warden
           python -m build services/cloudbrowser
