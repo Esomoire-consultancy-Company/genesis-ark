@@ -1,0 +1,13 @@
+{
+  "request_id": "BROWSER-SESSION-REQUEST-0001",
+  "box_id": "BOX-GENESIS-PERSONAL-0001",
+  "digitalme_id": "DIGITALME-FAIZ-0001",
+  "runtime_id": "RUNTIME-GENESIS-PHONE-0001",
+  "context_id": "CONTEXT-VOI-OPERATIONS-0001",
+  "workspace_id": "WORKSPACE-VOI-OPERATIONS-0001",
+  "licence_id": "LICENCE-SYNNERGYZE-MERCHANT-0001",
+  "policy_id": "BROWSER-POLICY-GOVERNED-V1",
+  "purpose": "CLOUD_BROWSER_OPERATION",
+  "data_classes": ["PUBLIC"],
+  "requested_duration_seconds": 1200
+}

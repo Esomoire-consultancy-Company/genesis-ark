@@ -12,9 +12,7 @@ def test_missing_registry_state_denies_and_emits_evidence() -> None:
     registry = InMemoryRegistry()
     engine = WardenEngine(registry, Settings(api_token="test-token"))
 
-    decision = engine.evaluate(
-        PolicyDecisionRequest.model_validate(decision_request())
-    )
+    decision = engine.evaluate(PolicyDecisionRequest.model_validate(decision_request()))
 
     assert decision.outcome == "DENY"
     assert decision.reason_codes == ["BOX_NOT_FOUND"]
@@ -39,9 +37,7 @@ def test_agent_write_potential_without_approval_is_restricted() -> None:
     registry = seeded_registry()
     engine = WardenEngine(registry, Settings(api_token="test-token"))
 
-    decision = engine.evaluate(
-        PolicyDecisionRequest.model_validate(decision_request())
-    )
+    decision = engine.evaluate(PolicyDecisionRequest.model_validate(decision_request()))
 
     assert decision.outcome == "RESTRICT"
     assert decision.required_approval == "HUMAN_APPROVAL_FOR_WRITE"
@@ -58,9 +54,7 @@ def test_unattested_runtime_denies() -> None:
     )
     engine = WardenEngine(registry, Settings(api_token="test-token"))
 
-    decision = engine.evaluate(
-        PolicyDecisionRequest.model_validate(decision_request())
-    )
+    decision = engine.evaluate(PolicyDecisionRequest.model_validate(decision_request()))
 
     assert decision.outcome == "DENY"
     assert "RUNTIME_FAILED" in decision.reason_codes
@@ -71,9 +65,7 @@ def test_missing_boundary_rule_denies_cross_zone_data() -> None:
     registry.boundaries.clear()
     engine = WardenEngine(registry, Settings(api_token="test-token"))
 
-    decision = engine.evaluate(
-        PolicyDecisionRequest.model_validate(decision_request())
-    )
+    decision = engine.evaluate(PolicyDecisionRequest.model_validate(decision_request()))
 
     assert decision.outcome == "DENY"
     assert "DATA_BOUNDARY_DENIED" in decision.reason_codes

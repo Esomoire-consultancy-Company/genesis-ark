@@ -1,0 +1,12 @@
+{
+  "action_id": "BROWSER-ACTION-SUBMIT-0001",
+  "action_type": "BROWSER_SUBMIT_FORM",
+  "target_url": "https://example.com/orders",
+  "purpose": "CLOUD_BROWSER_OPERATION",
+  "data_classes": ["FORM_DATA"],
+  "payload": {
+    "form_reference": "FORM-ORDER-0001"
+  },
+  "estimated_network_bytes": 2000,
+  "estimated_file_bytes": 0
+}

@@ -9,6 +9,10 @@ Root orchestration repository for the Virtual Silk Road and Genesis Stack ecosys
 - Offline validation: `python scripts/validate_actor_box_contracts.py`.
 - Runnable Warden evaluator: `services/warden/`.
 - Warden tests: `cd services/warden && pytest`.
+- Governed CloudBrowser broker: `services/cloudbrowser/`.
+- CloudBrowser contract: `openapi/cloudbrowser/v1/openapi.yaml`.
+- CloudBrowser registry migration: `db/cloudbrowser/v1/002_cloud_browser_foundation.sql`.
+- CloudBrowser validation: `python scripts/validate_cloudbrowser_contracts.py`.
 
 ## Knowledge Hub Proxy Blueprint
 - Reference architecture for an enterprise-wide “holy grail” knowledge hub proxy with Virtual Silk Road sub-arcs: `docs/knowledge-hub-proxy.md`.
