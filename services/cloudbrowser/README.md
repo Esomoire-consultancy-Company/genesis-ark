@@ -1,26 +1,26 @@
 # Genesis Governed CloudBrowser
 
-CloudBrowser is the first governed application executed through the Warden-Enabled Actor Box. It brokers isolated browser sessions and material browser actions; it does not grant unrestricted browser automation.
+CloudBrowser is the first governed application executed through the Warden-Enabled Actor Box. It brokers isolated browser sessions and material actions; it does not grant unrestricted automation.
 
 ## Trust flow
 
 ```text
 DigitalMe + Actor Box context
         ↓
-Warden session decision and capability
+Warden decision and short-lived capability
         ↓
-Ephemeral CloudBrowser session partition
+Non-persistent Chromium BrowserContext
         ↓
-Domain, action, file, credential and data-boundary checks
+Domain, action, file and credential controls
         ↓
-Human approval interception for consequential actions
+Durable authorization or DigitalMe approval
         ↓
-Bounded executor
+Bounded browser execution
         ↓
-RiverOS-style evidence and compute usage
+RiverOS-style evidence and usage metering
 ```
 
-## Implemented API
+## API
 
 - `POST /v1/browser-sessions`
 - `GET /v1/browser-sessions/{sessionId}`
@@ -31,36 +31,48 @@ RiverOS-style evidence and compute usage
 - `GET /v1/browser-sessions/{sessionId}/evidence`
 - `GET /v1/browser-sessions/{sessionId}/usage`
 
-## Enforced controls
+## Execution guarantees
 
-- Warden must authorize and materialize the session capability.
-- Every action must match the browser policy and Warden authority.
-- Domain rules support exact hosts and explicit `*.subdomain` rules only.
-- Raw passwords, tokens, secrets, API keys and private keys are rejected.
-- Credential use accepts only a vault `credential_reference`.
-- Upload, download, clipboard and screen capture remain separately controlled.
-- High-impact actions pause for DigitalMe approval.
-- Paused, expired or terminated sessions cannot execute new actions.
-- Session and action events form a per-session evidence hash chain.
-- Runtime, network, file, connector, action and approval usage is metered.
+- Every session and action is checked by browser policy and Warden.
+- Raw credentials and secrets are rejected; credential references fail closed without a configured provider.
+- Action IDs are idempotent and cannot be reused with a different request.
+- A normal action is durably recorded as `ALLOW` before Chromium executes.
+- A consequential action is durably recorded as `APPROVED` before execution.
+- Client retries do not re-execute an already recorded action.
+- Evidence chains and state/usage writes are serialized transactionally per session.
+- Pausing, expiry and termination close the Chromium context.
 
-## Current executor boundary
+## Chromium mode
 
-The included `DeterministicBrowserExecutor` proves governance and orchestration without performing network access. A later isolated Chromium/Cloud Browser runtime must implement the same `BrowserExecutor` protocol and may not bypass Warden, policy, approval, evidence or metering.
+`CLOUDBROWSER_EXECUTOR_MODE=PLAYWRIGHT` activates the isolated Playwright adapter. Each session receives a fresh BrowserContext with service workers blocked, no permissions granted by default, request interception, domain allowlisting and owner-only quarantine directories.
 
-## Run
+The Playwright package is pinned to `1.61.0`; its browser binaries must match that version.
 
 ```bash
 cd services/cloudbrowser
-python -m pip install -e . --no-build-isolation
-export CLOUDBROWSER_API_TOKEN='replace-with-a-secret'
-export CLOUDBROWSER_WARDEN_API_TOKEN='replace-with-a-warden-token'
+python -m pip install -e '.[production,test]'
+export CLOUDBROWSER_REPOSITORY_BACKEND=postgres
+export CLOUDBROWSER_DATABASE_URL='<protected connection string>'
+export CLOUDBROWSER_EXECUTOR_MODE=PLAYWRIGHT
+export CLOUDBROWSER_API_TOKEN='<secret>'
+export CLOUDBROWSER_WARDEN_API_TOKEN='<secret>'
 cloudbrowser-service
 ```
+
+## Container
+
+Build from the repository root:
+
+```bash
+docker build -f services/cloudbrowser/Dockerfile -t genesis-cloudbrowser .
+```
+
+Run it as the image's `pwuser` with a suitable seccomp profile and network egress policy. Do not run the browser as root and do not disable the Chromium sandbox.
 
 ## Test
 
 ```bash
-cd services/cloudbrowser
-pytest
+PYTHONPATH=services/cloudbrowser/src:services/warden/src pytest -q services/cloudbrowser/tests
 ```
+
+The suite includes real system-Chromium checks when `/usr/bin/chromium` is available, including cookie isolation, domain blocking and context termination.
