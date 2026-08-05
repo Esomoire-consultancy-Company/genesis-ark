@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-from conftest import AUTH_HEADERS, SUBJECT_ID, create_session
+from .conftest import AUTH_HEADERS, SUBJECT_ID, create_session
 
 
 def test_authentication_requires_mtls_and_bearer(client: TestClient) -> None:
