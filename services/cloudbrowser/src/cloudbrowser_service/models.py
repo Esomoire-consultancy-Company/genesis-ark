@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any, Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, PrivateAttr, model_validator
 
 Identifier = Annotated[
     str,
@@ -145,6 +145,15 @@ class BrowserAction(StrictModel):
     executed_at: datetime | None = None
     result: dict[str, Any] | None = None
     evidence_event_id: Identifier
+    _request: BrowserActionRequest | None = PrivateAttr(default=None)
+
+    @property
+    def request(self) -> BrowserActionRequest | None:
+        return self._request
+
+    def bind_request(self, request: BrowserActionRequest | None) -> "BrowserAction":
+        self._request = request
+        return self
 
 
 class BrowserApprovalRequest(StrictModel):
@@ -158,6 +167,7 @@ class BrowserApproval(StrictModel):
     browser_session_id: Identifier
     action_id: Identifier
     approved_by: Identifier
+    approval_reason: str = Field(min_length=1)
     approved_at: datetime
     expires_at: datetime
     evidence_event_id: Identifier
