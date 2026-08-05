@@ -7,6 +7,8 @@ Root orchestration repository for the Virtual Silk Road and Genesis Stack ecosys
 - Warden control-plane contract: `openapi/warden/v1/openapi.yaml`.
 - Registry foundation DDL: `db/actor-box/v1/001_actor_box_foundation.sql`.
 - Offline validation: `python scripts/validate_actor_box_contracts.py`.
+- Runnable Warden evaluator: `services/warden/`.
+- Warden tests: `cd services/warden && pytest`.
 
 ## Knowledge Hub Proxy Blueprint
 - Reference architecture for an enterprise-wide “holy grail” knowledge hub proxy with Virtual Silk Road sub-arcs: `docs/knowledge-hub-proxy.md`.
