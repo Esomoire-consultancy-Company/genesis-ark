@@ -72,3 +72,26 @@ The foundation is structurally valid when:
 - the database script declares all canonical foundation tables;
 - example capability expiry is later than issuance;
 - deny-by-default behavior is visible in the API contract.
+
+## Runnable Warden service
+
+`services/warden/` implements the first executable control-plane slice:
+
+- deny-by-default policy evaluation;
+- runtime, DigitalMe binding, context, consent, delegation and boundary checks;
+- short-lived capability materialisation;
+- capability revocation;
+- emergency Actor Box locking;
+- authoritative control-state reads;
+- RiverOS-style per-Box evidence hash chaining;
+- bearer plus trusted mTLS-ingress authentication.
+
+The current adapter is an in-memory implementation for deterministic tests and local development. The repository interface is deliberately separated so a PostgreSQL/Supabase adapter can become the authoritative production persistence layer without changing the Warden decision engine.
+
+Run:
+
+```bash
+cd services/warden
+python -m pip install -e . --no-build-isolation
+pytest
+```
