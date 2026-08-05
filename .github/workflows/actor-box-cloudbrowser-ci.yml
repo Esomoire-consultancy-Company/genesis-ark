@@ -39,6 +39,19 @@ jobs:
       - name: Install managed Chromium
         run: python -m playwright install --with-deps chromium
 
+      - name: Resolve managed Chromium executable
+        shell: bash
+        run: |
+          CHROMIUM_PATH="$(python - <<'PY'
+          from playwright.sync_api import sync_playwright
+          with sync_playwright() as playwright:
+              print(playwright.chromium.executable_path)
+          PY
+          )"
+          test -x "$CHROMIUM_PATH"
+          echo "CLOUDBROWSER_TEST_CHROMIUM_EXECUTABLE=$CHROMIUM_PATH" >> "$GITHUB_ENV"
+          echo "Using managed Chromium: $CHROMIUM_PATH"
+
       - name: Validate contracts and migrations
         run: |
           python scripts/validate_actor_box_contracts.py
