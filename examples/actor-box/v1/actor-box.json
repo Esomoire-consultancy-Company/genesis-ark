@@ -1,0 +1,13 @@
+{
+  "object_type": "ACTOR_BOX",
+  "box_id": "BOX-GENESIS-PERSONAL-0001",
+  "box_type": "PERSONAL",
+  "genesis_runtime_id": "RUNTIME-GENESIS-PHONE-0001",
+  "current_status": "ACTIVE",
+  "policy_profile_id": "WARDEN-POLICY-PERSONAL-V1",
+  "evidence_stream_id": "RIVER-BOX-0001",
+  "sentinel_clock_id": "CLOCK-BOX-0001",
+  "provisioned_at": "2026-08-05T18:00:00Z",
+  "claimed_at": "2026-08-05T18:05:00Z",
+  "activated_at": "2026-08-05T18:10:00Z"
+}
