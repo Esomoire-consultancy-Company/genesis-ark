@@ -63,10 +63,35 @@ jobs:
           PYTHONPATH: services/warden/src
         run: pytest -q services/warden/tests
 
-      - name: Test CloudBrowser control plane
+      - name: Test CloudBrowser API
+        if: always()
         env:
           PYTHONPATH: services/cloudbrowser/src:services/warden/src
-        run: pytest -q services/cloudbrowser/tests --ignore=services/cloudbrowser/tests/test_playwright_executor.py
+        run: pytest -q services/cloudbrowser/tests/test_api.py
+
+      - name: Test CloudBrowser policy
+        if: always()
+        env:
+          PYTHONPATH: services/cloudbrowser/src:services/warden/src
+        run: pytest -q services/cloudbrowser/tests/test_policy.py
+
+      - name: Test CloudBrowser PostgreSQL repository
+        if: always()
+        env:
+          PYTHONPATH: services/cloudbrowser/src:services/warden/src
+        run: pytest -q services/cloudbrowser/tests/test_postgres_repository.py
+
+      - name: Test CloudBrowser idempotency
+        if: always()
+        env:
+          PYTHONPATH: services/cloudbrowser/src:services/warden/src
+        run: pytest -q services/cloudbrowser/tests/test_idempotency.py
+
+      - name: Test CloudBrowser approval replay
+        if: always()
+        env:
+          PYTHONPATH: services/cloudbrowser/src:services/warden/src
+        run: pytest -q services/cloudbrowser/tests/test_approval_replay.py
 
       - name: Test Chromium cookie isolation
         if: always()
