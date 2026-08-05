@@ -19,13 +19,23 @@ Root orchestration repository for the Virtual Silk Road and Genesis Stack ecosys
 - Runtime validation: `python scripts/validate_authoritative_runtime.py`.
 - Complete verification record: `VALIDATION.md`.
 
+## Genesis Runtime Platform
+- Capability-aware Runtime Manager: `services/runtime/`.
+- Runtime authority and lifecycle contract: `docs/runtime-platform.md`.
+- Runtime API contract: `openapi/runtime/v1/openapi.yaml`.
+- Runtime object schema: `schemas/runtime/v1/runtime.schema.json`.
+- Private-schema migration: `db/runtime/v1/004_genesis_runtime_platform.sql`.
+- Runtime validation: `python scripts/validate_runtime_platform.py`.
+
 ## Validation
 ```bash
 python scripts/validate_actor_box_contracts.py
 python scripts/validate_cloudbrowser_contracts.py
 python scripts/validate_authoritative_runtime.py
+python scripts/validate_runtime_platform.py
 PYTHONPATH=services/warden/src pytest -q services/warden/tests
 PYTHONPATH=services/cloudbrowser/src:services/warden/src pytest -q services/cloudbrowser/tests
+PYTHONPATH=services/runtime/src pytest -q services/runtime/tests
 ```
 
 ## Knowledge Hub Proxy Blueprint
