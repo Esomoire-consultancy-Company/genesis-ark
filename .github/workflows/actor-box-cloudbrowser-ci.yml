@@ -1,4 +1,4 @@
-name: Actor Box and CloudBrowser CI
+name: Genesis Actor Box Runtime CI
 
 on:
   pull_request:
@@ -10,13 +10,13 @@ permissions:
   contents: read
 
 concurrency:
-  group: actor-box-cloudbrowser-${{ github.workflow }}-${{ github.ref }}
+  group: genesis-runtime-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   validate-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
 
     steps:
       - name: Check out repository
@@ -34,6 +34,7 @@ jobs:
           python -m pip install 'jsonschema==4.26.0' 'PyYAML==6.0.3'
           python -m pip install -e './services/warden[postgres,test]'
           python -m pip install -e './services/cloudbrowser[production,test]'
+          python -m pip install -e './services/runtime[postgres,test]'
 
       - name: Install managed Chromium
         run: python -m playwright install --with-deps chromium
@@ -56,68 +57,28 @@ jobs:
           python scripts/validate_actor_box_contracts.py
           python scripts/validate_cloudbrowser_contracts.py
           python scripts/validate_authoritative_runtime.py
+          python scripts/validate_runtime_platform.py
 
       - name: Test Warden
         env:
           PYTHONPATH: services/warden/src
         run: pytest -q services/warden/tests
 
-      - name: Test CloudBrowser API
+      - name: Test CloudBrowser
         if: always()
         env:
           PYTHONPATH: services/cloudbrowser/src:services/warden/src
-        run: pytest -q services/cloudbrowser/tests/test_api.py
+        run: pytest -q services/cloudbrowser/tests
 
-      - name: Test CloudBrowser policy
+      - name: Test Runtime Manager
         if: always()
         env:
-          PYTHONPATH: services/cloudbrowser/src:services/warden/src
-        run: pytest -q services/cloudbrowser/tests/test_policy.py
-
-      - name: Test CloudBrowser PostgreSQL repository
-        if: always()
-        env:
-          PYTHONPATH: services/cloudbrowser/src:services/warden/src
-        run: pytest -q services/cloudbrowser/tests/test_postgres_repository.py
-
-      - name: Test CloudBrowser idempotency
-        if: always()
-        env:
-          PYTHONPATH: services/cloudbrowser/src:services/warden/src
-        run: pytest -q services/cloudbrowser/tests/test_idempotency.py
-
-      - name: Test CloudBrowser approval replay
-        if: always()
-        env:
-          PYTHONPATH: services/cloudbrowser/src:services/warden/src
-        run: pytest -q services/cloudbrowser/tests/test_approval_replay.py
-
-      - name: Test Chromium cookie isolation
-        if: always()
-        env:
-          PYTHONPATH: services/cloudbrowser/src:services/warden/src
-        run: pytest -q services/cloudbrowser/tests/test_playwright_executor.py::test_non_persistent_contexts_do_not_share_cookies
-
-      - name: Test Chromium domain blocking
-        if: always()
-        env:
-          PYTHONPATH: services/cloudbrowser/src:services/warden/src
-        run: pytest -q services/cloudbrowser/tests/test_playwright_executor.py::test_context_route_blocks_non_allowlisted_network
-
-      - name: Test Chromium pause teardown
-        if: always()
-        env:
-          PYTHONPATH: services/cloudbrowser/src:services/warden/src
-        run: pytest -q services/cloudbrowser/tests/test_playwright_executor.py::test_pause_closes_runtime_context
-
-      - name: Test Chromium quarantine permissions
-        if: always()
-        env:
-          PYTHONPATH: services/cloudbrowser/src:services/warden/src
-        run: pytest -q services/cloudbrowser/tests/test_playwright_executor.py::test_quarantine_directories_are_owner_only
+          PYTHONPATH: services/runtime/src
+        run: pytest -q services/runtime/tests
 
       - name: Build distributable wheels
         if: success()
         run: |
           python -m build services/warden
           python -m build services/cloudbrowser
+          python -m build services/runtime
