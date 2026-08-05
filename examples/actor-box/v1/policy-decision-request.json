@@ -1,0 +1,18 @@
+{
+  "object_type": "POLICY_DECISION_REQUEST",
+  "request_id": "REQ-INVENTORY-RECONCILIATION-0001",
+  "requested_at": "2026-08-05T18:20:00Z",
+  "box_id": "BOX-GENESIS-PERSONAL-0001",
+  "runtime_id": "RUNTIME-GENESIS-PHONE-0001",
+  "subject_id": "DIGITALME-FAIZ-0001",
+  "agent_id": "AGENT-INVENTORY-RECONCILIATION-0001",
+  "context_id": "CONTEXT-VOI-CIRP-OPERATIONS-0001",
+  "resource_id": "DODDABALLAPUR-INVENTORY-VIEW",
+  "requested_action": "READ_AND_RECONCILE",
+  "purpose": "DAILY_STOCK_RECONCILIATION",
+  "data_classes": ["INVENTORY", "OPERATIONAL"],
+  "source_zone": "ORGANISATION",
+  "destination_zone": "SHARED_WORKSPACE",
+  "requested_duration_seconds": 1200,
+  "human_approval_present": false
+}
