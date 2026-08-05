@@ -32,6 +32,7 @@ jobs:
       - name: Install packages and test dependencies
         run: |
           python -m pip install --upgrade pip build
+          python -m pip install 'jsonschema==4.26.0' 'PyYAML==6.0.3'
           python -m pip install -e './services/warden[postgres,test]'
           python -m pip install -e './services/cloudbrowser[production,test]'
 
