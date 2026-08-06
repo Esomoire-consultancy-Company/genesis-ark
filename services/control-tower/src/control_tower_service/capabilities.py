@@ -3,8 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Protocol
 
-from .errors import AuthorizationError
-from .models import CapabilityGrant
+from .models import CapabilityAuthorization
 
 
 class CapabilityVerifier(Protocol):
@@ -12,36 +11,41 @@ class CapabilityVerifier(Protocol):
         self,
         *,
         capability_id: str,
-        subject_id: str,
+        box_id: str,
+        principal_id: str,
+        context_id: str,
         resource_id: str,
-        allowed_action: str,
+        required_actions: set[str],
+        purpose: str,
         at: datetime,
-    ) -> CapabilityGrant: ...
+    ) -> CapabilityAuthorization | None: ...
 
 
 class InMemoryCapabilityVerifier:
     def __init__(self) -> None:
-        self.capabilities: dict[str, CapabilityGrant] = {}
+        self.capabilities: dict[str, CapabilityAuthorization] = {}
 
     def verify(
         self,
         *,
         capability_id: str,
-        subject_id: str,
+        box_id: str,
+        principal_id: str,
+        context_id: str,
         resource_id: str,
-        allowed_action: str,
+        required_actions: set[str],
+        purpose: str,
         at: datetime,
-    ) -> CapabilityGrant:
+    ) -> CapabilityAuthorization | None:
         capability = self.capabilities.get(capability_id)
-        if (
-            capability is None
-            or capability.expires_at <= at
-            or capability.subject_id != subject_id
-            or capability.resource_id not in {resource_id, "*"}
-            or capability.allowed_action not in {allowed_action, "CONTROL_TOWER_MANAGE", "*"}
-        ):
-            raise AuthorizationError(
-                "Capability is missing, revoked, expired or does not match the requested operation",
-                reason_codes=["CAPABILITY_INACTIVE"],
-            )
+        if capability is None or capability.expires_at <= at:
+            return None
+        if capability.box_id != box_id or capability.subject_id != principal_id:
+            return None
+        if capability.context_id != context_id or capability.purpose != purpose:
+            return None
+        if capability.allowed_action not in required_actions | {"CONTROL_TOWER_MANAGE", "*"}:
+            return None
+        if capability.resource_id not in {resource_id, box_id, "*"}:
+            return None
         return capability

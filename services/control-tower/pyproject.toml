@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "genesis-control-tower"
 version = "0.1.0"
-description = "Governed fleet operations and evidence publication for the Genesis runtime fabric"
+description = "Governed fleet operations, incident management and command dispatch for Genesis runtimes"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.128,<1",

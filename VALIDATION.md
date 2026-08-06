@@ -1,6 +1,8 @@
 # Validation Evidence
 
-Warden-Enabled Actor Box, governed CloudBrowser, Genesis Runtime Platform, Genesis Edge Node and Genesis Control Tower.
+Governed Genesis execution stack: Warden-Enabled Actor Box, CloudBrowser, Runtime Platform, Edge Node and Control Tower.
+
+## Contract validation
 
 - Actor Box contract validator: passed
 - CloudBrowser contract validator: passed
@@ -8,19 +10,27 @@ Warden-Enabled Actor Box, governed CloudBrowser, Genesis Runtime Platform, Genes
 - Genesis Runtime Platform validator: passed
 - Genesis Edge Node validator: passed
 - Genesis Control Tower validator: passed
+
+## Service tests
+
 - Warden tests: 11 passed
 - CloudBrowser tests: 20 passed
 - Runtime Manager tests: 14 passed
 - Edge Node tests: 14 passed
-- Control Tower tests: 15 passed
+- Control Tower tests: 24 passed
+- Total: 83 passed
+
+## Build and runtime checks
+
+- Python compilation: passed
 - Warden wheel build: passed
 - CloudBrowser wheel build: passed
 - Runtime Manager wheel build: passed
 - Edge Node wheel build: passed
 - Control Tower wheel build: passed
-- Real Chromium isolation tests: passed where Chromium is available
-- Python compilation: passed
+- CloudBrowser Chromium isolation tests: passed with no skips reported in the complete suite
+- Generated caches, build directories and package metadata were removed from the source tree after verification
 
-CI runs all six validators, all five service suites and all five wheel builds.
+The wheel builds used the installed build toolchain through `pip wheel --no-deps --no-build-isolation` because the local environment did not include the `build` module. GitHub CI installs `build` and performs isolated wheel builds.
 
-No live Supabase migration or production deployment was performed.
+No live Supabase migration, production deployment, credential creation, secret rotation or destructive operation was performed.

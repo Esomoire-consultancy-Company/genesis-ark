@@ -1,24 +1,27 @@
-# Genesis Control Tower v1
+# Genesis Control Tower
 
-Governed fleet operations over the Genesis Runtime Platform and Edge Node control planes.
+Governed fleet inventory, incident management, command approval/dispatch, dashboard projection and audit evidence for Genesis runtimes and Edge Nodes.
 
-The service does not originate node, Box, command or recovery authority. It builds operational read models from registered Runtime/Edge state and requires an active Warden capability before an authorized command can be dispatched to the Edge Node queue.
+## Security boundary
 
-## Capabilities
+- API access requires trusted-ingress mTLS confirmation plus a bearer token.
+- Fleet state is accepted only as versioned observations; stale observations are rejected.
+- Signals are idempotent by `signal_id` and correlated into one active incident per fingerprint.
+- Incident acknowledgement and resolution require active Warden capabilities.
+- Every fleet command requires an issue capability.
+- High-impact commands require an independent approver and a separate approval capability.
+- Dispatch revalidates a current Warden capability immediately before emitting `EDGE_COMMAND_REQUESTED`.
+- Events are hash-linked per aggregate and remain unpublished in a durable outbox until an external RiverOS relay marks them published.
 
-- Fleet refresh and effective node-state calculation.
-- Automatic offline, degraded and quarantine incidents.
-- Explicit incident lifecycle transitions.
-- Two-step command authorization and dispatch with revocation re-check.
-- Dashboard scorecard for nodes, incidents, command queues and unpublished evidence.
-- Durable leasing and exact acknowledgement of Runtime, Edge and Control Tower evidence outboxes.
-- In-memory and PostgreSQL/Supabase repository adapters.
-
-## Run
+## Run locally
 
 ```bash
-export CONTROL_TOWER_API_TOKEN='replace-me'
-python -m control_tower_service
+python -m pip install -e '.[test]'
+CONTROL_TOWER_API_TOKEN=local-token genesis-control-tower
 ```
 
-All endpoints require bearer authentication and a trusted mutual-TLS assertion header.
+The in-memory repository is for tests and local development only. Use `CONTROL_TOWER_REPOSITORY_BACKEND=postgres` and `CONTROL_TOWER_DATABASE_URL` for authoritative state.
+
+## Migration
+
+Apply `db/control-tower/v1/006_genesis_control_tower.sql` only after migrations `001` through `005`.

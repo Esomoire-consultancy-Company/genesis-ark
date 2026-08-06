@@ -4,7 +4,7 @@ import uvicorn
 
 
 def main() -> None:
-    uvicorn.run("control_tower_service.app:create_app", host="0.0.0.0", port=8080, factory=True)
+    uvicorn.run("control_tower_service.app:create_app", factory=True, host="0.0.0.0", port=8084)
 
 
 if __name__ == "__main__":

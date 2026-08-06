@@ -1,45 +1,51 @@
 # Genesis Control Tower v1
 
-The Control Tower is the governed operational command and observability layer above the Genesis Runtime Platform and Genesis Edge Nodes. It is not a registry authority and cannot create ownership, identity, Box, node or recovery authority.
+## Role
 
-## Authority path
+Genesis Control Tower is the governed operational projection over registered runtime, Edge Node, Actor Box and browser state. It does not create legal or operational authority. Commands execute only after the relevant Warden capabilities are verified and the Edge Node accepts the resulting command request.
+
+Canonical authority flow:
 
 ```text
-Anchor / BNR registered state
-  → DigitalMe principal
-  → Warden capability
-  → Control Tower authorization queue
-  → Edge Node command queue
-  → local Edge Agent execution
-  → RiverOS evidence publication
+Anchor / owner / operator authority
+→ BNR canonical registration
+→ DigitalMe principal and representation
+→ Warden capability and approval
+→ Genesis Control Tower operational decision
+→ Edge Node or Runtime Manager execution
+→ RiverOS evidence publication
+→ SILK settlement where value moves
 ```
 
-## Fleet read model
+## Implemented scope
 
-The fleet dashboard is a derived operational snapshot. Runtime Node registration remains in `genesis_runtime.runtime_nodes`; Edge identity and heartbeat state remain in `genesis_edge`. Control Tower snapshots may be rebuilt and never supersede those source records.
+### Fleet projection
 
-Effective node state uses the following precedence:
+Control Tower stores the latest accepted observation for each managed asset. Observations include the anchor, owner, region, jurisdiction, status, health score, attestation reference, policy version and source metadata. Older observations cannot overwrite newer canonical state.
 
-1. Retired
-2. Quarantined
-3. Draining
-4. Offline by source state or heartbeat threshold
-5. Degraded by source state or heartbeat threshold
-6. Online
-7. Unknown
+### Incident centre
 
-Offline, quarantined and degraded observations create deduplicated system incidents. A healthy observation resolves only system-created incidents; manual incidents remain under operator control.
+Operational signals are idempotent by `signal_id`. Signals sharing an active fingerprint correlate into one incident, increase its occurrence count and can escalate severity. Acknowledgement and resolution are capability-gated and evidence-producing.
 
-## Governed commands
+### Governed command queue
 
-A command request starts in `AUTHORIZATION_REQUIRED`. Approval verifies the Warden capability against the node and exact Edge action. Dispatch is a separate operation and re-verifies the same capability immediately before atomically inserting the command into `genesis_edge.edge_commands`. Revocation therefore takes precedence over earlier approval.
+Every command requires an active `CONTROL_TOWER_COMMAND_ISSUE` capability. Low-impact diagnostics and log collection become approved immediately. High-impact actions require a second DigitalMe principal with `CONTROL_TOWER_COMMAND_APPROVE`; the issuer cannot approve their own command. Dispatch requires a fresh `CONTROL_TOWER_COMMAND_DISPATCH` capability and emits an `EDGE_COMMAND_REQUESTED` outbox event.
 
-Control Tower v1 requires the authorizing DigitalMe Actor to dispatch the command. Delegated dispatch requires a future explicit delegation record and is not inferred.
+### Dashboard and audit
 
-## Evidence publication
+Dashboard values are projections from canonical Control Tower tables whose material transitions also produce hash-linked evidence events. The events table is a durable RiverOS publication outbox; `published_at` remains null until an external relay confirms publication.
 
-Runtime, Edge and Control Tower events remain in their source outboxes until a publisher acquires a bounded lease. Acknowledgement must cover exactly the leased event set and records a destination reference for every item. Expired leases may be reclaimed; duplicate publication acknowledgement is rejected.
+## Data boundary
 
-## Deployment boundary
+The `genesis_control_tower` schema is private. RLS is enabled on all tables. `anon` and `authenticated` receive no table access. The private `genesis_control_plane` role receives explicit access. Security-invoker views expose only open incidents and aggregate fleet status to that role.
 
-No unrestricted shell execution, firmware installation, cross-node migration, production Supabase migration or live RiverOS delivery is included in this slice. The publisher contract ends at lease and acknowledgement.
+## Deliberate exclusions
+
+Control Tower v1 does not:
+
+- bypass Warden or originate authority;
+- run arbitrary host commands;
+- install firmware or runtime upgrades directly;
+- execute cross-node migration;
+- replace BNR, RiverOS, SILK or specialist telemetry systems;
+- claim production readiness without a live PostgreSQL/Supabase integration run and operational deployment review.

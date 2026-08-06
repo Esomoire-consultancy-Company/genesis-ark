@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
-from fastapi import Depends, FastAPI, Query, Request, status
+from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
@@ -12,26 +12,21 @@ from starlette.concurrency import run_in_threadpool
 from .auth import build_auth_dependency
 from .capabilities import InMemoryCapabilityVerifier
 from .config import Settings
-from .engine import ControlTowerEngine
+from .engine import ControlTower
 from .errors import ControlTowerError
 from .models import (
-    AuthorizeCommandRequest,
-    ControlCommandRequest,
-    ControlIncident,
-    CreateCommandRequest,
-    CreateIncidentRequest,
-    DashboardSummary,
-    DispatchCommandRequest,
-    FleetNodeSnapshot,
-    FleetRefreshReceipt,
-    FleetRefreshRequest,
-    FleetStatus,
-    IncidentStatus,
-    IncidentTransitionRequest,
-    PublicationAckRequest,
-    PublicationLease,
-    PublicationLeaseRequest,
-    PublicationReceipt,
+    ApproveFleetCommandRequest,
+    CompleteFleetCommandRequest,
+    ControlTowerEvent,
+    CreateFleetCommandRequest,
+    DashboardSnapshot,
+    DispatchFleetCommandRequest,
+    FleetAsset,
+    FleetCommand,
+    Incident,
+    IncidentActionRequest,
+    ReportSignalRequest,
+    UpsertFleetAssetRequest,
 )
 from .repository import InMemoryControlTowerRepository
 
@@ -58,11 +53,12 @@ def create_app(
             resolved_repository = InMemoryControlTowerRepository()
     resolved_verifier = capability_verifier
     if resolved_verifier is None:
-        if resolved_settings.repository_backend == "postgres":
-            resolved_verifier = resolved_repository
-        else:
-            resolved_verifier = InMemoryCapabilityVerifier()
-    engine = ControlTowerEngine(resolved_repository, resolved_verifier, resolved_settings)
+        resolved_verifier = (
+            resolved_repository
+            if resolved_settings.repository_backend == "postgres"
+            else InMemoryCapabilityVerifier()
+        )
+    engine = ControlTower(resolved_repository, resolved_verifier, resolved_settings)
     authenticate = build_auth_dependency(resolved_settings)
 
     @asynccontextmanager
@@ -77,16 +73,20 @@ def create_app(
             if callable(close_method):
                 await run_in_threadpool(close_method)
 
-    app = FastAPI(title="Genesis Control Tower API", version="1.0.0", lifespan=lifespan)
+    app = FastAPI(
+        title="Genesis Control Tower API",
+        version="1.0.0",
+        lifespan=lifespan,
+    )
     app.state.engine = engine
     app.state.repository = resolved_repository
 
     @app.exception_handler(ControlTowerError)
-    async def control_error_handler(_: Request, exc: ControlTowerError) -> JSONResponse:
+    async def control_tower_error_handler(_: Request, exc: ControlTowerError) -> JSONResponse:
         return JSONResponse(
             status_code=exc.status_code,
             content={
-                "type": f"urn:genesis:control-tower:{exc.reason_codes[0].lower()}",
+                "type": exc.type_uri,
                 "title": exc.title,
                 "status": exc.status_code,
                 "detail": exc.detail,
@@ -100,7 +100,7 @@ def create_app(
         return JSONResponse(
             status_code=422,
             content={
-                "type": "urn:genesis:control-tower:request-validation-failed",
+                "type": "urn:vsr:control-tower:request-validation-failed",
                 "title": "Request Validation Failed",
                 "status": 422,
                 "detail": "The request did not satisfy the Control Tower contract",
@@ -110,81 +110,117 @@ def create_app(
             media_type="application/problem+json",
         )
 
-    dependencies = [Depends(authenticate)]
-
-    @app.post("/v1/control-tower/fleet/refresh", response_model=FleetRefreshReceipt, dependencies=dependencies)
-    async def refresh_fleet(request: FleetRefreshRequest) -> FleetRefreshReceipt:
-        return await run_in_threadpool(engine.refresh_fleet, request.actor_id)
-
-    @app.get("/v1/control-tower/fleet", response_model=list[FleetNodeSnapshot], dependencies=dependencies)
-    async def list_fleet(status_filter: FleetStatus | None = Query(default=None, alias="status")) -> list[FleetNodeSnapshot]:
-        return await run_in_threadpool(engine.list_fleet, status_filter)
-
-    @app.get("/v1/control-tower/nodes/{node_id}", response_model=FleetNodeSnapshot, dependencies=dependencies)
-    async def get_node(node_id: str) -> FleetNodeSnapshot:
-        return await run_in_threadpool(engine.get_node, node_id)
+    protected = [Depends(authenticate)]
 
     @app.post(
-        "/v1/control-tower/command-requests",
-        response_model=ControlCommandRequest,
+        "/v1/fleet/assets",
+        response_model=FleetAsset,
         status_code=status.HTTP_201_CREATED,
-        dependencies=dependencies,
+        dependencies=protected,
     )
-    async def create_command(request: CreateCommandRequest) -> ControlCommandRequest:
-        return await run_in_threadpool(engine.create_command_request, request)
+    async def upsert_asset(request: UpsertFleetAssetRequest) -> FleetAsset:
+        return await run_in_threadpool(engine.upsert_asset, request)
+
+    @app.get("/v1/fleet/assets", response_model=list[FleetAsset], dependencies=protected)
+    async def list_assets() -> list[FleetAsset]:
+        return await run_in_threadpool(engine.list_assets)
+
+    @app.get("/v1/fleet/assets/{asset_id}", response_model=FleetAsset, dependencies=protected)
+    async def get_asset(asset_id: str) -> FleetAsset:
+        return await run_in_threadpool(engine.get_asset, asset_id)
 
     @app.post(
-        "/v1/control-tower/command-requests/{request_id}/authorize",
-        response_model=ControlCommandRequest,
-        dependencies=dependencies,
+        "/v1/signals",
+        response_model=Incident,
+        status_code=status.HTTP_202_ACCEPTED,
+        dependencies=protected,
     )
-    async def authorize_command(request_id: str, request: AuthorizeCommandRequest) -> ControlCommandRequest:
-        return await run_in_threadpool(engine.authorize_command, request_id, request)
+    async def report_signal(request: ReportSignalRequest) -> Incident:
+        return await run_in_threadpool(engine.report_signal, request)
+
+    @app.get("/v1/incidents", response_model=list[Incident], dependencies=protected)
+    async def list_incidents() -> list[Incident]:
+        return await run_in_threadpool(engine.list_incidents)
 
     @app.post(
-        "/v1/control-tower/command-requests/{request_id}/dispatch",
-        response_model=ControlCommandRequest,
-        dependencies=dependencies,
+        "/v1/incidents/{incident_id}/acknowledge",
+        response_model=Incident,
+        dependencies=protected,
     )
-    async def dispatch_command(request_id: str, request: DispatchCommandRequest) -> ControlCommandRequest:
-        return await run_in_threadpool(engine.dispatch_command, request_id, request)
+    async def acknowledge_incident(
+        incident_id: str,
+        request: IncidentActionRequest,
+    ) -> Incident:
+        return await run_in_threadpool(engine.acknowledge_incident, incident_id, request)
 
     @app.post(
-        "/v1/control-tower/incidents",
-        response_model=ControlIncident,
+        "/v1/incidents/{incident_id}/resolve",
+        response_model=Incident,
+        dependencies=protected,
+    )
+    async def resolve_incident(
+        incident_id: str,
+        request: IncidentActionRequest,
+    ) -> Incident:
+        return await run_in_threadpool(engine.resolve_incident, incident_id, request)
+
+    @app.post(
+        "/v1/commands",
+        response_model=FleetCommand,
         status_code=status.HTTP_201_CREATED,
-        dependencies=dependencies,
+        dependencies=protected,
     )
-    async def create_incident(request: CreateIncidentRequest) -> ControlIncident:
-        return await run_in_threadpool(engine.create_incident, request)
+    async def create_command(request: CreateFleetCommandRequest) -> FleetCommand:
+        return await run_in_threadpool(engine.create_command, request)
+
+    @app.get("/v1/commands", response_model=list[FleetCommand], dependencies=protected)
+    async def list_commands() -> list[FleetCommand]:
+        return await run_in_threadpool(engine.list_commands)
 
     @app.post(
-        "/v1/control-tower/incidents/{incident_id}/transition",
-        response_model=ControlIncident,
-        dependencies=dependencies,
+        "/v1/commands/{command_id}/approve",
+        response_model=FleetCommand,
+        dependencies=protected,
     )
-    async def transition_incident(incident_id: str, request: IncidentTransitionRequest) -> ControlIncident:
-        return await run_in_threadpool(engine.transition_incident, incident_id, request)
-
-    @app.get("/v1/control-tower/incidents", response_model=list[ControlIncident], dependencies=dependencies)
-    async def list_incidents(status_filter: IncidentStatus | None = Query(default=None, alias="status")) -> list[ControlIncident]:
-        return await run_in_threadpool(engine.list_incidents, status_filter)
-
-    @app.post("/v1/control-tower/publications/lease", response_model=PublicationLease, dependencies=dependencies)
-    async def lease_publications(request: PublicationLeaseRequest) -> PublicationLease:
-        return await run_in_threadpool(engine.lease_publications, request)
+    async def approve_command(
+        command_id: str,
+        request: ApproveFleetCommandRequest,
+    ) -> FleetCommand:
+        return await run_in_threadpool(engine.approve_command, command_id, request)
 
     @app.post(
-        "/v1/control-tower/publications/{lease_id}/ack",
-        response_model=PublicationReceipt,
-        dependencies=dependencies,
+        "/v1/commands/{command_id}/dispatch",
+        response_model=FleetCommand,
+        dependencies=protected,
     )
-    async def acknowledge_publications(lease_id: str, request: PublicationAckRequest) -> PublicationReceipt:
-        return await run_in_threadpool(engine.acknowledge_publications, lease_id, request)
+    async def dispatch_command(
+        command_id: str,
+        request: DispatchFleetCommandRequest,
+    ) -> FleetCommand:
+        return await run_in_threadpool(engine.dispatch_command, command_id, request)
 
-    @app.get("/v1/control-tower/dashboard", response_model=DashboardSummary, dependencies=dependencies)
-    async def dashboard() -> DashboardSummary:
+    @app.post(
+        "/v1/commands/{command_id}/complete",
+        response_model=FleetCommand,
+        dependencies=protected,
+    )
+    async def complete_command(
+        command_id: str,
+        request: CompleteFleetCommandRequest,
+    ) -> FleetCommand:
+        return await run_in_threadpool(engine.complete_command, command_id, request)
+
+    @app.get("/v1/dashboard", response_model=DashboardSnapshot, dependencies=protected)
+    async def dashboard() -> DashboardSnapshot:
         return await run_in_threadpool(engine.dashboard)
+
+    @app.get(
+        "/v1/audit/{subject_id}",
+        response_model=list[ControlTowerEvent],
+        dependencies=protected,
+    )
+    async def audit(subject_id: str) -> list[ControlTowerEvent]:
+        return await run_in_threadpool(engine.audit, subject_id)
 
     def custom_openapi():
         if app.openapi_schema:

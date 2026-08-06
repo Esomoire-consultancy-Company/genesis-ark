@@ -3,31 +3,28 @@ from __future__ import annotations
 from contextlib import contextmanager
 from datetime import datetime
 import json
-import secrets
 from threading import local
 from typing import Any, Iterator
 
-from .errors import AuthorizationError, NotFoundError, StateConflictError
-from .models import (
-    CapabilityGrant,
-    ControlCommandRequest,
-    ControlIncident,
-    ControlTowerEvent,
-    DispatchedEdgeCommand,
-    FleetNodeSnapshot,
-    PublicationAckItem,
-    PublicationLeaseStatus,
-    PublicationSourceEvent,
-    SourceFleetObservation,
-)
-from .repository import PublicationLeaseRecord
+from .errors import StateConflictError
+from .models import CapabilityAuthorization, ControlTowerEvent, FleetAsset, FleetCommand, Incident
 
 
-def _json(value: Any) -> Any:
-    return json.loads(value) if isinstance(value, str) else value
+def _decode_json(value: Any) -> Any:
+    if isinstance(value, str):
+        return json.loads(value)
+    return value
 
 
-class PostgresBase:
+def _decode_fields(row: Any, *fields: str) -> Any:
+    if row is None:
+        return None
+    result = dict(row)
+    for field in fields:
+        result[field] = _decode_json(result[field])
+    return result
+
+class PostgresControlTowerBase:
     def __init__(
         self,
         database_url: str,
@@ -41,7 +38,7 @@ class PostgresBase:
         if not database_url and pool is None:
             raise ValueError("database_url is required")
         self._timeout = timeout
-        self._local = local()
+        self._state = local()
         if pool is not None:
             self._pool = pool
             return
@@ -74,45 +71,51 @@ class PostgresBase:
         if hasattr(self._pool, "close"):
             self._pool.close()
 
+    @contextmanager
+    def transaction(self, aggregate_key: str) -> Iterator[None]:
+        active = getattr(self._state, "connection", None)
+        if active is not None:
+            self._execute(
+                active,
+                "select pg_advisory_xact_lock(hashtextextended(%s, 0))",
+                (aggregate_key,),
+            )
+            yield
+            return
+        with self._pool.connection(timeout=self._timeout) as connection:
+            self._state.connection = connection
+            try:
+                self._execute(
+                    connection,
+                    "select pg_advisory_xact_lock(hashtextextended(%s, 0))",
+                    (aggregate_key,),
+                )
+                yield
+            finally:
+                self._state.connection = None
+
+    @contextmanager
+    def _connection(self) -> Iterator[Any]:
+        active = getattr(self._state, "connection", None)
+        if active is not None:
+            yield active
+            return
+        with self._pool.connection(timeout=self._timeout) as connection:
+            yield connection
+
     @staticmethod
-    def _one(connection: Any, query: str, params: tuple[Any, ...] = ()) -> Any | None:
+    def _execute(connection: Any, query: str, params: tuple[Any, ...] = ()) -> None:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+
+    @staticmethod
+    def _fetchone(connection: Any, query: str, params: tuple[Any, ...]) -> Any | None:
         with connection.cursor() as cursor:
             cursor.execute(query, params)
             return cursor.fetchone()
 
     @staticmethod
-    def _all(connection: Any, query: str, params: tuple[Any, ...] = ()) -> list[Any]:
+    def _fetchall(connection: Any, query: str, params: tuple[Any, ...] = ()) -> list[Any]:
         with connection.cursor() as cursor:
             cursor.execute(query, params)
             return list(cursor.fetchall())
-
-    @staticmethod
-    def _run(connection: Any, query: str, params: tuple[Any, ...] = ()) -> None:
-        with connection.cursor() as cursor:
-            cursor.execute(query, params)
-
-    @contextmanager
-    def _connection(self) -> Iterator[Any]:
-        active = getattr(self._local, "connection", None)
-        if active is not None:
-            yield active
-        else:
-            with self._pool.connection(timeout=self._timeout) as connection:
-                yield connection
-
-    @contextmanager
-    def transaction(self, key: str) -> Iterator[None]:
-        if getattr(self._local, "connection", None) is not None:
-            raise RuntimeError("Nested Control Tower repository transactions are not supported")
-        with self._pool.connection(timeout=self._timeout) as connection:
-            with connection.transaction():
-                self._run(
-                    connection,
-                    "select pg_advisory_xact_lock(hashtextextended(%s, 0))",
-                    (f"control-tower:{key}",),
-                )
-                self._local.connection = connection
-                try:
-                    yield
-                finally:
-                    del self._local.connection
