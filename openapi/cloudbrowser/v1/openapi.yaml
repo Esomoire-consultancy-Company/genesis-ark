@@ -1,0 +1,300 @@
+openapi: 3.1.0
+info:
+  title: Genesis Governed CloudBrowser API
+  version: 1.0.0
+  description: >-
+    Warden-gated browser session and material-action broker for Genesis Actor
+    Boxes. Deny-by-default; every operation requires mutual TLS and bearer
+    authentication.
+servers:
+  - url: https://cloudbrowser.internal.virtualsilkroad.com
+security:
+  - mutualTLS: []
+    bearerAuth: []
+paths:
+  /v1/browser-sessions:
+    post:
+      operationId: createGovernedBrowserSession
+      summary: Create a Warden-authorized isolated browser session
+      security: [{mutualTLS: [], bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/BrowserSessionRequest'}
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BrowserSession'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /v1/browser-sessions/{sessionId}:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    get:
+      operationId: getGovernedBrowserSession
+      summary: Read authoritative browser session state
+      security: [{mutualTLS: [], bearerAuth: []}]
+      responses:
+        '200':
+          description: Session state
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BrowserSession'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /v1/browser-sessions/{sessionId}/actions/evaluate:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    post:
+      operationId: evaluateGovernedBrowserAction
+      summary: Evaluate and, when permitted, execute a material browser action
+      security: [{mutualTLS: [], bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/BrowserActionRequest'}
+      responses:
+        '200':
+          description: Denied, approval-pending or executed action
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BrowserAction'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /v1/browser-sessions/{sessionId}/approve:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    post:
+      operationId: approveGovernedBrowserAction
+      summary: Approve a pending consequential action as the bound DigitalMe
+      security: [{mutualTLS: [], bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/BrowserApprovalRequest'}
+      responses:
+        '200':
+          description: Approved and executed action
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BrowserAction'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /v1/browser-sessions/{sessionId}/pause:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    post:
+      operationId: pauseGovernedBrowserSession
+      summary: Pause execution while preserving session evidence
+      security: [{mutualTLS: [], bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SessionPauseRequest'}
+      responses:
+        '200':
+          description: Paused session
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BrowserSession'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /v1/browser-sessions/{sessionId}/terminate:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    post:
+      operationId: terminateGovernedBrowserSession
+      summary: Terminate the session and revoke its capabilities
+      security: [{mutualTLS: [], bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SessionTerminateRequest'}
+      responses:
+        '200':
+          description: Terminated session
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BrowserSession'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /v1/browser-sessions/{sessionId}/evidence:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    get:
+      operationId: getGovernedBrowserEvidence
+      summary: Read the session evidence chain
+      security: [{mutualTLS: [], bearerAuth: []}]
+      responses:
+        '200':
+          description: Ordered evidence events
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/EvidenceEvent'}
+  /v1/browser-sessions/{sessionId}/usage:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    get:
+      operationId: getGovernedBrowserUsage
+      summary: Read metered runtime and action usage
+      security: [{mutualTLS: [], bearerAuth: []}]
+      responses:
+        '200':
+          description: Session usage
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/UsageRecord'}
+components:
+  securitySchemes:
+    mutualTLS: {type: mutualTLS}
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  parameters:
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema: {type: string, minLength: 3}
+  responses:
+    Forbidden:
+      description: Warden or browser policy denied authority
+    Conflict:
+      description: Authoritative state prevents the requested transition
+    NotFound:
+      description: Session or control object not found
+  schemas:
+    Identifier:
+      type: string
+      minLength: 3
+      maxLength: 200
+      pattern: '^[A-Za-z0-9][A-Za-z0-9._:/-]*$'
+    BrowserSessionRequest:
+      type: object
+      additionalProperties: false
+      required: [request_id, box_id, digitalme_id, runtime_id, context_id, workspace_id, policy_id, purpose, data_classes, requested_duration_seconds]
+      properties:
+        request_id: {$ref: '#/components/schemas/Identifier'}
+        box_id: {$ref: '#/components/schemas/Identifier'}
+        digitalme_id: {$ref: '#/components/schemas/Identifier'}
+        runtime_id: {$ref: '#/components/schemas/Identifier'}
+        context_id: {$ref: '#/components/schemas/Identifier'}
+        workspace_id: {$ref: '#/components/schemas/Identifier'}
+        licence_id: {oneOf: [{$ref: '#/components/schemas/Identifier'}, {type: 'null'}]}
+        agent_id: {oneOf: [{$ref: '#/components/schemas/Identifier'}, {type: 'null'}]}
+        policy_id: {$ref: '#/components/schemas/Identifier'}
+        purpose: {type: string, minLength: 1}
+        data_classes: {type: array, items: {type: string}}
+        requested_duration_seconds: {type: integer, minimum: 1, maximum: 3600}
+    BrowserSession:
+      type: object
+      additionalProperties: false
+      required: [browser_session_id, box_id, digitalme_id, runtime_id, context_id, workspace_id, policy_id, policy_decision_id, capability_id, session_status, isolation_profile, started_at, expires_at, evidence_stream_id, compute_meter_id]
+      properties:
+        browser_session_id: {$ref: '#/components/schemas/Identifier'}
+        box_id: {$ref: '#/components/schemas/Identifier'}
+        digitalme_id: {$ref: '#/components/schemas/Identifier'}
+        runtime_id: {$ref: '#/components/schemas/Identifier'}
+        context_id: {$ref: '#/components/schemas/Identifier'}
+        workspace_id: {$ref: '#/components/schemas/Identifier'}
+        licence_id: {oneOf: [{$ref: '#/components/schemas/Identifier'}, {type: 'null'}]}
+        agent_id: {oneOf: [{$ref: '#/components/schemas/Identifier'}, {type: 'null'}]}
+        policy_id: {$ref: '#/components/schemas/Identifier'}
+        policy_decision_id: {$ref: '#/components/schemas/Identifier'}
+        capability_id: {$ref: '#/components/schemas/Identifier'}
+        session_status: {enum: [REQUESTED, ACTIVE, PAUSED, TERMINATED, EXPIRED, LOCKED]}
+        isolation_profile: {type: string}
+        started_at: {type: string, format: date-time}
+        expires_at: {type: string, format: date-time}
+        terminated_at: {oneOf: [{type: string, format: date-time}, {type: 'null'}]}
+        evidence_stream_id: {$ref: '#/components/schemas/Identifier'}
+        compute_meter_id: {$ref: '#/components/schemas/Identifier'}
+    BrowserActionRequest:
+      type: object
+      additionalProperties: false
+      required: [action_id, action_type, purpose, data_classes]
+      properties:
+        action_id: {$ref: '#/components/schemas/Identifier'}
+        action_type: {type: string, pattern: '^BROWSER_[A-Z_]+$'}
+        target_url: {oneOf: [{type: string, format: uri}, {type: 'null'}]}
+        purpose: {type: string, minLength: 1}
+        data_classes: {type: array, items: {type: string}}
+        payload: {type: object, additionalProperties: true}
+        estimated_network_bytes: {type: integer, minimum: 0}
+        estimated_file_bytes: {type: integer, minimum: 0}
+    BrowserAction:
+      type: object
+      additionalProperties: false
+      required: [action_id, browser_session_id, action_type, decision, reason_codes, requested_at, decided_at, evidence_event_id]
+      properties:
+        action_id: {$ref: '#/components/schemas/Identifier'}
+        browser_session_id: {$ref: '#/components/schemas/Identifier'}
+        action_type: {type: string}
+        decision: {enum: [ALLOW, DENY, APPROVAL_REQUIRED, APPROVED, EXECUTED]}
+        reason_codes: {type: array, minItems: 1, items: {type: string}}
+        target_url: {oneOf: [{type: string}, {type: 'null'}]}
+        warden_policy_decision_id: {oneOf: [{$ref: '#/components/schemas/Identifier'}, {type: 'null'}]}
+        capability_id: {oneOf: [{$ref: '#/components/schemas/Identifier'}, {type: 'null'}]}
+        approval_id: {oneOf: [{$ref: '#/components/schemas/Identifier'}, {type: 'null'}]}
+        requested_at: {type: string, format: date-time}
+        decided_at: {type: string, format: date-time}
+        executed_at: {oneOf: [{type: string, format: date-time}, {type: 'null'}]}
+        result: {oneOf: [{type: object, additionalProperties: true}, {type: 'null'}]}
+        evidence_event_id: {$ref: '#/components/schemas/Identifier'}
+    BrowserApprovalRequest:
+      type: object
+      additionalProperties: false
+      required: [action_id, approved_by, approval_reason]
+      properties:
+        action_id: {$ref: '#/components/schemas/Identifier'}
+        approved_by: {$ref: '#/components/schemas/Identifier'}
+        approval_reason: {type: string, minLength: 1}
+    SessionPauseRequest:
+      type: object
+      additionalProperties: false
+      required: [paused_by, reason]
+      properties:
+        paused_by: {$ref: '#/components/schemas/Identifier'}
+        reason: {type: string, minLength: 1}
+    SessionTerminateRequest:
+      type: object
+      additionalProperties: false
+      required: [terminated_by, reason]
+      properties:
+        terminated_by: {$ref: '#/components/schemas/Identifier'}
+        reason: {type: string, minLength: 1}
+    EvidenceEvent:
+      type: object
+      additionalProperties: false
+      required: [event_id, browser_session_id, box_id, event_type, actor_id, action_reference, timestamp, payload, evidence_hash]
+      properties:
+        event_id: {$ref: '#/components/schemas/Identifier'}
+        browser_session_id: {$ref: '#/components/schemas/Identifier'}
+        box_id: {$ref: '#/components/schemas/Identifier'}
+        event_type: {type: string}
+        actor_id: {$ref: '#/components/schemas/Identifier'}
+        action_reference: {type: string}
+        timestamp: {type: string, format: date-time}
+        payload: {type: object, additionalProperties: true}
+        previous_event_hash: {oneOf: [{type: string}, {type: 'null'}]}
+        evidence_hash: {type: string}
+    UsageRecord:
+      type: object
+      additionalProperties: false
+      required: [compute_meter_id, browser_session_id, runtime_seconds, action_count, approval_count, connector_calls, uploaded_bytes, downloaded_bytes, network_bytes, compute_units, updated_at]
+      properties:
+        compute_meter_id: {$ref: '#/components/schemas/Identifier'}
+        browser_session_id: {$ref: '#/components/schemas/Identifier'}
+        runtime_seconds: {type: integer, minimum: 0}
+        action_count: {type: integer, minimum: 0}
+        approval_count: {type: integer, minimum: 0}
+        connector_calls: {type: integer, minimum: 0}
+        uploaded_bytes: {type: integer, minimum: 0}
+        downloaded_bytes: {type: integer, minimum: 0}
+        network_bytes: {type: integer, minimum: 0}
+        compute_units: {type: number, minimum: 0}
+        updated_at: {type: string, format: date-time}

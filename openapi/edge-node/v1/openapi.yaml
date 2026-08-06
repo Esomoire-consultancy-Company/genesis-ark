@@ -1,0 +1,103 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Genesis Edge Node API",
+    "version": "1.0.0",
+    "description": "Governed enrollment, heartbeat, command leasing and evidence ingestion for registered Genesis Runtime Nodes."
+  },
+  "paths": {
+    "/v1/edge-nodes/enroll": {
+      "post": {
+        "operationId": "enrollEdgeNode",
+        "security": [{"bearerAuth": [], "mutualTLS": []}],
+        "responses": {"201": {"description": "Successful response", "content": {"application/json": {"schema": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/EdgeNodeIdentity"}}}}},
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/EnrollNodeRequest"}}}}
+      }
+    },
+    "/v1/edge-nodes/{node_id}/heartbeats": {
+      "post": {
+        "operationId": "submitHeartbeat",
+        "security": [{"bearerAuth": [], "mutualTLS": []}],
+        "responses": {"202": {"description": "Successful response", "content": {"application/json": {"schema": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/HeartbeatReceipt"}}}}},
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/HeartbeatRequest"}}}},
+        "parameters": [{"name": "node_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 3}}]
+      }
+    },
+    "/v1/edge-nodes/{node_id}/commands": {
+      "post": {
+        "operationId": "issueEdgeCommand",
+        "security": [{"bearerAuth": [], "mutualTLS": []}],
+        "responses": {"201": {"description": "Successful response", "content": {"application/json": {"schema": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/EdgeCommand"}}}}},
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/IssueCommandRequest"}}}},
+        "parameters": [{"name": "node_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 3}}]
+      }
+    },
+    "/v1/edge-nodes/{node_id}/commands/lease": {
+      "post": {
+        "operationId": "leaseEdgeCommand",
+        "security": [{"bearerAuth": [], "mutualTLS": []}],
+        "responses": {"200": {"description": "Successful response", "content": {"application/json": {"schema": {"anyOf": [{"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/CommandLease"}, {"type": "null"}]}}}}},
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/LeaseCommandRequest"}}}},
+        "parameters": [{"name": "node_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 3}}]
+      }
+    },
+    "/v1/edge-nodes/{node_id}/commands/{command_id}/complete": {
+      "post": {
+        "operationId": "completeEdgeCommand",
+        "security": [{"bearerAuth": [], "mutualTLS": []}],
+        "responses": {"200": {"description": "Successful response", "content": {"application/json": {"schema": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/EdgeCommand"}}}}},
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/CompleteCommandRequest"}}}},
+        "parameters": [
+          {"name": "node_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 3}},
+          {"name": "command_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 3}}
+        ]
+      }
+    },
+    "/v1/edge-nodes/{node_id}/spool/flush": {
+      "post": {
+        "operationId": "flushEdgeSpool",
+        "security": [{"bearerAuth": [], "mutualTLS": []}],
+        "responses": {"202": {"description": "Successful response", "content": {"application/json": {"schema": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/SpoolFlushReceipt"}}}}},
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/SpoolFlushRequest"}}}},
+        "parameters": [{"name": "node_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 3}}]
+      }
+    },
+    "/v1/edge-nodes/{node_id}": {
+      "get": {
+        "operationId": "getEdgeNode",
+        "security": [{"bearerAuth": [], "mutualTLS": []}],
+        "responses": {"200": {"description": "Successful response", "content": {"application/json": {"schema": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/EdgeNodeIdentity"}}}}},
+        "parameters": [{"name": "node_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 3}}]
+      }
+    },
+    "/v1/edge-nodes/{node_id}/evidence": {
+      "get": {
+        "operationId": "listEdgeEvidence",
+        "security": [{"bearerAuth": [], "mutualTLS": []}],
+        "responses": {"200": {"description": "Successful response", "content": {"application/json": {"schema": {"type": "array", "items": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/EdgeEvidenceEvent"}}}}}},
+        "parameters": [{"name": "node_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 3}}]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {"type": "http", "scheme": "bearer"},
+      "mutualTLS": {"type": "mutualTLS"}
+    },
+    "schemas": {
+      "EnrollNodeRequest": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/EnrollNodeRequest"},
+      "EdgeNodeIdentity": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/EdgeNodeIdentity"},
+      "HeartbeatRequest": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/HeartbeatRequest"},
+      "HeartbeatReceipt": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/HeartbeatReceipt"},
+      "IssueCommandRequest": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/IssueCommandRequest"},
+      "EdgeCommand": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/EdgeCommand"},
+      "LeaseCommandRequest": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/LeaseCommandRequest"},
+      "CommandLease": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/CommandLease"},
+      "CompleteCommandRequest": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/CompleteCommandRequest"},
+      "SpoolEvent": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/SpoolEvent"},
+      "SpoolFlushRequest": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/SpoolFlushRequest"},
+      "SpoolFlushReceipt": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/SpoolFlushReceipt"},
+      "EdgeEvidenceEvent": {"$ref": "../../../schemas/edge-node/v1/edge-node.schema.json#/$defs/EdgeEvidenceEvent"}
+    }
+  }
+}

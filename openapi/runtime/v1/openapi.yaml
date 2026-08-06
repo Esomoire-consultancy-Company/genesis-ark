@@ -1,0 +1,396 @@
+openapi: 3.1.0
+info:
+  title: Genesis Runtime Manager API
+  version: 1.0.0
+  description: >-
+    Capability-aware control plane for attested Genesis runtime nodes,
+    Actor Box-bound instances, sessions, resources, health and durable events.
+servers:
+  - url: https://runtime.internal.virtualsilkroad.com
+security:
+  - mutualTLS: []
+    bearerAuth: []
+paths:
+  /v1/runtime-nodes:
+    post:
+      operationId: registerRuntimeNode
+      security: [{mutualTLS: [], bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/RegisterNodeRequest'}
+      responses:
+        '201':
+          description: Runtime node registered
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RuntimeNode'}
+        '400': {$ref: '#/components/responses/InvalidRequest'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /v1/runtime-instances:
+    post:
+      operationId: provisionRuntimeInstance
+      security: [{mutualTLS: [], bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProvisionInstanceRequest'}
+      responses:
+        '201':
+          description: Runtime instance provisioned
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RuntimeInstance'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /v1/runtime-instances/{instanceId}:
+    parameters:
+      - $ref: '#/components/parameters/InstanceId'
+    get:
+      operationId: getRuntimeInstance
+      security: [{mutualTLS: [], bearerAuth: []}]
+      responses:
+        '200':
+          description: Runtime instance state
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RuntimeInstance'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /v1/runtime-instances/{instanceId}/attest:
+    parameters:
+      - $ref: '#/components/parameters/InstanceId'
+    post:
+      operationId: attestRuntimeInstance
+      security: [{mutualTLS: [], bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AttestInstanceRequest'}
+      responses:
+        '200':
+          description: Attested runtime instance
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RuntimeInstance'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /v1/runtime-sessions:
+    post:
+      operationId: createRuntimeSession
+      security: [{mutualTLS: [], bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateSessionRequest'}
+      responses:
+        '201':
+          description: Capability-authorized runtime session
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RuntimeSession'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /v1/runtime-sessions/{sessionId}/resources:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    post:
+      operationId: allocateRuntimeResources
+      security: [{mutualTLS: [], bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AllocateResourcesRequest'}
+      responses:
+        '201':
+          description: Resource allocation
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ResourceAllocation'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /v1/runtime-instances/{instanceId}/health:
+    parameters:
+      - $ref: '#/components/parameters/InstanceId'
+    post:
+      operationId: reportRuntimeHealth
+      security: [{mutualTLS: [], bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/HealthReportRequest'}
+      responses:
+        '200':
+          description: Runtime health report accepted
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RuntimeHealthReport'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /v1/runtime-sessions/{sessionId}/terminate:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    post:
+      operationId: terminateRuntimeSession
+      security: [{mutualTLS: [], bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/TerminateSessionRequest'}
+      responses:
+        '200':
+          description: Terminated runtime session
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RuntimeSession'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /v1/runtime-events:
+    get:
+      operationId: listRuntimeEvents
+      security: [{mutualTLS: [], bearerAuth: []}]
+      parameters:
+        - name: aggregate_type
+          in: query
+          required: true
+          schema: {type: string, minLength: 1}
+        - name: aggregate_id
+          in: query
+          required: true
+          schema: {$ref: '#/components/schemas/Identifier'}
+      responses:
+        '200':
+          description: Ordered runtime event chain
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/RuntimeEvent'}
+components:
+  securitySchemes:
+    mutualTLS:
+      type: mutualTLS
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    InstanceId:
+      name: instanceId
+      in: path
+      required: true
+      schema: {$ref: '#/components/schemas/Identifier'}
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema: {$ref: '#/components/schemas/Identifier'}
+  responses:
+    InvalidRequest:
+      description: Request does not satisfy the contract
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Problem'}
+    Forbidden:
+      description: Warden authority denied
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Problem'}
+    NotFound:
+      description: Runtime object not found
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Problem'}
+    Conflict:
+      description: Authoritative runtime state conflict
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Problem'}
+  schemas:
+    Identifier:
+      type: string
+      minLength: 3
+      maxLength: 200
+      pattern: '^[A-Za-z0-9][A-Za-z0-9._:/-]*$'
+    ResourceVector:
+      type: object
+      additionalProperties: false
+      properties:
+        cpu_millis: {type: integer, minimum: 0}
+        memory_mb: {type: integer, minimum: 0}
+        gpu_millis: {type: integer, minimum: 0}
+        storage_mb: {type: integer, minimum: 0}
+        network_egress_mb: {type: integer, minimum: 0}
+        browser_slots: {type: integer, minimum: 0}
+      required: [cpu_millis, memory_mb, gpu_millis, storage_mb, network_egress_mb, browser_slots]
+    RegisterNodeRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        node_id: {$ref: '#/components/schemas/Identifier'}
+        node_class: {type: string, minLength: 1}
+        region: {type: string, minLength: 1}
+        jurisdiction: {type: string, minLength: 1}
+        authority_reference: {$ref: '#/components/schemas/Identifier'}
+        attestation_reference: {$ref: '#/components/schemas/Identifier'}
+        capacity: {$ref: '#/components/schemas/ResourceVector'}
+      required: [node_id, node_class, region, jurisdiction, authority_reference, attestation_reference, capacity]
+    RuntimeNode:
+      allOf:
+        - $ref: '#/components/schemas/RegisterNodeRequest'
+        - type: object
+          properties:
+            status: {enum: [REGISTERED, ACTIVE, DRAINING, OFFLINE, QUARANTINED, RETIRED]}
+            registered_at: {type: string, format: date-time}
+            updated_at: {type: string, format: date-time}
+          required: [status, registered_at, updated_at]
+    ProvisionInstanceRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        instance_id: {$ref: '#/components/schemas/Identifier'}
+        node_id: {$ref: '#/components/schemas/Identifier'}
+        box_id: {$ref: '#/components/schemas/Identifier'}
+        runtime_class: {type: string, minLength: 1}
+        runtime_version: {type: string, minLength: 1}
+        requested_by: {$ref: '#/components/schemas/Identifier'}
+        authority_reference: {$ref: '#/components/schemas/Identifier'}
+        resource_limits: {$ref: '#/components/schemas/ResourceVector'}
+      required: [instance_id, node_id, box_id, runtime_class, runtime_version, requested_by, authority_reference, resource_limits]
+    RuntimeInstance:
+      type: object
+      additionalProperties: false
+      properties:
+        instance_id: {$ref: '#/components/schemas/Identifier'}
+        node_id: {$ref: '#/components/schemas/Identifier'}
+        box_id: {$ref: '#/components/schemas/Identifier'}
+        runtime_class: {type: string}
+        runtime_version: {type: string}
+        status: {enum: [PROVISIONING, ACTIVE, DEGRADED, SUSPENDED, RECOVERY_PENDING, STOPPED, RETIRED]}
+        integrity_status: {enum: [ATTESTED, DEGRADED, FAILED, UNKNOWN]}
+        resource_limits: {$ref: '#/components/schemas/ResourceVector'}
+        attestation_reference: {type: [string, 'null']}
+        provisioned_at: {type: string, format: date-time}
+        activated_at: {type: [string, 'null'], format: date-time}
+        last_attested_at: {type: [string, 'null'], format: date-time}
+        updated_at: {type: string, format: date-time}
+      required: [instance_id, node_id, box_id, runtime_class, runtime_version, status, integrity_status, resource_limits, provisioned_at, updated_at]
+    AttestInstanceRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        integrity_status: {enum: [ATTESTED, DEGRADED, FAILED, UNKNOWN]}
+        attestation_reference: {$ref: '#/components/schemas/Identifier'}
+        attested_by: {$ref: '#/components/schemas/Identifier'}
+      required: [integrity_status, attestation_reference, attested_by]
+    CreateSessionRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        session_id: {$ref: '#/components/schemas/Identifier'}
+        instance_id: {$ref: '#/components/schemas/Identifier'}
+        box_id: {$ref: '#/components/schemas/Identifier'}
+        principal_id: {$ref: '#/components/schemas/Identifier'}
+        context_id: {$ref: '#/components/schemas/Identifier'}
+        capability_id: {$ref: '#/components/schemas/Identifier'}
+        session_type: {enum: [ACTOR, CLOUDBROWSER, AGENT, WORKSPACE, MERCHANT, VEHICLE]}
+        purpose: {type: string, minLength: 1}
+        requested_duration_seconds: {type: integer, minimum: 1, maximum: 3600}
+      required: [session_id, instance_id, box_id, principal_id, context_id, capability_id, session_type, purpose, requested_duration_seconds]
+    RuntimeSession:
+      type: object
+      additionalProperties: true
+      properties:
+        session_id: {$ref: '#/components/schemas/Identifier'}
+        instance_id: {$ref: '#/components/schemas/Identifier'}
+        box_id: {$ref: '#/components/schemas/Identifier'}
+        principal_id: {$ref: '#/components/schemas/Identifier'}
+        context_id: {$ref: '#/components/schemas/Identifier'}
+        capability_id: {$ref: '#/components/schemas/Identifier'}
+        session_type: {enum: [ACTOR, CLOUDBROWSER, AGENT, WORKSPACE, MERCHANT, VEHICLE]}
+        purpose: {type: string}
+        status: {enum: [ACTIVE, PAUSED, TERMINATED, EXPIRED]}
+        started_at: {type: string, format: date-time}
+        expires_at: {type: string, format: date-time}
+        terminated_at: {type: [string, 'null'], format: date-time}
+        termination_reason: {type: [string, 'null']}
+        updated_at: {type: string, format: date-time}
+      required: [session_id, instance_id, box_id, principal_id, context_id, capability_id, session_type, purpose, status, started_at, expires_at, updated_at]
+    AllocateResourcesRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        allocation_id: {$ref: '#/components/schemas/Identifier'}
+        capability_id: {$ref: '#/components/schemas/Identifier'}
+        resources: {$ref: '#/components/schemas/ResourceVector'}
+      required: [allocation_id, capability_id, resources]
+    ResourceAllocation:
+      type: object
+      additionalProperties: true
+      properties:
+        allocation_id: {$ref: '#/components/schemas/Identifier'}
+        session_id: {$ref: '#/components/schemas/Identifier'}
+        capability_id: {$ref: '#/components/schemas/Identifier'}
+        resources: {$ref: '#/components/schemas/ResourceVector'}
+        status: {enum: [ACTIVE, RELEASED]}
+        allocated_at: {type: string, format: date-time}
+        released_at: {type: [string, 'null'], format: date-time}
+      required: [allocation_id, session_id, capability_id, resources, status, allocated_at]
+    HealthReportRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        state: {enum: [HEALTHY, DEGRADED, CRITICAL, UNKNOWN]}
+        reported_by: {$ref: '#/components/schemas/Identifier'}
+        checks: {type: object, additionalProperties: {type: string}}
+        metrics: {type: object, additionalProperties: {type: number}}
+      required: [state, reported_by]
+    RuntimeHealthReport:
+      type: object
+      additionalProperties: true
+      properties:
+        health_report_id: {$ref: '#/components/schemas/Identifier'}
+        instance_id: {$ref: '#/components/schemas/Identifier'}
+        state: {enum: [HEALTHY, DEGRADED, CRITICAL, UNKNOWN]}
+        reported_by: {$ref: '#/components/schemas/Identifier'}
+        checks: {type: object}
+        metrics: {type: object}
+        reported_at: {type: string, format: date-time}
+      required: [health_report_id, instance_id, state, reported_by, checks, metrics, reported_at]
+    TerminateSessionRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        reason: {type: string, minLength: 1}
+        initiated_by: {$ref: '#/components/schemas/Identifier'}
+      required: [reason, initiated_by]
+    RuntimeEvent:
+      type: object
+      additionalProperties: true
+      properties:
+        event_id: {$ref: '#/components/schemas/Identifier'}
+        aggregate_type: {type: string}
+        aggregate_id: {$ref: '#/components/schemas/Identifier'}
+        box_id: {type: [string, 'null']}
+        event_type: {type: string}
+        payload: {type: object}
+        occurred_at: {type: string, format: date-time}
+        previous_event_hash: {type: [string, 'null']}
+        evidence_hash: {type: string, pattern: '^[0-9a-f]{64}$'}
+        published_at: {type: [string, 'null'], format: date-time}
+      required: [event_id, aggregate_type, aggregate_id, event_type, payload, occurred_at, evidence_hash]
+    Problem:
+      type: object
+      properties:
+        type: {type: string}
+        title: {type: string}
+        status: {type: integer}
+        detail: {type: string}
+        instance: {type: string}
+        reason_codes:
+          type: array
+          items: {type: string}
+      required: [type, title, status, detail, instance, reason_codes]

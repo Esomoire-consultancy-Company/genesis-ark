@@ -1,0 +1,35 @@
+{
+  "object_type": "POLICY_DECISION",
+  "policy_decision_id": "DECISION-INVENTORY-RECONCILIATION-0001",
+  "request_id": "REQ-INVENTORY-RECONCILIATION-0001",
+  "decided_at": "2026-08-05T18:20:01Z",
+  "outcome": "RESTRICT",
+  "reason_codes": [
+    "RUNTIME_ATTESTED",
+    "DIGITALME_BINDING_ACTIVE",
+    "DELEGATION_ACTIVE",
+    "WRITE_REQUIRES_HUMAN_APPROVAL"
+  ],
+  "policy_bundle_version": "warden-actor-box-v1.0.0",
+  "capability": {
+    "object_type": "CAPABILITY_GRANT",
+    "capability_id": "CAP-INVENTORY-RECONCILIATION-0001",
+    "box_id": "BOX-GENESIS-PERSONAL-0001",
+    "subject_id": "AGENT-INVENTORY-RECONCILIATION-0001",
+    "resource_id": "DODDABALLAPUR-INVENTORY-VIEW",
+    "allowed_action": "READ_AND_RECONCILE",
+    "purpose": "DAILY_STOCK_RECONCILIATION",
+    "context_id": "CONTEXT-VOI-CIRP-OPERATIONS-0001",
+    "issued_at": "2026-08-05T18:20:01Z",
+    "expires_at": "2026-08-05T18:40:01Z",
+    "policy_decision_id": "DECISION-INVENTORY-RECONCILIATION-0001",
+    "capability_status": "ISSUED",
+    "constraints": {
+      "external_transmission": false,
+      "write_requires_human_approval": true,
+      "max_records": 5000
+    }
+  },
+  "required_approval": "HUMAN_APPROVAL_FOR_WRITE",
+  "evidence_event_id": "RIVER-EVENT-DECISION-0001"
+}

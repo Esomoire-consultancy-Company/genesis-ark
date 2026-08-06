@@ -1,0 +1,111 @@
+# Warden-Enabled Actor Box by Genesis
+
+Status: **Foundation contract v1**
+
+The Warden-Enabled Actor Box is the governed execution unit of the Genesis Stack. Genesis provisions and secures the runtime; DigitalMe identifies the principal; Warden evaluates consent, authority, delegation, data boundaries, lifecycle and revocation; the VSR Registry stores authoritative control state; RiverOS preserves evidence.
+
+## Binding invariants
+
+1. A Box cannot become `ACTIVE` without a valid DigitalMe binding and an attested Genesis runtime.
+2. Every material application or agent action must receive a narrow, short-lived capability from Warden.
+3. Capabilities are bound to one Box, subject, context, resource, action and purpose.
+4. Personal, organisation, licence, Arc and temporary contexts remain explicit and separable.
+5. Consent, delegation, lifecycle and Sentinel Clock state are evaluated at decision time.
+6. Cross-zone data movement is denied unless a matching active boundary rule exists.
+7. Revocation takes precedence over earlier consent, delegation or capability issuance.
+8. Every material decision and execution result emits a RiverOS evidence event.
+9. Genesis administration does not imply Actor impersonation, data ownership or transaction authority.
+10. Emergency controls preserve evidence.
+
+## Foundation artifacts
+
+- `schemas/actor-box/v1/actor-box.schema.json` — canonical JSON Schema bundle for Actor Box control objects.
+- `openapi/warden/v1/openapi.yaml` — Warden decision, capability, revocation and Box-lock contract.
+- `db/actor-box/v1/001_actor_box_foundation.sql` — PostgreSQL/Supabase-compatible registry foundation.
+- `examples/actor-box/v1/` — representative request, decision and Box objects.
+- `scripts/validate_actor_box_contracts.py` — offline structural and example validation.
+
+## First vertical slice
+
+```text
+Genesis runtime attestation
+        ↓
+DigitalMe principal + representation context
+        ↓
+Warden policy evaluation
+        ↓
+Short-lived capability issuance
+        ↓
+Bounded application or agent action
+        ↓
+RiverOS evidence event
+        ↓
+VSR Registry state update
+```
+
+## Decision outcomes
+
+Warden returns exactly one of:
+
+- `ALLOW` — action may execute under the issued capability;
+- `DENY` — action must not execute;
+- `RESTRICT` — only the returned reduced scope may execute;
+- `ESCALATE` — human or higher-authority approval is required.
+
+## Deliberately excluded from foundation v1
+
+- unrestricted third-party application installation;
+- broad or permanent OAuth scopes;
+- silent background sensor access;
+- automatic cross-workspace data reuse;
+- production deployment manifests;
+- settlement execution;
+- organisation transfer workflows beyond the registry objects required to support them.
+
+## Acceptance checks
+
+The foundation is structurally valid when:
+
+- the JSON Schema parses and validates the supplied examples;
+- the OpenAPI document parses as OpenAPI 3.1;
+- every OpenAPI operation has an operation ID and security declaration;
+- the database script declares all canonical foundation tables;
+- example capability expiry is later than issuance;
+- deny-by-default behavior is visible in the API contract.
+
+## Runnable Warden service
+
+`services/warden/` implements the first executable control-plane slice:
+
+- deny-by-default policy evaluation;
+- runtime, DigitalMe binding, context, consent, delegation and boundary checks;
+- short-lived capability materialisation;
+- capability revocation;
+- emergency Actor Box locking;
+- authoritative control-state reads;
+- RiverOS-style per-Box evidence hash chaining;
+- bearer plus trusted mTLS-ingress authentication.
+
+The current adapter is an in-memory implementation for deterministic tests and local development. The repository interface is deliberately separated so a PostgreSQL/Supabase adapter can become the authoritative production persistence layer without changing the Warden decision engine.
+
+Run:
+
+```bash
+cd services/warden
+python -m pip install -e . --no-build-isolation
+pytest
+```
+
+## Governed CloudBrowser application
+
+CloudBrowser is the first controlled application executed through the Actor Box. The broker requires a Warden session capability, isolates each session, applies domain/action/file/credential policies, intercepts high-impact actions for DigitalMe approval, records a RiverOS-style evidence chain and meters compute and network usage.
+
+Implementation artifacts:
+
+- `services/cloudbrowser/` — runnable session and action broker;
+- `openapi/cloudbrowser/v1/openapi.yaml` — eight-operation API contract;
+- `schemas/cloudbrowser/v1/cloudbrowser.schema.json` — session, action, approval, usage and evidence objects;
+- `db/cloudbrowser/v1/002_cloud_browser_foundation.sql` — durable registry migration;
+- `scripts/validate_cloudbrowser_contracts.py` — offline contract validation.
+
+The current deterministic executor performs no external network access. It is the governance seam that an isolated Chromium runtime must implement without bypassing Warden, approval, evidence or metering.

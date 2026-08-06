@@ -1,0 +1,501 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.virtualsilkroad.com/genesis/actor-box/v1/actor-box.schema.json",
+  "title": "Warden-Enabled Actor Box Foundation",
+  "description": "Canonical control objects for a Genesis-provisioned, DigitalMe-bound, Warden-governed Actor Box.",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/ActorBox" },
+    { "$ref": "#/$defs/ActorBoxBinding" },
+    { "$ref": "#/$defs/BoxRuntime" },
+    { "$ref": "#/$defs/BoxContext" },
+    { "$ref": "#/$defs/WardenPolicyProfile" },
+    { "$ref": "#/$defs/ConsentReceipt" },
+    { "$ref": "#/$defs/DelegatedAgent" },
+    { "$ref": "#/$defs/CapabilityGrant" },
+    { "$ref": "#/$defs/DataBoundaryRule" },
+    { "$ref": "#/$defs/EvidenceEvent" },
+    { "$ref": "#/$defs/Revocation" },
+    { "$ref": "#/$defs/PolicyDecisionRequest" },
+    { "$ref": "#/$defs/PolicyDecision" }
+  ],
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 200,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+    },
+    "Timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "BoxStatus": {
+      "type": "string",
+      "enum": [
+        "RESERVED",
+        "PROVISIONED",
+        "CLAIM_PENDING",
+        "CLAIMED",
+        "ACTIVE",
+        "RESTRICTED",
+        "SUSPENDED",
+        "RECOVERY",
+        "TRANSFER_PENDING",
+        "COMPROMISED",
+        "REVOKED",
+        "RETIREMENT_PENDING",
+        "RETIRED"
+      ]
+    },
+    "ContextType": {
+      "type": "string",
+      "enum": ["PERSONAL", "ORGANISATION", "LICENCE", "ARC", "TEMPORARY"]
+    },
+    "DecisionOutcome": {
+      "type": "string",
+      "enum": ["ALLOW", "DENY", "RESTRICT", "ESCALATE"]
+    },
+    "LifecycleWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "effective_from": { "$ref": "#/$defs/Timestamp" },
+        "effective_until": { "$ref": "#/$defs/Timestamp" },
+        "review_at": { "$ref": "#/$defs/Timestamp" },
+        "revoked_at": { "$ref": "#/$defs/Timestamp" }
+      },
+      "required": ["effective_from"]
+    },
+    "ActorBox": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_type": { "const": "ACTOR_BOX" },
+        "box_id": { "$ref": "#/$defs/Identifier" },
+        "box_type": {
+          "type": "string",
+          "enum": ["PERSONAL", "ORGANISATION", "EDGE", "AGENT"]
+        },
+        "genesis_runtime_id": { "$ref": "#/$defs/Identifier" },
+        "current_status": { "$ref": "#/$defs/BoxStatus" },
+        "policy_profile_id": { "$ref": "#/$defs/Identifier" },
+        "evidence_stream_id": { "$ref": "#/$defs/Identifier" },
+        "sentinel_clock_id": { "$ref": "#/$defs/Identifier" },
+        "provisioned_at": { "$ref": "#/$defs/Timestamp" },
+        "claimed_at": { "$ref": "#/$defs/Timestamp" },
+        "activated_at": { "$ref": "#/$defs/Timestamp" },
+        "retired_at": { "$ref": "#/$defs/Timestamp" }
+      },
+      "required": [
+        "object_type",
+        "box_id",
+        "box_type",
+        "genesis_runtime_id",
+        "current_status",
+        "policy_profile_id",
+        "evidence_stream_id",
+        "sentinel_clock_id",
+        "provisioned_at"
+      ]
+    },
+    "ActorBoxBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_type": { "const": "ACTOR_BOX_BINDING" },
+        "binding_id": { "$ref": "#/$defs/Identifier" },
+        "box_id": { "$ref": "#/$defs/Identifier" },
+        "digitalme_id": { "$ref": "#/$defs/Identifier" },
+        "represented_entity_id": { "$ref": "#/$defs/Identifier" },
+        "relationship_type": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "binding_authority_id": { "$ref": "#/$defs/Identifier" },
+        "binding_status": {
+          "type": "string",
+          "enum": ["PENDING", "ACTIVE", "SUSPENDED", "REVOKED", "EXPIRED"]
+        },
+        "lifecycle": { "$ref": "#/$defs/LifecycleWindow" }
+      },
+      "required": [
+        "object_type",
+        "binding_id",
+        "box_id",
+        "digitalme_id",
+        "relationship_type",
+        "binding_authority_id",
+        "binding_status",
+        "lifecycle"
+      ]
+    },
+    "BoxRuntime": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_type": { "const": "BOX_RUNTIME" },
+        "runtime_id": { "$ref": "#/$defs/Identifier" },
+        "box_id": { "$ref": "#/$defs/Identifier" },
+        "device_id": { "$ref": "#/$defs/Identifier" },
+        "runtime_type": {
+          "type": "string",
+          "enum": ["DEVICE", "CONTAINER", "EDGE_NODE", "AGENT_RUNTIME"]
+        },
+        "hardware_attestation": { "type": "string", "minLength": 1 },
+        "software_version": { "type": "string", "minLength": 1 },
+        "security_patch_level": { "type": "string", "minLength": 1 },
+        "integrity_status": {
+          "type": "string",
+          "enum": ["ATTESTED", "DEGRADED", "FAILED", "UNKNOWN"]
+        },
+        "last_attested_at": { "$ref": "#/$defs/Timestamp" }
+      },
+      "required": [
+        "object_type",
+        "runtime_id",
+        "box_id",
+        "device_id",
+        "runtime_type",
+        "hardware_attestation",
+        "software_version",
+        "security_patch_level",
+        "integrity_status",
+        "last_attested_at"
+      ]
+    },
+    "BoxContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_type": { "const": "BOX_CONTEXT" },
+        "context_id": { "$ref": "#/$defs/Identifier" },
+        "box_id": { "$ref": "#/$defs/Identifier" },
+        "context_type": { "$ref": "#/$defs/ContextType" },
+        "principal_id": { "$ref": "#/$defs/Identifier" },
+        "represented_entity_id": { "$ref": "#/$defs/Identifier" },
+        "workspace_id": { "$ref": "#/$defs/Identifier" },
+        "licence_id": { "$ref": "#/$defs/Identifier" },
+        "arc_id": { "$ref": "#/$defs/Identifier" },
+        "activated_at": { "$ref": "#/$defs/Timestamp" },
+        "expires_at": { "$ref": "#/$defs/Timestamp" },
+        "context_status": {
+          "type": "string",
+          "enum": ["ACTIVE", "INACTIVE", "SUSPENDED", "EXPIRED", "REVOKED"]
+        }
+      },
+      "required": [
+        "object_type",
+        "context_id",
+        "box_id",
+        "context_type",
+        "principal_id",
+        "workspace_id",
+        "activated_at",
+        "context_status"
+      ]
+    },
+    "WardenPolicyProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_type": { "const": "WARDEN_POLICY_PROFILE" },
+        "policy_profile_id": { "$ref": "#/$defs/Identifier" },
+        "box_id": { "$ref": "#/$defs/Identifier" },
+        "policy_bundle_version": { "type": "string", "minLength": 1 },
+        "safe_space_profile": { "$ref": "#/$defs/Identifier" },
+        "data_boundary_profile": { "$ref": "#/$defs/Identifier" },
+        "agent_policy_profile": { "$ref": "#/$defs/Identifier" },
+        "connector_policy_profile": { "$ref": "#/$defs/Identifier" },
+        "lifecycle": { "$ref": "#/$defs/LifecycleWindow" }
+      },
+      "required": [
+        "object_type",
+        "policy_profile_id",
+        "box_id",
+        "policy_bundle_version",
+        "safe_space_profile",
+        "data_boundary_profile",
+        "agent_policy_profile",
+        "connector_policy_profile",
+        "lifecycle"
+      ]
+    },
+    "ConsentReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_type": { "const": "CONSENT_RECEIPT" },
+        "consent_receipt_id": { "$ref": "#/$defs/Identifier" },
+        "box_id": { "$ref": "#/$defs/Identifier" },
+        "digitalme_id": { "$ref": "#/$defs/Identifier" },
+        "product_id": { "$ref": "#/$defs/Identifier" },
+        "purpose": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "data_scope": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "action_scope": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "revocation_method": { "type": "string", "minLength": 1 },
+        "receipt_status": {
+          "type": "string",
+          "enum": ["ACTIVE", "REVOKED", "EXPIRED", "SUPERSEDED"]
+        },
+        "evidence_event_id": { "$ref": "#/$defs/Identifier" },
+        "lifecycle": { "$ref": "#/$defs/LifecycleWindow" }
+      },
+      "required": [
+        "object_type",
+        "consent_receipt_id",
+        "box_id",
+        "digitalme_id",
+        "product_id",
+        "purpose",
+        "data_scope",
+        "action_scope",
+        "revocation_method",
+        "receipt_status",
+        "evidence_event_id",
+        "lifecycle"
+      ]
+    },
+    "DelegatedAgent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_type": { "const": "DELEGATED_AGENT" },
+        "delegation_id": { "$ref": "#/$defs/Identifier" },
+        "box_id": { "$ref": "#/$defs/Identifier" },
+        "agent_id": { "$ref": "#/$defs/Identifier" },
+        "delegating_principal_id": { "$ref": "#/$defs/Identifier" },
+        "represented_entity_id": { "$ref": "#/$defs/Identifier" },
+        "permitted_actions": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "permitted_data_scope": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "workspace_scope": { "type": "array", "items": { "$ref": "#/$defs/Identifier" }, "minItems": 1 },
+        "approval_threshold": { "type": "number", "minimum": 0 },
+        "delegation_status": {
+          "type": "string",
+          "enum": ["PENDING", "ACTIVE", "SUSPENDED", "REVOKED", "EXPIRED"]
+        },
+        "lifecycle": { "$ref": "#/$defs/LifecycleWindow" }
+      },
+      "required": [
+        "object_type",
+        "delegation_id",
+        "box_id",
+        "agent_id",
+        "delegating_principal_id",
+        "permitted_actions",
+        "permitted_data_scope",
+        "workspace_scope",
+        "approval_threshold",
+        "delegation_status",
+        "lifecycle"
+      ]
+    },
+    "CapabilityGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_type": { "const": "CAPABILITY_GRANT" },
+        "capability_id": { "$ref": "#/$defs/Identifier" },
+        "box_id": { "$ref": "#/$defs/Identifier" },
+        "subject_id": { "$ref": "#/$defs/Identifier" },
+        "resource_id": { "$ref": "#/$defs/Identifier" },
+        "allowed_action": { "type": "string", "minLength": 1 },
+        "purpose": { "type": "string", "minLength": 1 },
+        "context_id": { "$ref": "#/$defs/Identifier" },
+        "issued_at": { "$ref": "#/$defs/Timestamp" },
+        "expires_at": { "$ref": "#/$defs/Timestamp" },
+        "policy_decision_id": { "$ref": "#/$defs/Identifier" },
+        "capability_status": {
+          "type": "string",
+          "enum": ["ISSUED", "CONSUMED", "EXPIRED", "REVOKED", "SUSPENDED"]
+        },
+        "constraints": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "object_type",
+        "capability_id",
+        "box_id",
+        "subject_id",
+        "resource_id",
+        "allowed_action",
+        "purpose",
+        "context_id",
+        "issued_at",
+        "expires_at",
+        "policy_decision_id",
+        "capability_status",
+        "constraints"
+      ]
+    },
+    "DataBoundaryRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_type": { "const": "DATA_BOUNDARY_RULE" },
+        "boundary_rule_id": { "$ref": "#/$defs/Identifier" },
+        "box_id": { "$ref": "#/$defs/Identifier" },
+        "source_zone": {
+          "type": "string",
+          "enum": ["PRIVATE_ACTOR", "ORGANISATION", "SHARED_WORKSPACE", "EXTERNAL_PROVIDER", "PUBLIC_REGISTRY"]
+        },
+        "destination_zone": {
+          "type": "string",
+          "enum": ["PRIVATE_ACTOR", "ORGANISATION", "SHARED_WORKSPACE", "EXTERNAL_PROVIDER", "PUBLIC_REGISTRY"]
+        },
+        "data_class": { "type": "string", "minLength": 1 },
+        "permitted_purpose": { "type": "string", "minLength": 1 },
+        "permitted_connector": { "$ref": "#/$defs/Identifier" },
+        "retention_rule": { "type": "string", "minLength": 1 },
+        "evidence_requirement": { "type": "string", "minLength": 1 },
+        "approval_requirement": { "type": "string", "minLength": 1 },
+        "rule_status": {
+          "type": "string",
+          "enum": ["ACTIVE", "SUSPENDED", "REVOKED", "EXPIRED"]
+        },
+        "lifecycle": { "$ref": "#/$defs/LifecycleWindow" }
+      },
+      "required": [
+        "object_type",
+        "boundary_rule_id",
+        "box_id",
+        "source_zone",
+        "destination_zone",
+        "data_class",
+        "permitted_purpose",
+        "retention_rule",
+        "evidence_requirement",
+        "approval_requirement",
+        "rule_status",
+        "lifecycle"
+      ]
+    },
+    "EvidenceEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_type": { "const": "EVIDENCE_EVENT" },
+        "event_id": { "$ref": "#/$defs/Identifier" },
+        "box_id": { "$ref": "#/$defs/Identifier" },
+        "actor_id": { "$ref": "#/$defs/Identifier" },
+        "agent_id": { "$ref": "#/$defs/Identifier" },
+        "context_id": { "$ref": "#/$defs/Identifier" },
+        "event_type": { "type": "string", "minLength": 1 },
+        "action_reference": { "type": "string", "minLength": 1 },
+        "policy_decision": { "$ref": "#/$defs/DecisionOutcome" },
+        "timestamp": { "$ref": "#/$defs/Timestamp" },
+        "evidence_hash": { "type": "string", "minLength": 32 },
+        "previous_event_hash": { "type": "string", "minLength": 32 },
+        "custody_location": { "type": "string", "minLength": 1 },
+        "payload": { "type": "object", "additionalProperties": true }
+      },
+      "required": [
+        "object_type",
+        "event_id",
+        "box_id",
+        "actor_id",
+        "context_id",
+        "event_type",
+        "action_reference",
+        "policy_decision",
+        "timestamp",
+        "evidence_hash",
+        "custody_location",
+        "payload"
+      ]
+    },
+    "Revocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_type": { "const": "REVOCATION" },
+        "revocation_id": { "$ref": "#/$defs/Identifier" },
+        "box_id": { "$ref": "#/$defs/Identifier" },
+        "target_type": {
+          "type": "string",
+          "enum": ["BOX", "RUNTIME", "CONTEXT", "CONSENT", "DELEGATION", "CAPABILITY", "AGENT", "WORKSPACE"]
+        },
+        "target_id": { "$ref": "#/$defs/Identifier" },
+        "reason": { "type": "string", "minLength": 1 },
+        "revoked_by": { "$ref": "#/$defs/Identifier" },
+        "effective_at": { "$ref": "#/$defs/Timestamp" },
+        "policy_reference": { "$ref": "#/$defs/Identifier" },
+        "evidence_event_id": { "$ref": "#/$defs/Identifier" }
+      },
+      "required": [
+        "object_type",
+        "revocation_id",
+        "box_id",
+        "target_type",
+        "target_id",
+        "reason",
+        "revoked_by",
+        "effective_at",
+        "policy_reference",
+        "evidence_event_id"
+      ]
+    },
+    "PolicyDecisionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_type": { "const": "POLICY_DECISION_REQUEST" },
+        "request_id": { "$ref": "#/$defs/Identifier" },
+        "requested_at": { "$ref": "#/$defs/Timestamp" },
+        "box_id": { "$ref": "#/$defs/Identifier" },
+        "runtime_id": { "$ref": "#/$defs/Identifier" },
+        "subject_id": { "$ref": "#/$defs/Identifier" },
+        "agent_id": { "$ref": "#/$defs/Identifier" },
+        "context_id": { "$ref": "#/$defs/Identifier" },
+        "resource_id": { "$ref": "#/$defs/Identifier" },
+        "requested_action": { "type": "string", "minLength": 1 },
+        "purpose": { "type": "string", "minLength": 1 },
+        "data_classes": { "type": "array", "items": { "type": "string" } },
+        "source_zone": { "type": "string" },
+        "destination_zone": { "type": "string" },
+        "requested_duration_seconds": { "type": "integer", "minimum": 1, "maximum": 3600 },
+        "human_approval_present": { "type": "boolean" }
+      },
+      "required": [
+        "object_type",
+        "request_id",
+        "requested_at",
+        "box_id",
+        "runtime_id",
+        "subject_id",
+        "context_id",
+        "resource_id",
+        "requested_action",
+        "purpose",
+        "data_classes",
+        "requested_duration_seconds",
+        "human_approval_present"
+      ]
+    },
+    "PolicyDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_type": { "const": "POLICY_DECISION" },
+        "policy_decision_id": { "$ref": "#/$defs/Identifier" },
+        "request_id": { "$ref": "#/$defs/Identifier" },
+        "decided_at": { "$ref": "#/$defs/Timestamp" },
+        "outcome": { "$ref": "#/$defs/DecisionOutcome" },
+        "reason_codes": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "policy_bundle_version": { "type": "string", "minLength": 1 },
+        "capability": { "$ref": "#/$defs/CapabilityGrant" },
+        "required_approval": { "type": "string" },
+        "evidence_event_id": { "$ref": "#/$defs/Identifier" }
+      },
+      "required": [
+        "object_type",
+        "policy_decision_id",
+        "request_id",
+        "decided_at",
+        "outcome",
+        "reason_codes",
+        "policy_bundle_version",
+        "evidence_event_id"
+      ]
+    }
+  }
+}

@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.virtualsilkroad.com/genesis/runtime/v1/runtime.schema.json",
+  "title": "Genesis Runtime Platform Schema v1",
+  "oneOf": [
+    {"$ref": "#/$defs/RegisterNodeRequest"},
+    {"$ref": "#/$defs/RuntimeNode"},
+    {"$ref": "#/$defs/ProvisionInstanceRequest"},
+    {"$ref": "#/$defs/RuntimeInstance"},
+    {"$ref": "#/$defs/AttestInstanceRequest"},
+    {"$ref": "#/$defs/CreateSessionRequest"},
+    {"$ref": "#/$defs/RuntimeSession"},
+    {"$ref": "#/$defs/AllocateResourcesRequest"},
+    {"$ref": "#/$defs/ResourceAllocation"},
+    {"$ref": "#/$defs/HealthReportRequest"},
+    {"$ref": "#/$defs/RuntimeHealthReport"},
+    {"$ref": "#/$defs/RecoveryJob"},
+    {"$ref": "#/$defs/TerminateSessionRequest"},
+    {"$ref": "#/$defs/RuntimeEvent"},
+    {"$ref": "#/$defs/CapabilityAuthorization"}
+  ],
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 200,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+    },
+    "Timestamp": {"type": "string", "format": "date-time"},
+    "ResourceVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cpu_millis": {"type": "integer", "minimum": 0},
+        "memory_mb": {"type": "integer", "minimum": 0},
+        "gpu_millis": {"type": "integer", "minimum": 0},
+        "storage_mb": {"type": "integer", "minimum": 0},
+        "network_egress_mb": {"type": "integer", "minimum": 0},
+        "browser_slots": {"type": "integer", "minimum": 0}
+      },
+      "required": ["cpu_millis", "memory_mb", "gpu_millis", "storage_mb", "network_egress_mb", "browser_slots"]
+    },
+    "RegisterNodeRequest": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "node_id": {"$ref": "#/$defs/Identifier"},
+        "node_class": {"type": "string", "minLength": 1},
+        "region": {"type": "string", "minLength": 1},
+        "jurisdiction": {"type": "string", "minLength": 1},
+        "authority_reference": {"$ref": "#/$defs/Identifier"},
+        "attestation_reference": {"$ref": "#/$defs/Identifier"},
+        "capacity": {"$ref": "#/$defs/ResourceVector"}
+      },
+      "required": ["node_id", "node_class", "region", "jurisdiction", "authority_reference", "attestation_reference", "capacity"]
+    },
+    "RuntimeNode": {
+      "allOf": [
+        {"$ref": "#/$defs/RegisterNodeRequest"},
+        {
+          "type": "object",
+          "properties": {
+            "status": {"enum": ["REGISTERED", "ACTIVE", "DRAINING", "OFFLINE", "QUARANTINED", "RETIRED"]},
+            "registered_at": {"$ref": "#/$defs/Timestamp"},
+            "updated_at": {"$ref": "#/$defs/Timestamp"}
+          },
+          "required": ["status", "registered_at", "updated_at"]
+        }
+      ]
+    },
+    "ProvisionInstanceRequest": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "instance_id": {"$ref": "#/$defs/Identifier"},
+        "node_id": {"$ref": "#/$defs/Identifier"},
+        "box_id": {"$ref": "#/$defs/Identifier"},
+        "runtime_class": {"type": "string", "minLength": 1},
+        "runtime_version": {"type": "string", "minLength": 1},
+        "requested_by": {"$ref": "#/$defs/Identifier"},
+        "authority_reference": {"$ref": "#/$defs/Identifier"},
+        "resource_limits": {"$ref": "#/$defs/ResourceVector"}
+      },
+      "required": ["instance_id", "node_id", "box_id", "runtime_class", "runtime_version", "requested_by", "authority_reference", "resource_limits"]
+    },
+    "RuntimeInstance": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "instance_id": {"$ref": "#/$defs/Identifier"},
+        "node_id": {"$ref": "#/$defs/Identifier"},
+        "box_id": {"$ref": "#/$defs/Identifier"},
+        "runtime_class": {"type": "string"},
+        "runtime_version": {"type": "string"},
+        "status": {"enum": ["PROVISIONING", "ACTIVE", "DEGRADED", "SUSPENDED", "RECOVERY_PENDING", "STOPPED", "RETIRED"]},
+        "integrity_status": {"enum": ["ATTESTED", "DEGRADED", "FAILED", "UNKNOWN"]},
+        "resource_limits": {"$ref": "#/$defs/ResourceVector"},
+        "attestation_reference": {"anyOf": [{"$ref": "#/$defs/Identifier"}, {"type": "null"}]},
+        "provisioned_at": {"$ref": "#/$defs/Timestamp"},
+        "activated_at": {"anyOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]},
+        "last_attested_at": {"anyOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]},
+        "updated_at": {"$ref": "#/$defs/Timestamp"}
+      },
+      "required": ["instance_id", "node_id", "box_id", "runtime_class", "runtime_version", "status", "integrity_status", "resource_limits", "provisioned_at", "updated_at"]
+    },
+    "AttestInstanceRequest": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "integrity_status": {"enum": ["ATTESTED", "DEGRADED", "FAILED", "UNKNOWN"]},
+        "attestation_reference": {"$ref": "#/$defs/Identifier"},
+        "attested_by": {"$ref": "#/$defs/Identifier"}
+      },
+      "required": ["integrity_status", "attestation_reference", "attested_by"]
+    },
+    "CreateSessionRequest": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "session_id": {"$ref": "#/$defs/Identifier"},
+        "instance_id": {"$ref": "#/$defs/Identifier"},
+        "box_id": {"$ref": "#/$defs/Identifier"},
+        "principal_id": {"$ref": "#/$defs/Identifier"},
+        "context_id": {"$ref": "#/$defs/Identifier"},
+        "capability_id": {"$ref": "#/$defs/Identifier"},
+        "session_type": {"enum": ["ACTOR", "CLOUDBROWSER", "AGENT", "WORKSPACE", "MERCHANT", "VEHICLE"]},
+        "purpose": {"type": "string", "minLength": 1},
+        "requested_duration_seconds": {"type": "integer", "minimum": 1, "maximum": 3600}
+      },
+      "required": ["session_id", "instance_id", "box_id", "principal_id", "context_id", "capability_id", "session_type", "purpose", "requested_duration_seconds"]
+    },
+    "RuntimeSession": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "session_id": {"$ref": "#/$defs/Identifier"},
+        "instance_id": {"$ref": "#/$defs/Identifier"},
+        "box_id": {"$ref": "#/$defs/Identifier"},
+        "principal_id": {"$ref": "#/$defs/Identifier"},
+        "context_id": {"$ref": "#/$defs/Identifier"},
+        "capability_id": {"$ref": "#/$defs/Identifier"},
+        "session_type": {"enum": ["ACTOR", "CLOUDBROWSER", "AGENT", "WORKSPACE", "MERCHANT", "VEHICLE"]},
+        "purpose": {"type": "string"},
+        "status": {"enum": ["ACTIVE", "PAUSED", "TERMINATED", "EXPIRED"]},
+        "started_at": {"$ref": "#/$defs/Timestamp"},
+        "expires_at": {"$ref": "#/$defs/Timestamp"},
+        "terminated_at": {"anyOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]},
+        "termination_reason": {"type": ["string", "null"]},
+        "updated_at": {"$ref": "#/$defs/Timestamp"}
+      },
+      "required": ["session_id", "instance_id", "box_id", "principal_id", "context_id", "capability_id", "session_type", "purpose", "status", "started_at", "expires_at", "updated_at"]
+    },
+    "AllocateResourcesRequest": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "allocation_id": {"$ref": "#/$defs/Identifier"},
+        "capability_id": {"$ref": "#/$defs/Identifier"},
+        "resources": {"$ref": "#/$defs/ResourceVector"}
+      },
+      "required": ["allocation_id", "capability_id", "resources"]
+    },
+    "ResourceAllocation": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "allocation_id": {"$ref": "#/$defs/Identifier"},
+        "session_id": {"$ref": "#/$defs/Identifier"},
+        "capability_id": {"$ref": "#/$defs/Identifier"},
+        "resources": {"$ref": "#/$defs/ResourceVector"},
+        "status": {"enum": ["ACTIVE", "RELEASED"]},
+        "allocated_at": {"$ref": "#/$defs/Timestamp"},
+        "released_at": {"anyOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]}
+      },
+      "required": ["allocation_id", "session_id", "capability_id", "resources", "status", "allocated_at"]
+    },
+    "HealthReportRequest": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "state": {"enum": ["HEALTHY", "DEGRADED", "CRITICAL", "UNKNOWN"]},
+        "reported_by": {"$ref": "#/$defs/Identifier"},
+        "checks": {"type": "object", "additionalProperties": {"type": "string"}},
+        "metrics": {"type": "object", "additionalProperties": {"type": "number"}}
+      },
+      "required": ["state", "reported_by"]
+    },
+    "RuntimeHealthReport": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "health_report_id": {"$ref": "#/$defs/Identifier"},
+        "instance_id": {"$ref": "#/$defs/Identifier"},
+        "state": {"enum": ["HEALTHY", "DEGRADED", "CRITICAL", "UNKNOWN"]},
+        "reported_by": {"$ref": "#/$defs/Identifier"},
+        "checks": {"type": "object"},
+        "metrics": {"type": "object"},
+        "reported_at": {"$ref": "#/$defs/Timestamp"}
+      },
+      "required": ["health_report_id", "instance_id", "state", "reported_by", "checks", "metrics", "reported_at"]
+    },
+    "RecoveryJob": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "recovery_job_id": {"$ref": "#/$defs/Identifier"},
+        "instance_id": {"$ref": "#/$defs/Identifier"},
+        "status": {"enum": ["AUTHORIZATION_REQUIRED", "AUTHORIZED", "RUNNING", "COMPLETED", "FAILED", "CANCELLED"]},
+        "trigger_health_report_id": {"$ref": "#/$defs/Identifier"},
+        "required_capability_action": {"type": "string"},
+        "created_at": {"$ref": "#/$defs/Timestamp"},
+        "authorized_at": {"anyOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]}
+      },
+      "required": ["recovery_job_id", "instance_id", "status", "trigger_health_report_id", "required_capability_action", "created_at"]
+    },
+    "TerminateSessionRequest": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "reason": {"type": "string", "minLength": 1},
+        "initiated_by": {"$ref": "#/$defs/Identifier"}
+      },
+      "required": ["reason", "initiated_by"]
+    },
+    "RuntimeEvent": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "event_id": {"$ref": "#/$defs/Identifier"},
+        "aggregate_type": {"type": "string", "minLength": 1},
+        "aggregate_id": {"$ref": "#/$defs/Identifier"},
+        "box_id": {"anyOf": [{"$ref": "#/$defs/Identifier"}, {"type": "null"}]},
+        "event_type": {"type": "string", "minLength": 1},
+        "payload": {"type": "object"},
+        "occurred_at": {"$ref": "#/$defs/Timestamp"},
+        "previous_event_hash": {"type": ["string", "null"], "minLength": 64, "maxLength": 64},
+        "evidence_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "published_at": {"anyOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]}
+      },
+      "required": ["event_id", "aggregate_type", "aggregate_id", "event_type", "payload", "occurred_at", "evidence_hash"]
+    },
+    "CapabilityAuthorization": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "capability_id": {"$ref": "#/$defs/Identifier"},
+        "box_id": {"$ref": "#/$defs/Identifier"},
+        "subject_id": {"$ref": "#/$defs/Identifier"},
+        "context_id": {"$ref": "#/$defs/Identifier"},
+        "resource_id": {"$ref": "#/$defs/Identifier"},
+        "allowed_action": {"type": "string", "minLength": 1},
+        "purpose": {"type": "string", "minLength": 1},
+        "expires_at": {"$ref": "#/$defs/Timestamp"},
+        "constraints": {"type": "object"}
+      },
+      "required": ["capability_id", "box_id", "subject_id", "context_id", "resource_id", "allowed_action", "purpose", "expires_at"]
+    }
+  }
+}

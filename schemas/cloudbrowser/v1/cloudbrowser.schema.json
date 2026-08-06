@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.virtualsilkroad.com/genesis/cloudbrowser/v1/cloudbrowser.schema.json",
+  "title": "Genesis Governed CloudBrowser Foundation",
+  "oneOf": [
+    {"$ref": "#/$defs/BrowserSessionRequest"},
+    {"$ref": "#/$defs/BrowserActionRequest"},
+    {"$ref": "#/$defs/BrowserSession"},
+    {"$ref": "#/$defs/BrowserAction"},
+    {"$ref": "#/$defs/BrowserApproval"},
+    {"$ref": "#/$defs/UsageRecord"},
+    {"$ref": "#/$defs/EvidenceEvent"}
+  ],
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 200,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+    },
+    "BrowserSessionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["request_id", "box_id", "digitalme_id", "runtime_id", "context_id", "workspace_id", "policy_id", "purpose", "data_classes", "requested_duration_seconds"],
+      "properties": {
+        "request_id": {"$ref": "#/$defs/Identifier"},
+        "box_id": {"$ref": "#/$defs/Identifier"},
+        "digitalme_id": {"$ref": "#/$defs/Identifier"},
+        "runtime_id": {"$ref": "#/$defs/Identifier"},
+        "context_id": {"$ref": "#/$defs/Identifier"},
+        "workspace_id": {"$ref": "#/$defs/Identifier"},
+        "licence_id": {"type": ["string", "null"], "minLength": 3},
+        "agent_id": {"type": ["string", "null"], "minLength": 3},
+        "policy_id": {"$ref": "#/$defs/Identifier"},
+        "purpose": {"type": "string", "minLength": 1},
+        "data_classes": {"type": "array", "items": {"type": "string"}},
+        "requested_duration_seconds": {"type": "integer", "minimum": 1, "maximum": 3600}
+      }
+    },
+    "BrowserActionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action_id", "action_type", "purpose", "data_classes"],
+      "properties": {
+        "action_id": {"$ref": "#/$defs/Identifier"},
+        "action_type": {"type": "string", "pattern": "^BROWSER_[A-Z_]+$"},
+        "target_url": {"type": ["string", "null"], "format": "uri"},
+        "purpose": {"type": "string", "minLength": 1},
+        "data_classes": {"type": "array", "items": {"type": "string"}},
+        "payload": {"type": "object"},
+        "estimated_network_bytes": {"type": "integer", "minimum": 0},
+        "estimated_file_bytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "BrowserSession": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["browser_session_id", "box_id", "digitalme_id", "runtime_id", "context_id", "workspace_id", "policy_id", "policy_decision_id", "capability_id", "session_status", "isolation_profile", "started_at", "expires_at", "evidence_stream_id", "compute_meter_id"],
+      "properties": {
+        "browser_session_id": {"$ref": "#/$defs/Identifier"},
+        "box_id": {"$ref": "#/$defs/Identifier"},
+        "digitalme_id": {"$ref": "#/$defs/Identifier"},
+        "runtime_id": {"$ref": "#/$defs/Identifier"},
+        "context_id": {"$ref": "#/$defs/Identifier"},
+        "workspace_id": {"$ref": "#/$defs/Identifier"},
+        "licence_id": {"type": ["string", "null"]},
+        "agent_id": {"type": ["string", "null"]},
+        "policy_id": {"$ref": "#/$defs/Identifier"},
+        "policy_decision_id": {"$ref": "#/$defs/Identifier"},
+        "capability_id": {"$ref": "#/$defs/Identifier"},
+        "session_status": {"enum": ["REQUESTED", "ACTIVE", "PAUSED", "TERMINATED", "EXPIRED", "LOCKED"]},
+        "isolation_profile": {"type": "string"},
+        "started_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"},
+        "terminated_at": {"type": ["string", "null"], "format": "date-time"},
+        "evidence_stream_id": {"$ref": "#/$defs/Identifier"},
+        "compute_meter_id": {"$ref": "#/$defs/Identifier"}
+      }
+    },
+    "BrowserAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action_id", "browser_session_id", "action_type", "decision", "reason_codes", "requested_at", "decided_at", "evidence_event_id"],
+      "properties": {
+        "action_id": {"$ref": "#/$defs/Identifier"},
+        "browser_session_id": {"$ref": "#/$defs/Identifier"},
+        "action_type": {"type": "string"},
+        "decision": {"enum": ["ALLOW", "DENY", "APPROVAL_REQUIRED", "APPROVED", "EXECUTED"]},
+        "reason_codes": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "target_url": {"type": ["string", "null"]},
+        "warden_policy_decision_id": {"type": ["string", "null"]},
+        "capability_id": {"type": ["string", "null"]},
+        "approval_id": {"type": ["string", "null"]},
+        "requested_at": {"type": "string", "format": "date-time"},
+        "decided_at": {"type": "string", "format": "date-time"},
+        "executed_at": {"type": ["string", "null"], "format": "date-time"},
+        "result": {"type": ["object", "null"]},
+        "evidence_event_id": {"$ref": "#/$defs/Identifier"}
+      }
+    },
+    "BrowserApproval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approval_id", "browser_session_id", "action_id", "approved_by", "approved_at", "expires_at", "evidence_event_id"],
+      "properties": {
+        "approval_id": {"$ref": "#/$defs/Identifier"},
+        "browser_session_id": {"$ref": "#/$defs/Identifier"},
+        "action_id": {"$ref": "#/$defs/Identifier"},
+        "approved_by": {"$ref": "#/$defs/Identifier"},
+        "approved_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"},
+        "evidence_event_id": {"$ref": "#/$defs/Identifier"}
+      }
+    },
+    "UsageRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compute_meter_id", "browser_session_id", "runtime_seconds", "action_count", "approval_count", "connector_calls", "uploaded_bytes", "downloaded_bytes", "network_bytes", "compute_units", "updated_at"],
+      "properties": {
+        "compute_meter_id": {"$ref": "#/$defs/Identifier"},
+        "browser_session_id": {"$ref": "#/$defs/Identifier"},
+        "runtime_seconds": {"type": "integer", "minimum": 0},
+        "action_count": {"type": "integer", "minimum": 0},
+        "approval_count": {"type": "integer", "minimum": 0},
+        "connector_calls": {"type": "integer", "minimum": 0},
+        "uploaded_bytes": {"type": "integer", "minimum": 0},
+        "downloaded_bytes": {"type": "integer", "minimum": 0},
+        "network_bytes": {"type": "integer", "minimum": 0},
+        "compute_units": {"type": "number", "minimum": 0},
+        "updated_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "EvidenceEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "browser_session_id", "box_id", "event_type", "actor_id", "action_reference", "timestamp", "payload", "evidence_hash"],
+      "properties": {
+        "event_id": {"$ref": "#/$defs/Identifier"},
+        "browser_session_id": {"$ref": "#/$defs/Identifier"},
+        "box_id": {"$ref": "#/$defs/Identifier"},
+        "event_type": {"type": "string"},
+        "actor_id": {"$ref": "#/$defs/Identifier"},
+        "action_reference": {"type": "string"},
+        "timestamp": {"type": "string", "format": "date-time"},
+        "payload": {"type": "object"},
+        "previous_event_hash": {"type": ["string", "null"]},
+        "evidence_hash": {"type": "string"}
+      }
+    }
+  }
+}
