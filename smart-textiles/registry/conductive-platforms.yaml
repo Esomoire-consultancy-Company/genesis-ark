@@ -1,0 +1,10 @@
+- code: AG
+  name: Silver
+- code: STL
+  name: Steel
+- code: CU
+  name: Copper
+- code: CNT
+  name: Carbon nanotube
+- code: CPY
+  name: Conductive polymer

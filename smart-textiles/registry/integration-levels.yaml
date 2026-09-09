@@ -1,0 +1,6 @@
+- code: FBR
+  name: Fiber-level
+- code: YRN
+  name: Yarn-level
+- code: FAB
+  name: Fabric-level
