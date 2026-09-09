@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:genesis:smart-textiles:product-passport:r0.1",
+  "type": "object",
+  "required": ["passport", "identity", "application", "textile", "smart_architecture", "capabilities", "power", "electronics", "performance", "safety", "manufacturing", "traceability", "circularity", "evidence"],
+  "properties": {
+    "passport": {
+      "type": "object",
+      "required": ["passport_id", "passport_level", "schema_version", "status"],
+      "properties": {
+        "passport_id": {"type": "string", "minLength": 1},
+        "passport_level": {"enum": ["model", "batch", "item"]},
+        "schema_version": {"const": "0.1"},
+        "status": {"type": "string", "minLength": 1},
+        "effective_from": {"type": "string"},
+        "supersedes": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "identity": {
+      "type": "object",
+      "required": ["platform_id", "model_id", "human_readable_sku"],
+      "properties": {
+        "platform_id": {"type": "string", "minLength": 1},
+        "capability_bundle_id": {"type": ["string", "null"]},
+        "model_id": {"type": "string", "minLength": 1},
+        "commercial_variant_id": {"type": ["string", "null"]},
+        "batch_id": {"type": ["string", "null"]},
+        "item_id": {"type": ["string", "null"]},
+        "human_readable_sku": {"type": "string", "minLength": 1},
+        "persistent_product_identifier": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "application": {"type": "object"},
+    "textile": {"type": "object"},
+    "smart_architecture": {"type": "object"},
+    "capabilities": {"type": "object"},
+    "power": {"type": "object"},
+    "electronics": {"type": "object"},
+    "performance": {"type": "object"},
+    "safety": {"type": "object"},
+    "manufacturing": {"type": "object"},
+    "traceability": {"type": "object"},
+    "circularity": {"type": "object"},
+    "evidence": {"type": "object"}
+  },
+  "additionalProperties": true
+}

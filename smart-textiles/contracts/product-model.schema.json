@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:genesis:smart-textiles:product-model:r0.1",
+  "type": "object",
+  "required": ["model_id", "platform_id", "application_family", "form_code", "smart_architecture", "capability_ids", "power_code", "revision", "lifecycle_state"],
+  "properties": {
+    "model_id": {"type": "string", "minLength": 1},
+    "platform_id": {"type": "string", "minLength": 1},
+    "application_family": {"enum": ["HLT", "SPT", "DFR", "IND", "HMI"]},
+    "form_code": {"enum": ["TSH", "JKT", "VST", "LEG", "SCK", "GLV", "SLV", "HDW", "PNL"]},
+    "smart_architecture": {
+      "type": "object",
+      "required": ["integration_level", "integration_method", "conductive_platform"],
+      "properties": {
+        "integration_level": {"enum": ["FBR", "YRN", "FAB"]},
+        "integration_method": {"enum": ["WVN", "KNT", "EMB"]},
+        "conductive_platform": {"enum": ["AG", "STL", "CU", "CNT", "CPY"]},
+        "body_contact_zone": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "capability_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^ST-F(0[1-9]|1[0-7])$"}
+    },
+    "power_code": {"enum": ["PAS", "BAT", "PZO", "TRB"]},
+    "revision": {"type": "integer", "minimum": 1},
+    "lifecycle_state": {"enum": ["DRAFT_CONFIG", "PROTOTYPE_APPROVED", "ENGINEERING_VALIDATED", "MODEL_RELEASED", "BATCH_RELEASED", "ITEM_ACTIVE", "IN_SERVICE", "REPAIR", "REFURBISH", "QUARANTINE", "RECALL", "RETIRED", "RECYCLED", "DISPOSED"]},
+    "intended_use": {"type": "string"},
+    "regulatory_claim_class": {"enum": ["none", "medical", "ppe", "other_regulated"]},
+    "regulatory_evidence_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "warden_decision_id": {"type": "string", "minLength": 1},
+    "river_receipt_ids": {"type": "array", "items": {"type": "string", "minLength": 1}}
+  },
+  "additionalProperties": true
+}
