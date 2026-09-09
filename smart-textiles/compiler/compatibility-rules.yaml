@@ -1,0 +1,21 @@
+body_contact_required:
+  - ST-F01
+  - ST-F03
+  - ST-F04
+  - ST-F07
+  - ST-F08
+  - ST-F09
+
+power_profile_required:
+  - ST-F15
+  - ST-F16
+  - ST-F17
+
+prototype_only_capabilities:
+  ST-F08: R01_EVIDENCE_MATURITY
+  ST-F09: R01_EVIDENCE_MATURITY
+
+regulated_claim_classes:
+  - medical
+  - ppe
+  - other_regulated

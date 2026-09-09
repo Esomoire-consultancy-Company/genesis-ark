@@ -1,0 +1,17 @@
+- {code: ST-F01, name: "ECG / biopotential sensing", class: physiological_sensing}
+- {code: ST-F02, name: "Respiration sensing", class: physiological_sensing}
+- {code: ST-F03, name: "Muscle activity sensing", class: physiological_sensing}
+- {code: ST-F04, name: "Pressure sensing", class: mechanical_sensing}
+- {code: ST-F05, name: "Motion / strain sensing", class: mechanical_sensing}
+- {code: ST-F06, name: "Posture sensing", class: mechanical_sensing}
+- {code: ST-F07, name: "Skin temperature sensing", class: thermal_sensing}
+- {code: ST-F08, name: "Sweat lactate sensing", class: biochemical_sensing}
+- {code: ST-F09, name: "Sweat glucose sensing", class: biochemical_sensing}
+- {code: ST-F10, name: "Toxic-gas / chemical exposure sensing", class: environmental_sensing}
+- {code: ST-F11, name: "Thermal-hazard sensing", class: environmental_sensing}
+- {code: ST-F12, name: "Piezoelectric energy harvesting", class: energy}
+- {code: ST-F13, name: "Triboelectric energy harvesting", class: energy}
+- {code: ST-F14, name: "Thermochromic actuation", class: actuation}
+- {code: ST-F15, name: "Electroactive actuation", class: actuation}
+- {code: ST-F16, name: "Textile input interface", class: human_machine_interface}
+- {code: ST-F17, name: "Flexible textile display", class: human_machine_interface}

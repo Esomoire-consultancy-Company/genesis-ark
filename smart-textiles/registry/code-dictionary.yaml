@@ -1,0 +1,33 @@
+forms:
+  TSH: T-Shirt
+  JKT: Jacket
+  VST: Vest
+  LEG: Legging / trouser
+  SCK: Sock
+  GLV: Glove
+  SLV: Sleeve / band
+  HDW: Headwear
+  PNL: Textile panel / wrap
+power:
+  PAS: Passive / no onboard power
+  BAT: Battery-powered
+  PZO: Piezoelectric harvesting
+  TRB: Triboelectric harvesting
+capability_short_codes:
+  ST-F01: ECG
+  ST-F02: RSP
+  ST-F03: EMG
+  ST-F04: PRS
+  ST-F05: STR
+  ST-F06: PST
+  ST-F07: TMP
+  ST-F08: LAC
+  ST-F09: GLC
+  ST-F10: GAS
+  ST-F11: THZ
+  ST-F12: PZO
+  ST-F13: TRB
+  ST-F14: THC
+  ST-F15: EAC
+  ST-F16: INP
+  ST-F17: DSP

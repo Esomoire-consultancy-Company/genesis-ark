@@ -1,0 +1,10 @@
+- code: HLT
+  name: Healthcare / clinical monitoring
+- code: SPT
+  name: Sport / performance
+- code: DFR
+  name: Defence / first responder
+- code: IND
+  name: Industrial / workforce safety
+- code: HMI
+  name: Wearable computing / human-machine interface
