@@ -15,3 +15,11 @@ The first governed execution slice for `GES-ALPHA-001` lives under `control-plan
 - Verification record: `docs/evidence/GES-ALPHA-CONTROL-PLANE-R0.1.md`
 
 R0.1 is Alpha-only and remains E2 until the real Docker acceptance suite passes on the registered Alpha station.
+
+## Smart Textile Product Passport Registry
+
+The R0.1 smart-textile taxonomy, compatibility compiler, human-readable SKU grammar, and DPP-ready passport contracts live under `smart-textiles/`.
+
+- Design: `docs/superpowers/specs/2026-09-09-smart-textile-product-passport-registry-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-09-09-smart-textile-product-passport-registry.md`
+- Operator guide: `smart-textiles/README.md`

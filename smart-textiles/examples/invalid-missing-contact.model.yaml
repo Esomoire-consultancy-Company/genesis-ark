@@ -1,0 +1,11 @@
+application_family: SPT
+form_code: TSH
+smart_architecture:
+  integration_level: YRN
+  integration_method: KNT
+  conductive_platform: AG
+capability_ids: [ST-F01]
+power_code: TRB
+revision: 1
+regulatory_claim_class: none
+regulatory_evidence_ids: []

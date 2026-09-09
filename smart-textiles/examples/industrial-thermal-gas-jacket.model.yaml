@@ -1,0 +1,18 @@
+model_id: STM-IND-JKT-0001-R01
+platform_id: STP-IND-SAFETY-0001
+application_family: IND
+form_code: JKT
+smart_architecture:
+  integration_level: FAB
+  integration_method: EMB
+  conductive_platform: CU
+capability_ids:
+  - ST-F10
+  - ST-F11
+power_code: BAT
+revision: 1
+lifecycle_state: ENGINEERING_VALIDATED
+intended_use: Industrial environmental hazard monitoring reference model
+regulatory_claim_class: none
+regulatory_evidence_ids: []
+river_receipt_ids: []

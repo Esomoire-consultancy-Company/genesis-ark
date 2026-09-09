@@ -1,0 +1,12 @@
+application_family: SPT
+form_code: TSH
+smart_architecture:
+  integration_level: YRN
+  integration_method: KNT
+  conductive_platform: AG
+  body_contact_zone: chest
+capability_ids: [ST-F01]
+power_code: TRB
+revision: 1
+regulatory_claim_class: medical
+regulatory_evidence_ids: []

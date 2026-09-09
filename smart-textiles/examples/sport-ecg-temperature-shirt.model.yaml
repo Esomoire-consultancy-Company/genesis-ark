@@ -1,0 +1,19 @@
+model_id: STM-SPT-TSH-0001-R01
+platform_id: STP-SPORT-PHYSIO-0001
+application_family: SPT
+form_code: TSH
+smart_architecture:
+  integration_level: YRN
+  integration_method: KNT
+  conductive_platform: AG
+  body_contact_zone: chest
+capability_ids:
+  - ST-F01
+  - ST-F07
+power_code: TRB
+revision: 1
+lifecycle_state: ENGINEERING_VALIDATED
+intended_use: Athletic physiological monitoring prototype/reference model
+regulatory_claim_class: none
+regulatory_evidence_ids: []
+river_receipt_ids: []
