@@ -1,0 +1,25 @@
+name: GES Alpha Control Plane
+
+on:
+  pull_request:
+    paths:
+      - "control-plane/**"
+      - ".github/workflows/ges-alpha-control-plane.yml"
+  push:
+    branches: [main]
+    paths:
+      - "control-plane/**"
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e "control-plane[test]"
+      - run: python -m pytest control-plane/tests -v -m "not docker_e2e"

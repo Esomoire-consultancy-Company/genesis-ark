@@ -1,0 +1,7 @@
+.venv/
+.runtime/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.sqlite3
+*.jsonl
