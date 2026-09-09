@@ -15,3 +15,7 @@ test = ["pytest>=8.0"]
 pythonpath = ["src"]
 testpaths = ["tests"]
 addopts = "-q"
+markers = ["docker_e2e: requires a local Docker engine and disposable container"]
+
+[project.scripts]
+ges-alpha = "genesis_control_plane.cli:main"
