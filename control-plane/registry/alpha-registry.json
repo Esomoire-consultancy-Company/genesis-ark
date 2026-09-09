@@ -1,0 +1,32 @@
+{
+  "estate_id": "GENESIS-ESTATE-001",
+  "station_id": "GES-ALPHA-001",
+  "node_id": "ALPHA-NODE-001",
+  "environment": "alpha",
+  "adapters": [
+    {"adapter_id": "GEN-ADAPTER-DOCKER-001", "type": "docker", "state": "active"}
+  ],
+  "capabilities": [
+    {"name": "container.instance.list", "risk": 1, "mutation": false},
+    {"name": "container.instance.inspect", "risk": 1, "mutation": false},
+    {"name": "container.logs.read", "risk": 1, "mutation": false},
+    {"name": "container.instance.restart", "risk": 3, "mutation": true}
+  ],
+  "resources": [
+    {
+      "resource_id": "RES-RIVER-WORKER-001",
+      "canonical_name": "river-worker",
+      "resource_type": "container",
+      "station_id": "GES-ALPHA-001",
+      "environment": "alpha",
+      "adapter_id": "GEN-ADAPTER-DOCKER-001",
+      "docker_name": "river-worker",
+      "state": "active",
+      "capabilities": [
+        "container.instance.inspect",
+        "container.logs.read",
+        "container.instance.restart"
+      ]
+    }
+  ]
+}
