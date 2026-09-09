@@ -68,3 +68,28 @@ def test_high_risk_is_denied():
     decision = engine().evaluate(command(risk_class="high"), NOW)
     assert decision.result is DecisionResult.DENY
     assert decision.reason_code == "RISK_DENIED"
+
+
+def test_expired_command_is_denied():
+    decision = engine().evaluate(
+        command(expires_at="2026-09-09T02:39:59+00:00"),
+        NOW,
+    )
+    assert decision.result is DecisionResult.DENY
+    assert decision.reason_code == "COMMAND_EXPIRED"
+
+
+def test_permit_validity_never_outlives_command():
+    decision = engine().evaluate(
+        command(expires_at="2026-09-09T02:40:10+00:00"),
+        NOW,
+    )
+    assert datetime.fromisoformat(decision.valid_until) <= datetime.fromisoformat(
+        "2026-09-09T02:40:10+00:00"
+    )
+
+
+def test_invalid_command_expiry_is_denied_without_exception():
+    decision = engine().evaluate(command(expires_at="not-a-time"), NOW)
+    assert decision.result is DecisionResult.DENY
+    assert decision.reason_code == "COMMAND_TIME_INVALID"

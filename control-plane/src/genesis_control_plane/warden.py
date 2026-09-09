@@ -24,6 +24,11 @@ class Warden:
         self._policy = policy
 
     def _decision(self, command: Command, now: datetime, result: DecisionResult, reason: str) -> Decision:
+        try:
+            command_expiry = datetime.fromisoformat(command.expires_at)
+        except ValueError:
+            command_expiry = now
+        valid_until = min(now + timedelta(seconds=60), command_expiry)
         return Decision(
             decision_id=f"WD-{secrets.token_hex(8)}",
             command_id=command.command_id,
@@ -32,11 +37,17 @@ class Warden:
             conditions=("alpha_only", "one_shot_token") if result is DecisionResult.PERMIT else (),
             obligations=("evidence_required",) if result is DecisionResult.PERMIT else (),
             decided_at=now.isoformat(),
-            valid_until=(now + timedelta(seconds=60)).isoformat(),
+            valid_until=valid_until.isoformat(),
             reason_code=reason,
         )
 
     def evaluate(self, command: Command, now: datetime) -> Decision:
+        try:
+            command_expiry = datetime.fromisoformat(command.expires_at)
+        except ValueError:
+            return self._decision(command, now, DecisionResult.DENY, "COMMAND_TIME_INVALID")
+        if command_expiry <= now:
+            return self._decision(command, now, DecisionResult.DENY, "COMMAND_EXPIRED")
         if command.station_id != self._policy.station_id:
             return self._decision(command, now, DecisionResult.DENY, "STATION_DENIED")
         if command.environment != self._policy.environment:
