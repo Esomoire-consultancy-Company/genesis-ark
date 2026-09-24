@@ -15,6 +15,7 @@ from genesis_control_plane.contracts import (
 )
 from genesis_control_plane.docker_adapter import DockerAdapter
 from genesis_control_plane.evidence import EvidenceJournal, EvidenceReceipt
+from genesis_control_plane.intent_signature import SignedCommandIntent
 from genesis_control_plane.registry import AlphaRegistry
 from genesis_control_plane.tokens import TokenIssuer
 from genesis_control_plane.verifier import DockerVerifier
@@ -76,7 +77,10 @@ class GovernedExecutionService:
             classification="internal",
         )
 
-    def execute(self, command: Command, now: datetime) -> GovernedExecutionOutcome:
+    def execute(
+        self, command: Command, now: datetime,
+        signed_intent: SignedCommandIntent | None = None,
+    ) -> GovernedExecutionOutcome:
         receipts: list[EvidenceReceipt] = []
         previous_event_id: str | None = None
 
@@ -97,7 +101,7 @@ class GovernedExecutionService:
             return receipt
 
         record("command.requested", "operator", command.target_resource_id, asdict(command))
-        decision = self._warden.evaluate(command, now)
+        decision = self._warden.evaluate(command, now, signed_intent)
         record("warden.decision.created", "warden", command.command_id, asdict(decision))
 
         if decision.result is DecisionResult.DENY:
