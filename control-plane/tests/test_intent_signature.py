@@ -1,8 +1,10 @@
 """Tests for the optional real Ed25519 verification seam (also run via unittest)."""
 
 import json
+import io
 import tempfile
 import unittest
+from contextlib import redirect_stdout, redirect_stderr
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -12,6 +14,8 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from genesis_control_plane.contracts import Command, DecisionResult
+from genesis_control_plane.admitted_keys import FileActorKeyResolver
+from genesis_control_plane.cli import main as cli_main
 from genesis_control_plane.docker_adapter import DockerAdapter
 from genesis_control_plane.evidence import EvidenceJournal
 from genesis_control_plane.intent_signature import (
@@ -23,6 +27,7 @@ from genesis_control_plane.tokens import TokenIssuer
 from genesis_control_plane.verifier import DockerVerifier
 from genesis_control_plane.warden import Warden, WardenPolicy
 from genesis_control_plane.weg import ConsumedTokenLedger, WardenExecutionGateway
+from genesis_control_plane.weg import WEGValidationError
 
 NOW = datetime(2026, 9, 9, 2, 40, tzinfo=timezone.utc)
 REGISTRY = Path(__file__).parents[1] / "registry" / "alpha-registry.json"
@@ -99,10 +104,11 @@ class SignedIntentTests(unittest.TestCase):
                 warden=Warden(self.registry, WardenPolicy(), self.verifier),
                 token_issuer=issuer,
                 weg=WardenExecutionGateway(
-                    self.registry, issuer, ConsumedTokenLedger(Path(temp) / "tokens.sqlite3")
+                    self.registry, issuer, ConsumedTokenLedger(Path(temp) / "tokens.sqlite3"), self.verifier
                 ),
                 adapter=adapter, verifier=DockerVerifier(adapter),
                 evidence=EvidenceJournal(Path(temp) / "river.jsonl"),
+                clock=lambda: NOW,
             )
             outcome = service.execute(self.command, NOW)
             self.assertEqual(outcome.decision.result, DecisionResult.DENY)
@@ -112,6 +118,76 @@ class SignedIntentTests(unittest.TestCase):
             outcome = service.execute(self.command, NOW, self.intent)
             self.assertEqual(outcome.decision.result, DecisionResult.PERMIT)
             self.assertTrue(any(args[:2] == ["docker", "restart"] for args in calls))
+
+    def test_gateway_rechecks_revocation_and_consumes_intent_durably(self):
+        issuer = TokenIssuer(b"test-secret-not-production", "KEY-TEST-001", "WEG-GES-ALPHA-001")
+        warden = Warden(self.registry, WardenPolicy(), self.verifier)
+        decision = warden.evaluate(self.command, NOW, self.intent)
+        with tempfile.TemporaryDirectory() as temp:
+            db_path = Path(temp) / "tokens.sqlite3"
+            gateway = WardenExecutionGateway(
+                self.registry, issuer, ConsumedTokenLedger(db_path), self.verifier
+            )
+            token = issuer.issue(self.command, decision, NOW)
+            self.keys.active = False
+            with self.assertRaisesRegex(WEGValidationError, "SIGNING_KEY_NOT_ADMITTED"):
+                gateway.validate_and_consume(token, self.command, NOW, self.intent)
+            self.keys.active = True
+            gateway.validate_and_consume(token, self.command, NOW, self.intent)
+            reopened = WardenExecutionGateway(
+                self.registry, issuer, ConsumedTokenLedger(db_path), self.verifier
+            )
+            second = issuer.issue(self.command, decision, NOW)
+            with self.assertRaisesRegex(WEGValidationError, "REPLAY_DETECTED"):
+                reopened.validate_and_consume(second, self.command, NOW, self.intent)
+            changed = replace(self.command, command_id="CMD-002")
+            signed = replace(self.intent, signature_hex=self.private_key.sign(
+                intent_bytes(changed, self.intent)
+            ).hex())
+            changed_decision = warden.evaluate(changed, NOW, signed)
+            with self.assertRaisesRegex(WEGValidationError, "REPLAY_DETECTED"):
+                reopened.validate_and_consume(
+                    issuer.issue(changed, changed_decision, NOW), changed, NOW, signed
+                )
+
+    def test_local_trust_snapshot_and_signed_cli_fail_closed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            keys = Path(temp) / "admitted-keys.json"
+            keys.write_text(json.dumps({"keys": [{
+                "principal_id": "DM-001", "key_id": "GENESIS-KEY-001", "state": "active",
+                "valid_from": (NOW - timedelta(minutes=1)).isoformat(),
+                "valid_until": (NOW + timedelta(minutes=10)).isoformat(),
+                "public_key_hex": self.keys.public_key.hex(),
+            }]}))
+            resolver = FileActorKeyResolver(keys)
+            self.assertEqual(resolver.active_ed25519_key("DM-001", "GENESIS-KEY-001", NOW),
+                             self.keys.public_key)
+            data = json.loads(keys.read_text())
+            data["keys"][0]["state"] = "revoked"
+            keys.write_text(json.dumps(data))
+            self.assertIsNone(resolver.active_ed25519_key("DM-001", "GENESIS-KEY-001", NOW))
+            request = Path(temp) / "request.json"
+            current = datetime.now(timezone.utc)
+            fresh_command = replace(self.command, requested_at=current.isoformat(),
+                                    expires_at=(current + timedelta(minutes=2)).isoformat())
+            fresh_intent = replace(self.intent, expires_at=(current + timedelta(minutes=1)).isoformat())
+            fresh_intent = replace(fresh_intent, signature_hex=self.private_key.sign(
+                intent_bytes(fresh_command, fresh_intent)).hex())
+            request.write_text(json.dumps({"command": fresh_command.__dict__,
+                                           "signed_intent": fresh_intent.__dict__}))
+            with redirect_stderr(io.StringIO()):
+                self.assertEqual(cli_main(["signed-restart", "--request", str(request)],
+                    {"GENESIS_WARDEN_HMAC_KEY": "test-secret"}), 2)
+            output = io.StringIO()
+            with redirect_stdout(output):
+                code = cli_main(["signed-restart", "--request", str(request)], {
+                    "GENESIS_WARDEN_HMAC_KEY": "test-secret",
+                    "GENESIS_ACTOR_KEYS_PATH": str(keys),
+                    "GENESIS_REPLAY_DB": str(Path(temp) / "tokens.sqlite3"),
+                    "GENESIS_RIVER_JOURNAL": str(Path(temp) / "river.jsonl"),
+                })
+            self.assertEqual(code, 3)
+            self.assertEqual(json.loads(output.getvalue())["reason"], "SIGNING_KEY_NOT_ADMITTED")
 
 
 if __name__ == "__main__":
