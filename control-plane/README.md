@@ -43,3 +43,23 @@ The path is:
 `Command -> Warden -> one-shot token -> WEG -> Docker adapter -> verifier -> River evidence`
 
 R0.1 is initially E2 (Gateway Preferred). Direct Docker administrator/root access still exists outside the gateway; E4 enforcement requires later OS/service-account controls.
+
+## Optional signed intent gate (reference integration)
+
+`IntentSignatureVerifier` is an additive guard for service callers. Construct
+`Warden(..., intent_verifier=IntentSignatureVerifier(genesis_key_resolver))` and
+pass `SignedCommandIntent` to `GovernedExecutionService.execute`. With this
+gate configured, missing, expired, unadmitted or altered Ed25519 intent is
+denied before a capability token or Docker effect. The resolver must obtain
+the principal's admitted current public key from Genesis; never trust a key
+or `signature_verified` boolean supplied with the request. The signed payload
+is `intent_bytes(command, intent)` and includes the entire command, nonce,
+expiry, principal and key ID under a distinct protocol domain.
+
+The Alpha CLI does **not** configure the resolver or enable this gate. It
+continues its existing R0.1 behavior. This reference slice does not establish
+Genesis identity resolution, WebAuthn/passkeys, VC or OpenID federation,
+delegation, proof replay storage, live key revocation, pre-effect revalidation,
+or production signature authority. Those require authenticated adapters,
+policy admission and execution-gate integration. A valid actor signature is
+never itself a Warden permit.
