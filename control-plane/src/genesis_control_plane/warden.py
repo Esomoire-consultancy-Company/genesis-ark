@@ -28,6 +28,10 @@ class Warden:
         self._policy = policy
         self._intent_verifier = intent_verifier
 
+    @property
+    def intent_verifier(self) -> IntentSignatureVerifier | None:
+        return self._intent_verifier
+
     def _decision(self, command: Command, now: datetime, result: DecisionResult, reason: str) -> Decision:
         try:
             command_expiry = datetime.fromisoformat(command.expires_at)
