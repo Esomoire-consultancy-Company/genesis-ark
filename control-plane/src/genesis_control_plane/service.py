@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import secrets
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import Callable
 
 from genesis_control_plane.contracts import (
     Command,
@@ -15,6 +16,7 @@ from genesis_control_plane.contracts import (
 )
 from genesis_control_plane.docker_adapter import DockerAdapter
 from genesis_control_plane.evidence import EvidenceJournal, EvidenceReceipt
+from genesis_control_plane.intent_signature import SignedCommandIntent
 from genesis_control_plane.registry import AlphaRegistry
 from genesis_control_plane.tokens import TokenIssuer
 from genesis_control_plane.verifier import DockerVerifier
@@ -41,7 +43,10 @@ class GovernedExecutionService:
         adapter: DockerAdapter,
         verifier: DockerVerifier,
         evidence: EvidenceJournal,
+        clock: Callable[[], datetime] | None = None,
     ):
+        if warden.intent_verifier is not weg.intent_verifier:
+            raise ValueError("SIGNED_INTENT_GATE_MISMATCH")
         self._registry = registry
         self._warden = warden
         self._token_issuer = token_issuer
@@ -49,6 +54,7 @@ class GovernedExecutionService:
         self._adapter = adapter
         self._verifier = verifier
         self._evidence = evidence
+        self._clock = clock or (lambda: datetime.now(timezone.utc))
 
     def _event(
         self,
@@ -76,7 +82,10 @@ class GovernedExecutionService:
             classification="internal",
         )
 
-    def execute(self, command: Command, now: datetime) -> GovernedExecutionOutcome:
+    def execute(
+        self, command: Command, now: datetime,
+        signed_intent: SignedCommandIntent | None = None,
+    ) -> GovernedExecutionOutcome:
         receipts: list[EvidenceReceipt] = []
         previous_event_id: str | None = None
 
@@ -97,7 +106,7 @@ class GovernedExecutionService:
             return receipt
 
         record("command.requested", "operator", command.target_resource_id, asdict(command))
-        decision = self._warden.evaluate(command, now)
+        decision = self._warden.evaluate(command, now, signed_intent)
         record("warden.decision.created", "warden", command.command_id, asdict(decision))
 
         if decision.result is DecisionResult.DENY:
@@ -113,7 +122,9 @@ class GovernedExecutionService:
         claims = self._token_issuer.decode_and_verify(token, now)
         record("warden.token.issued", "warden", command.command_id, asdict(claims))
 
-        consumed_claims = self._weg.validate_and_consume(token, command, now)
+        # A signed request uses a fresh wall clock at the last controlled gate.
+        gateway_now = self._clock() if self._warden.intent_verifier is not None else now
+        consumed_claims = self._weg.validate_and_consume(token, command, gateway_now, signed_intent)
         record(
             "weg.token.consumed",
             "weg",

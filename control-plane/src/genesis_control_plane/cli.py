@@ -9,9 +9,11 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Mapping, Sequence
 
+from genesis_control_plane.admitted_keys import FileActorKeyResolver
 from genesis_control_plane.contracts import Command, DecisionResult, VerificationState
 from genesis_control_plane.docker_adapter import DockerAdapter
 from genesis_control_plane.evidence import EvidenceJournal
+from genesis_control_plane.intent_signature import IntentSignatureVerifier, SignedCommandIntent
 from genesis_control_plane.registry import AlphaRegistry
 from genesis_control_plane.service import GovernedExecutionService
 from genesis_control_plane.tokens import TokenIssuer
@@ -33,6 +35,9 @@ def build_parser() -> argparse.ArgumentParser:
     restart.add_argument("--timeout", type=int, default=30)
     restart.add_argument("--principal", default="DM-LOCAL-OPERATOR")
     restart.add_argument("--session", default="SES-LOCAL-ALPHA")
+    signed = subparsers.add_parser("signed-restart", help="execute an externally signed Alpha command")
+    signed.add_argument("--request", type=Path, required=True,
+                        help="JSON object containing command and signed_intent")
     return parser
 
 
@@ -63,9 +68,29 @@ def main(argv: Sequence[str] | None = None, environ: Mapping[str, str] | None = 
     registry_path, replay_path, river_path = _paths(env)
     now = datetime.now(timezone.utc)
     registry = AlphaRegistry.load(registry_path)
-    warden = Warden(registry, WardenPolicy())
+    intent_verifier = None
+    if args.subcommand == "signed-restart":
+        key_path = env.get("GENESIS_ACTOR_KEYS_PATH")
+        if not key_path:
+            print("GENESIS_ACTOR_KEYS_PATH is required for signed-restart", file=sys.stderr)
+            return 2
+        try:
+            request = json.loads(args.request.read_text(encoding="utf-8"))
+            command = Command(**request["command"])
+            signed_intent = SignedCommandIntent(**request["signed_intent"])
+            # A missing, corrupt or ungoverned trust snapshot must not execute.
+            json.loads(Path(key_path).read_text(encoding="utf-8"))["keys"]
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            print(f"invalid signed request or trust snapshot: {type(exc).__name__}", file=sys.stderr)
+            return 2
+        intent_verifier = IntentSignatureVerifier(FileActorKeyResolver(Path(key_path)))
+    else:
+        signed_intent = None
+    warden = Warden(registry, WardenPolicy(), intent_verifier)
     issuer = TokenIssuer(raw_secret.encode("utf-8"), "LOCAL-HMAC-001", AUDIENCE)
-    weg = WardenExecutionGateway(registry, issuer, ConsumedTokenLedger(replay_path))
+    weg = WardenExecutionGateway(
+        registry, issuer, ConsumedTokenLedger(replay_path), intent_verifier
+    )
     adapter = DockerAdapter()
     service = GovernedExecutionService(
         registry=registry,
@@ -76,7 +101,8 @@ def main(argv: Sequence[str] | None = None, environ: Mapping[str, str] | None = 
         verifier=DockerVerifier(adapter),
         evidence=EvidenceJournal(river_path),
     )
-    command = Command(
+    if args.subcommand == "restart":
+        command = Command(
         command_id=f"CMD-{secrets.token_hex(8)}",
         correlation_id=f"CORR-{secrets.token_hex(8)}",
         principal_id=args.principal,
@@ -90,9 +116,9 @@ def main(argv: Sequence[str] | None = None, environ: Mapping[str, str] | None = 
         environment="alpha",
         requested_at=now.isoformat(),
         expires_at=(now + timedelta(minutes=2)).isoformat(),
-    )
+        )
     try:
-        outcome = service.execute(command, now)
+        outcome = service.execute(command, now, signed_intent)
     except Exception as exc:
         print(f"governed execution failed: {type(exc).__name__}", file=sys.stderr)
         return 1

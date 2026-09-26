@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from genesis_control_plane.contracts import Command, Decision, DecisionResult
+from genesis_control_plane.intent_signature import IntentSignatureVerifier, SignedCommandIntent
 from genesis_control_plane.registry import AlphaRegistry, RegistryLookupError
 
 RISK_SCORE = {"low": 1, "medium": 3, "high": 6, "critical": 10}
@@ -19,9 +20,17 @@ class WardenPolicy:
 
 
 class Warden:
-    def __init__(self, registry: AlphaRegistry, policy: WardenPolicy):
+    def __init__(
+        self, registry: AlphaRegistry, policy: WardenPolicy,
+        intent_verifier: IntentSignatureVerifier | None = None,
+    ):
         self._registry = registry
         self._policy = policy
+        self._intent_verifier = intent_verifier
+
+    @property
+    def intent_verifier(self) -> IntentSignatureVerifier | None:
+        return self._intent_verifier
 
     def _decision(self, command: Command, now: datetime, result: DecisionResult, reason: str) -> Decision:
         try:
@@ -41,7 +50,13 @@ class Warden:
             reason_code=reason,
         )
 
-    def evaluate(self, command: Command, now: datetime) -> Decision:
+    def evaluate(
+        self, command: Command, now: datetime, signed_intent: SignedCommandIntent | None = None,
+    ) -> Decision:
+        if self._intent_verifier is not None:
+            denial = self._intent_verifier.verify(command, signed_intent, now)
+            if denial is not None:
+                return self._decision(command, now, DecisionResult.DENY, denial)
         try:
             command_expiry = datetime.fromisoformat(command.expires_at)
         except ValueError:

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from genesis_control_plane.canonical import canonical_json, sha256_hex
 from genesis_control_plane.contracts import CapabilityTokenClaims, Command
+from genesis_control_plane.intent_signature import IntentSignatureVerifier, SignedCommandIntent
 from genesis_control_plane.registry import AlphaRegistry
 from genesis_control_plane.tokens import TokenIssuer, TokenValidationError
 
@@ -30,6 +31,16 @@ class ConsumedTokenLedger:
                 )
                 """
             )
+            conn.execute(
+                """CREATE TABLE IF NOT EXISTS consumed_intents (
+                  principal_id TEXT NOT NULL,
+                  key_id TEXT NOT NULL,
+                  nonce TEXT NOT NULL,
+                  command_id TEXT NOT NULL UNIQUE,
+                  consumed_at TEXT NOT NULL,
+                  PRIMARY KEY (principal_id, key_id, nonce)
+                )"""
+            )
 
     def is_consumed(self, token_id: str) -> bool:
         with sqlite3.connect(self._db_path) as conn:
@@ -48,6 +59,24 @@ class ConsumedTokenLedger:
         except sqlite3.IntegrityError as exc:
             raise WEGValidationError("REPLAY_DETECTED") from exc
 
+    def consume_with_intent(
+        self, token_id: str, command_id: str, intent: SignedCommandIntent, consumed_at: datetime,
+    ) -> None:
+        """Reserve token, nonce and command together before any external effect."""
+        try:
+            with sqlite3.connect(self._db_path) as conn:
+                conn.execute("BEGIN IMMEDIATE")
+                conn.execute(
+                    "INSERT INTO consumed_intents VALUES (?, ?, ?, ?, ?)",
+                    (intent.principal_id, intent.key_id, intent.nonce, command_id, consumed_at.isoformat()),
+                )
+                conn.execute(
+                    "INSERT INTO consumed_tokens VALUES (?, ?, ?)",
+                    (token_id, command_id, consumed_at.isoformat()),
+                )
+        except sqlite3.IntegrityError as exc:
+            raise WEGValidationError("REPLAY_DETECTED") from exc
+
 
 class WardenExecutionGateway:
     def __init__(
@@ -55,13 +84,20 @@ class WardenExecutionGateway:
         registry: AlphaRegistry,
         issuer: TokenIssuer,
         ledger: ConsumedTokenLedger,
+        intent_verifier: IntentSignatureVerifier | None = None,
     ):
         self._registry = registry
         self._issuer = issuer
         self._ledger = ledger
+        self._intent_verifier = intent_verifier
+
+    @property
+    def intent_verifier(self) -> IntentSignatureVerifier | None:
+        return self._intent_verifier
 
     def validate_and_consume(
-        self, token: str, command: Command, now: datetime
+        self, token: str, command: Command, now: datetime,
+        signed_intent: SignedCommandIntent | None = None,
     ) -> CapabilityTokenClaims:
         try:
             claims = self._issuer.decode_and_verify(token, now)
@@ -91,5 +127,13 @@ class WardenExecutionGateway:
         ):
             raise WEGValidationError("REGISTRY_BINDING_INVALID")
 
-        self._ledger.consume(claims.token_id, command.command_id, now)
+        if self._intent_verifier is not None:
+            denial = self._intent_verifier.verify(command, signed_intent, now)
+            if denial is not None:
+                raise WEGValidationError(denial)
+            if signed_intent is None:
+                raise WEGValidationError("SIGNED_INTENT_REQUIRED")
+            self._ledger.consume_with_intent(claims.token_id, command.command_id, signed_intent, now)
+        else:
+            self._ledger.consume(claims.token_id, command.command_id, now)
         return claims

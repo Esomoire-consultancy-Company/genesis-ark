@@ -43,3 +43,41 @@ The path is:
 `Command -> Warden -> one-shot token -> WEG -> Docker adapter -> verifier -> River evidence`
 
 R0.1 is initially E2 (Gateway Preferred). Direct Docker administrator/root access still exists outside the gateway; E4 enforcement requires later OS/service-account controls.
+
+## Optional signed intent gate (reference integration)
+
+`IntentSignatureVerifier` is an additive guard for service callers. Construct
+`Warden(..., intent_verifier=IntentSignatureVerifier(genesis_key_resolver))` and
+pass `SignedCommandIntent` to `GovernedExecutionService.execute`. Inject the
+same verifier into `WardenExecutionGateway`; the service rejects a mismatch.
+With this
+gate configured, missing, expired, unadmitted or altered Ed25519 intent is
+denied before a capability token or Docker effect. The gateway rechecks the
+signature and currently admitted key, then atomically consumes the token,
+signed nonce and command ID in SQLite before Docker is called. Retries with
+the same command or nonce are rejected, including after restart. The resolver must obtain
+the principal's admitted current public key from Genesis; never trust a key
+or `signature_verified` boolean supplied with the request. The signed payload
+is `intent_bytes(command, intent)` and includes the entire command, nonce,
+expiry, principal and key ID under a distinct protocol domain.
+
+The `signed-restart --request /path/to/request.json` CLI route enables this gate
+when `GENESIS_ACTOR_KEYS_PATH` points to a separately operator-provisioned
+Alpha trust snapshot. The JSON request has `command` (all `Command` fields)
+and `signed_intent` (`principal_id`, `key_id`, `nonce`, `expires_at`,
+`signature_hex`); sign `intent_bytes(command, intent)` with Ed25519. The
+trust snapshot format is `{"keys":[{"principal_id":"DM-001",
+"key_id":"GENESIS-KEY-001","state":"active","valid_from":"...+00:00",
+"valid_until":"...+00:00","public_key_hex":"<32-byte-hex>"}]}`. Keep this
+file under operator control outside the request channel, and provision fresh
+key state before using this route. The original `restart` command retains its
+existing R0.1 behavior and is **not** an enforcement boundary against local
+operators with Docker access.
+
+The local file is an Alpha development adapter, not a Genesis authority or
+authenticated federation source. Production use still needs a governed key
+registry, authenticated ingress/session binding, WebAuthn or VC or federation
+adapters as applicable, delegation evaluation, and OS controls to prevent
+direct Docker bypass. A valid actor signature is never itself a Warden permit.
+The signed service route refreshes the gateway clock before token consumption;
+callers can inject a deterministic clock for tests.
