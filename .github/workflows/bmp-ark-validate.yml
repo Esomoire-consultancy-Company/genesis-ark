@@ -26,3 +26,4 @@ jobs:
       - run: node arks/bmp/scripts/validate-federation.mjs
       - run: node arks/bmp/scripts/validate-provider-admission.mjs
       - run: node arks/bmp/scripts/validate-release-assurance.mjs
+      - run: node arks/bmp/scripts/validate-lab-execution.mjs
