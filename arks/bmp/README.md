@@ -13,7 +13,7 @@ Canonical runtime: Identity → Authority → Reachability → Orchestration →
 ## Operating board
 Intake → Spec Ready → Build Ready → In Progress → Warden / BNR Review → Pilot Ready → Live / Operating → Evidence Closed.
 
-See [board](docs/BOARD.md), [architecture](docs/ARCHITECTURE.md), [pilot plan](docs/PILOT_SCOTTS_AMD.md), [property experience R0.5](docs/PROPERTY_EXPERIENCE_R05.md), [Door resolver R0.6](docs/DOOR_RESOLVER_R06.md), [Service Federation R0.7](docs/SERVICE_FEDERATION_R07.md), [Provider Admission R0.8](docs/PROVIDER_ADMISSION_R08.md) and [acceptance](docs/ACCEPTANCE_CHECKLIST.md).
+See [board](docs/BOARD.md), [architecture](docs/ARCHITECTURE.md), [pilot plan](docs/PILOT_SCOTTS_AMD.md), [property experience R0.5](docs/PROPERTY_EXPERIENCE_R05.md), [Door resolver R0.6](docs/DOOR_RESOLVER_R06.md), [Service Federation R0.7](docs/SERVICE_FEDERATION_R07.md), [Provider Admission R0.8](docs/PROVIDER_ADMISSION_R08.md), [Release Assurance R0.9](docs/RELEASE_ASSURANCE_R09.md) and [acceptance](docs/ACCEPTANCE_CHECKLIST.md).
 
 ## A-1204 reference pilot
 
