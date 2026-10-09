@@ -39,7 +39,7 @@ function render(){
  $("commercial-steps").replaceChildren();
  data.commercial_flow.forEach((s,i)=>{const row=el("div","step");row.append(el("b",null,i+1),document.createTextNode(s));$("commercial-steps").append(row);});
  $("price").textContent=tier==="GUEST"?"Price gated (demo)":"₹"+(data.property_price.indicative_amount/10000000).toFixed(2)+" Cr";
- $("price-note").textContent=tier==="GUEST"?"Select a preview persona to view indicative figures. This is not Warden admission.":"Unverified property indication; additional ₹18L and ₹12L lines have unknown scope. No binding quote.";
+ $("price-note").textContent=tier==="GUEST"?"Choose a preview persona to see depiction-only sample figures. Not a quote or Warden admission.":"Depiction-only example: ₹18L and ₹12L are sample UI values, not verified costs, approved pricing or an offer.";
  $("disclosure").textContent=tier+" preview only. Actual access requires server-side DigitalMe proof, Warden approval, lawful purpose and resource-scoped authorization.";
  const found=data.anchors.filter(a=>a.evidence_status==="PLACEHOLDER").length;
  $("evidence-summary").textContent=data.anchors.length+" anchors; "+found+" mock evidence URI; 0 independently verified receipts supplied.";
