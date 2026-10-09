@@ -16,6 +16,8 @@ export function createServiceFederation(config={}){
  async function requestQuantumSession(admission,{requested_slot}={}){
   if(!admission||!issued.has(admission)||admission.admission_status!=="ADMITTED")
    throw new DoorError("DOOR_ADMISSION_REQUIRED",403);
+  if(!Number.isSafeInteger(admission.expires_at)||admission.expires_at<=Math.floor(deps.clock()/1000))
+   throw new DoorError("DOOR_ADMISSION_EXPIRED",403);
   if(typeof requested_slot!=="string"||!slotRe.test(requested_slot)||
      !Number.isFinite(Date.parse(requested_slot))||
      Date.parse(requested_slot)<deps.clock()+60_000||

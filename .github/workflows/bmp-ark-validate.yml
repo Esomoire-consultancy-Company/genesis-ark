@@ -23,3 +23,4 @@ jobs:
       - run: node arks/bmp/scripts/validate-presentation.mjs
       - run: node arks/bmp/scripts/validate-experience.mjs
       - run: node arks/bmp/scripts/validate-door-runtime.mjs
+      - run: node arks/bmp/scripts/validate-federation.mjs
