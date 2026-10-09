@@ -65,7 +65,9 @@ export function createDoorResolver({registry,digitalMe,warden,river,nonceStore,p
        !["GUEST","REGISTERED"].includes(principal.identity_class))
       throw new DoorError("IDENTITY_INVALID",401);
     // Atomic, durable nonce consumption MUST be provided by the deployment.
-    const fresh=await nonceStore.consume("digitalme:"+principal.jti,principal.exp);
+    let fresh=false;
+    try{fresh=await nonceStore.consume("digitalme:"+principal.jti,principal.exp);}
+    catch{throw new DoorError("NONCE_STORE_UNAVAILABLE",503);}
     if(fresh!==true)throw new DoorError("ASSERTION_REPLAY",409);
     const correlation_id=randomUUID();
     const decisionEnvelope=await warden.decide({
@@ -78,7 +80,11 @@ export function createDoorResolver({registry,digitalMe,warden,river,nonceStore,p
     });
     const d=verifySigned(decisionEnvelope,{issuer:"Warden",key:publicKeys.warden,now:clock});
     if(d.allowed!==true||d.action!=="door.enter"||
-       !safeString(d.decision_id,128)||d.principal_ref!==principal.principal_ref||
+       !safeString(d.decision_id,128)||!safeString(d.policy_version,128)||
+       d.principal_ref!==principal.principal_ref||
+       d.correlation_id!==correlation_id||
+       d.asset_ref!==resource.asset_ref||d.door_ref!==resource.door_ref||
+       (d.anchor_ref??null)!==input.anchor_ref||
        d.resource_ref!==resource.resource_ref||
        !Array.isArray(d.allowed_states)||!d.allowed_states.includes(input.requested_state)||
        !["GUEST","REGISTERED"].includes(d.disclosure)||
