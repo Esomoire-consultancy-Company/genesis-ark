@@ -1,0 +1,32 @@
+name: "BMP | Feature or experience"
+description: "Requested experience or JIG feature"
+title: "[BMP/FEATURE] "
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Supply references, not confidential records.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Estate / Window / Stage
+      description: Supply references, not confidential records.
+    validations:
+      required: true
+  - type: textarea
+    id: governance
+    attributes:
+      label: Dependencies / gate
+      description: Supply references, not confidential records.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance evidence
+      description: Supply references, not confidential records.
+    validations:
+      required: true

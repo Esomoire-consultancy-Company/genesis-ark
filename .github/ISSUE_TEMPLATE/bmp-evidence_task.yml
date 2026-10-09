@@ -1,0 +1,32 @@
+name: "BMP | Evidence and assurance"
+description: "Evidence or River receipt task"
+title: "[BMP/EVIDENCE_TASK] "
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Source and issuer
+      description: Supply references, not confidential records.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Identity / authority
+      description: Supply references, not confidential records.
+    validations:
+      required: true
+  - type: textarea
+    id: governance
+    attributes:
+      label: Warden / BNR review
+      description: Supply references, not confidential records.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Outcome / closure
+      description: Supply references, not confidential records.
+    validations:
+      required: true

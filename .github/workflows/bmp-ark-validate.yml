@@ -1,0 +1,21 @@
+name: BMP ARK fixture validation
+on:
+  pull_request:
+    paths:
+      - 'arks/bmp/**'
+      - '.github/workflows/bmp-ark-validate.yml'
+  push:
+    paths:
+      - 'arks/bmp/**'
+      - '.github/workflows/bmp-ark-validate.yml'
+jobs:
+  fixture:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node arks/bmp/scripts/validate.mjs
