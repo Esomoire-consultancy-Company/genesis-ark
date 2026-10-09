@@ -45,7 +45,7 @@ const altered=structuredClone(fixture);altered.transaction_enabled=true;
 assert.throws(()=>getStateProjection(altered,"TODAY"),/nontransactional/);
 const html=read("../market/a-1204/index.html");
 const app=read("../market/a-1204/app.js");
-for(const id of ["stage-rail","stage-heading","stage-warning","anchor-grid","anchor-dialog","drawer-title","drawer-close","anchor-fields","door-locale","door-url","door-status","copy-door","bundle-examples","presentation-disclaimer"]){
+for(const id of ["state-rail","stage-heading","stage-warning","anchor-grid","anchor-dialog","drawer-title","drawer-close","anchor-fields","door-locale","door-url","door-status","copy-door","bundle-examples","presentation-disclaimer"]){
  assert.ok(html.includes('id="'+id+'"'),"Missing UI element "+id);
 }
 for(const action of ["getStateProjection","getAnchorDetails","getDoorPreview","getPresentationModel","interpretUntrustedDoorUrl"]){
@@ -55,4 +55,6 @@ assert.ok(html.includes('aria-labelledby="drawer-title"'));
 assert.ok(html.includes('role="group"'));
 assert.ok(html.includes("NOT A LIVE OFFER"));
 assert.ok(html.includes("Copy inactive example link"));
+assert.ok(app.includes(String.raw`/~~~yaml\s*([\s\S]*?)~~~/i`),"Canonical YAML fence parser must retain functional regex escapes");
+assert.ok(app.includes("node.dataset.anchorId===lastAnchorId"),"Closing the drawer must restore focus to current rendered anchor button");
 console.log("PASS: R0.5 5-state scene, 30 anchor state combinations, inactive Door previews, authority tampering and view bindings.");

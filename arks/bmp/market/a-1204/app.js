@@ -4,7 +4,7 @@ import { getStateProjection, getAnchorDetails, getDoorPreview } from "./experien
 
 const $=id=>document.getElementById(id);
 const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=String(text);return node;};
-let data=null,display=null,selectedAnchor=null,lastTrigger=null;
+let data=null,display=null,selectedAnchor=null,lastAnchorId=null;
 const anchorDialog=$("anchor-dialog");
 
 async function loadFixture(){
@@ -12,7 +12,7 @@ async function loadFixture(){
     const raw=await fetch("../../docs/LISTING_TEMPLATE.md",{cache:"no-store"});
     if(!raw.ok)throw new Error("Canonical Markdown unavailable");
     const markdown=await raw.text();
-    const match=markdown.match(/~~~yaml\\s*([\\s\\S]*?)~~~/i);
+    const match=markdown.match(/~~~yaml\s*([\s\S]*?)~~~/i);
     if(!match)throw new Error("Raw canonical source not available");
     $("data-source").textContent="Source: canonical LISTING_TEMPLATE.md.";
     return JSON.parse(match[1]);
@@ -46,7 +46,7 @@ async function boot(){
   $("copy").addEventListener("click",copyRef);
   $("copy-door").addEventListener("click",copyDoor);
   $("drawer-close").addEventListener("click",()=>anchorDialog.close());
-  anchorDialog.addEventListener("close",()=>lastTrigger?.focus());
+  anchorDialog.addEventListener("close",()=>{const card=[...$("anchor-grid").querySelectorAll("button")].find(node=>node.dataset.anchorId===lastAnchorId);card?.focus();});
   $("clear-anchor").addEventListener("click",()=>{selectedAnchor=null;render();});
   render();
 }
@@ -69,7 +69,7 @@ function render(){
   const grid=$("anchor-grid");grid.replaceChildren();
   for(const a of data.anchors){
     const card=el("button","anchor"+(selectedAnchor===a.id?" selected":""));
-    card.type="button";card.setAttribute("aria-haspopup","dialog");
+    card.type="button";card.dataset.anchorId=a.id;card.setAttribute("aria-haspopup","dialog");
     card.setAttribute("aria-label","Inspect "+a.label+" component "+a.id);
     card.append(el("small",null,a.id),el("h3",null,a.label),
       el("p",null,state==="TODAY"?a.today:a.proposed),
@@ -94,7 +94,7 @@ function render(){
   renderDoor();
 }
 function openAnchor(id,trigger){
-  selectedAnchor=id;lastTrigger=trigger;
+  selectedAnchor=id;lastAnchorId=id;
   render();
   renderAnchorDialog();
   if(typeof anchorDialog.showModal==="function")anchorDialog.showModal();
