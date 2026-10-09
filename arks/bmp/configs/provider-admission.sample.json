@@ -1,0 +1,12 @@
+{
+  "version": "bmp.provider-admission.v0.1",
+  "environment": "staging",
+  "release_sha": "f87ace816d8a01e4b0c2154084d4b3e9d19d2f43",
+  "asset_ref": "A-1204",
+  "tenant_ref": "DEMO_UNVERIFIED",
+  "submitted_at": 0,
+  "expires_at": 0,
+  "provider_attestations": [],
+  "control_evidence": [],
+  "approvals": {}
+}
