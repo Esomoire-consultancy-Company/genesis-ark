@@ -16,9 +16,12 @@ Intake → Spec Ready → Build Ready → In Progress → Warden / BNR Review �
 See [board](docs/BOARD.md), [architecture](docs/ARCHITECTURE.md), [pilot plan](docs/PILOT_SCOTTS_AMD.md) and [acceptance](docs/ACCEPTANCE_CHECKLIST.md).
 
 ## A-1204 reference pilot
+
+**Presentation-only disclaimer (R0.3): Every amount, cost, price, fee, commission percentage, component/replacement value and bundle figure in this BMP A-1204 demonstration is included solely for visual depiction and interface presentation. None is a verified quotation, valuation, financial forecast, payable amount, approved rate or binding offer. Original figures are preserved as examples, not commercially reconciled or certified.**
+
 A-1204 is an **unverified demonstration fixture**, not a published property offer. Claimed site, prices, TODAY-state description, River URI and prospective buyer schedules originate from user-supplied planning text, not validated external records. State rail: TODAY → PLANNED → FINISHED → CONFIGURED → DELIVERED. Six anchors: FLOOR_01, ARCH_01, GLAZE_01, KITCHEN_01, BALC_01, LIGHT_01.
 
-The listing has an illustrative amount of ₹4.8 crore plus two separately scoped *unconfirmed* amounts of ₹18 lakh and ₹12 lakh. No price, inclusion, specification, warranty or property right may be represented as verified without authenticated evidence.
+The listing displays sample amounts of ₹4.8 crore, ₹18 lakh and ₹12 lakh solely for depiction. They are not validated or reconciled commercial figures. No price, inclusion, specification, warranty or property right may be represented as verified without authenticated evidence.
 
 ## Run the standalone frontend
 From the **repository root**:
