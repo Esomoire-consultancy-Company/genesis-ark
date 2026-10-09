@@ -132,4 +132,72 @@ const tooBig=createFederationTransport({
 await fails(()=>tooBig.invoke("Genesis","/v1/status"),"FEDERATION_BAD_RESPONSE");
 await fails(()=>transport.invoke("Genesis","https://bad.example.test"),"FEDERATION_REQUEST_REJECTED");
 assert.equal(sequence.filter(x=>x.name==="Genesis").length,1);
-console.log("PASS: R0.7 five-provider signed lab federation, Quantum pending-only, hard A-1204 deny, no forged admissions, HTTP restrictions and depiction-only guard.");
+
+// R0.7 adverse cross-service behavior: an upstream "success" without correct signature
+// and request binding is never a verified operation.
+async function intercepted(name,predicate,change){
+ return async(url,opts)=>{
+  const raw=await mockFetch(url,opts);
+  const service=names.find(n=>new URL(url).hostname===n.toLowerCase()+".example.test");
+  if(service!==name||!predicate(opts))return raw;
+  const packet=await raw.json();
+  const modified=change(packet,opts);
+  return new Response(JSON.stringify(modified),{status:200,headers:{"content-type":"application/json"}});
+ };
+}
+const genesisSpoof=await intercepted("Genesis",()=>true,packet=>
+ signMessage("Genesis",{...packet.payload,asset_ref:"LAB-OTHER"}));
+await fails(()=>createServiceFederation({...base,fetchImpl:genesisSpoof}).resolver(input,{authorization:auth}),"GENESIS_BINDING_INVALID");
+const genesisTamper=await intercepted("Genesis",()=>true,packet=>{
+ packet.payload.asset_ref="LAB-OTHER";return packet;
+});
+await fails(()=>createServiceFederation({...base,fetchImpl:genesisTamper}).resolver(input,{authorization:auth}),"SIGNATURE_INVALID");
+const quantumConfirm=await intercepted("Quantum",()=>true,packet=>
+ signMessage("Quantum",{...packet.payload,status:"CONFIRMED"}));
+const confirmFed=createServiceFederation({...base,fetchImpl:quantumConfirm});
+const confirmAdmission=await confirmFed.resolver(input,{authorization:auth});
+await fails(()=>confirmFed.requestQuantumSession(confirmAdmission,{requested_slot}),"QUANTUM_RESPONSE_UNVERIFIED");
+const quantumWrongDecision=await intercepted("Quantum",()=>true,packet=>
+ signMessage("Quantum",{...packet.payload,decision_id:"lab:foreign-decision"}));
+const wrongQuantumFed=createServiceFederation({...base,fetchImpl:quantumWrongDecision});
+const wrongQuantumAdmission=await wrongQuantumFed.resolver(input,{authorization:auth});
+await fails(()=>wrongQuantumFed.requestQuantumSession(wrongQuantumAdmission,{requested_slot}),"QUANTUM_RESPONSE_UNVERIFIED");
+const sessionDeny=await intercepted("Warden",opts=>JSON.parse(opts.body).action==="quantum.session.request",packet=>
+ signMessage("Warden",{...packet.payload,allowed:false}));
+const deniedFed=createServiceFederation({...base,fetchImpl:sessionDeny});
+const deniedAdmission=await deniedFed.resolver(input,{authorization:auth});
+await fails(()=>deniedFed.requestQuantumSession(deniedAdmission,{requested_slot}),"WARDEN_SESSION_DENIED");
+const riverMismatch=await intercepted("River",opts=>JSON.parse(opts.body).event.event_type==="QUANTUM_SESSION_REQUEST",packet=>
+ signMessage("River",{...packet.payload,event_digest:"0".repeat(64)}));
+const mismatchFed=createServiceFederation({...base,fetchImpl:riverMismatch});
+const mismatchAdmission=await mismatchFed.resolver(input,{authorization:auth});
+await fails(()=>mismatchFed.requestQuantumSession(mismatchAdmission,{requested_slot}),"EVIDENCE_UNAVAILABLE");
+let advancingClock=now;
+const expiryFed=createServiceFederation({...base,clock:()=>advancingClock});
+const expiringAdmission=await expiryFed.resolver(input,{authorization:auth});
+advancingClock=now+200000;
+await fails(()=>expiryFed.requestQuantumSession(expiringAdmission,{requested_slot}),"DOOR_ADMISSION_EXPIRED");
+// Full local HTTP stack: request -> registry -> DigitalMe -> Warden -> River -> response.
+// Transport is completely substituted; no external host, secret or live QR is touched.
+const {createDoorHttpServer}=await import("../service/http.mjs");
+const bound=createDoorHttpServer({resolver:federation.resolver});
+await new Promise(resolve=>bound.listen(0,"127.0.0.1",resolve));
+try{
+ const url="http://127.0.0.1:"+bound.address().port+"/v1/door/resolve";
+ const goodHttp=await fetch(url,{
+   method:"POST",headers:{"content-type":"application/json","authorization":auth},
+   body:JSON.stringify(input)
+ });
+ assert.equal(goodHttp.status,200);
+ const body=await goodHttp.json();
+ assert.equal(body.admission_status,"ADMITTED");
+ assert.equal(body.monetary_values,"DEPICTION_ONLY");
+ const blocked=await fetch(url,{
+   method:"POST",headers:{"content-type":"application/json","authorization":auth},
+   body:JSON.stringify({...input,asset_ref:"A-1204",door_ref:"VSR:BELGAUM:A-1204:DOOR",requested_state:"TODAY"})
+ });
+ assert.equal(blocked.status,403);
+ assert.equal((await blocked.json()).error,"RESOURCE_NOT_ADMITTED");
+}finally{await new Promise((done,fail)=>bound.close(e=>e?fail(e):done()));}
+
+console.log("PASS: R0.7 five-provider signed lab federation, Quantum pending-only, hard A-1204 deny, no forged admissions, HTTP end-to-end, adversarial federation restrictions and depiction-only guard.");
