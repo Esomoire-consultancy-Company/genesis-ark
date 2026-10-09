@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.virtualsilkroad.example.invalid/bmp/door-entry-request/v0.2",
+  "title": "BMP public Door-entry navigation hints — not an authority grant",
+  "description": "QR carries untrusted display/navigation preferences only; admission and evidence are server issued. This proposed schema is not a deployed API.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "asset_ref",
+    "door_ref",
+    "requested_state",
+    "anchor_ref"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "bmp.door-entry-request.v0.2"
+    },
+    "asset_ref": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{1,63}$"
+    },
+    "door_ref": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_:/.-]{2,127}$"
+    },
+    "requested_state": {
+      "enum": [
+        "TODAY",
+        "PLANNED",
+        "FINISHED",
+        "CONFIGURED",
+        "DELIVERED"
+      ]
+    },
+    "anchor_ref": {
+      "anyOf": [
+        {
+          "enum": [
+            "FLOOR_01",
+            "ARCH_01",
+            "GLAZE_01",
+            "KITCHEN_01",
+            "BALC_01",
+            "LIGHT_01"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "locale_hint": {
+      "type": "string",
+      "maxLength": 20
+    },
+    "geo_pack_hint": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "campaign_ref": {
+      "type": "string",
+      "maxLength": 80
+    }
+  }
+}

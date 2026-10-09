@@ -1,0 +1,183 @@
+# A-1204 — canonical source fixture
+
+> DRAFT_UNVERIFIED — DEPICTION_ONLY. Every cost, price, fee, replacement value and financial figure is solely illustrative for interface presentation and is NOT a verified or payable amount. The following is YAML 1.2-compatible JSON in a fenced YAML block, permitting dependency-free, deterministic consumption by the preview and snapshot verifier. Edit this single source, then regenerate the JSON snapshot through the documented export step.
+
+~~~yaml
+{
+  "schema_version": "bmp.property-listing.v0.2",
+  "asset_id": "A-1204",
+  "pilot": "SCOTTS/AMD — A-1204",
+  "title": "A-1204 | Spatial Property Passport",
+  "location": "Belgaum, Karnataka, India (user-supplied pilot description; unverified)",
+  "claimed_site": "Prestige Belgaum · 12F West Wing (unverified)",
+  "publication_status": "DRAFT_UNVERIFIED",
+  "transaction_enabled": false,
+  "source_status": "USER_SUPPLIED_NOT_INDEPENDENTLY_VERIFIED",
+  "today_observation_date": "2026-10-08",
+  "description": "Illustrative commercial and spatial pilot. No verified title, approvals, offer, price, photographs, buyer rights, or River receipt have been supplied.",
+  "property_price": {
+    "currency": "INR",
+    "indicative_amount": 48000000,
+    "quote_status": "NOT_A_QUOTE_DEPICTION_ONLY",
+    "additional_indicative_lines": [
+      {
+        "amount": 1800000,
+        "scope": "TBD — source did not specify inclusion",
+        "purpose": "DEPICTION_ONLY"
+      },
+      {
+        "amount": 1200000,
+        "scope": "TBD — source did not specify inclusion",
+        "purpose": "DEPICTION_ONLY"
+      }
+    ],
+    "amount_purpose": "VISUAL_MOCKUP_ONLY"
+  },
+  "states": [
+    "TODAY",
+    "PLANNED",
+    "FINISHED",
+    "CONFIGURED",
+    "DELIVERED"
+  ],
+  "state_descriptions": {
+    "TODAY": "As-is proposed scan, not independently authenticated",
+    "PLANNED": "Proposed BIM / specification concept",
+    "FINISHED": "Illustrative finished render, not evidence of work",
+    "CONFIGURED": "Buyer-selected hypothetical finishes",
+    "DELIVERED": "Future as-built state; no delivery evidence on file"
+  },
+  "disclosure_levels": [
+    "GUEST",
+    "REGISTERED",
+    "QUALIFIED",
+    "VERIFIED"
+  ],
+  "anchors": [
+    {
+      "id": "FLOOR_01",
+      "label": "Flooring",
+      "today": "Bare/unfinished — verification pending",
+      "proposed": "Marble or buyer-selected wood subject to assessment",
+      "included": "UNCONFIRMED",
+      "supplier": "TBD",
+      "warranty": "TBD",
+      "evidence_ref": "river://a-1204/floor/marble/spec#abc123",
+      "evidence_status": "PLACEHOLDER"
+    },
+    {
+      "id": "ARCH_01",
+      "label": "Arch",
+      "today": "Unfinished arch — verification pending",
+      "proposed": "Architectural finish subject to approval",
+      "included": "UNCONFIRMED",
+      "supplier": "TBD",
+      "warranty": "TBD",
+      "evidence_ref": null,
+      "evidence_status": "MISSING"
+    },
+    {
+      "id": "GLAZE_01",
+      "label": "Glazing",
+      "today": "Not independently inspected",
+      "proposed": "Glazing specification to be obtained",
+      "included": "UNCONFIRMED",
+      "supplier": "TBD",
+      "warranty": "TBD",
+      "evidence_ref": null,
+      "evidence_status": "MISSING"
+    },
+    {
+      "id": "KITCHEN_01",
+      "label": "Kitchen",
+      "today": "Not independently inspected",
+      "proposed": "Modular kitchen design subject to measurement",
+      "included": "UNCONFIRMED",
+      "supplier": "TBD",
+      "warranty": "TBD",
+      "evidence_ref": null,
+      "evidence_status": "MISSING"
+    },
+    {
+      "id": "BALC_01",
+      "label": "Balcony",
+      "today": "Not independently inspected",
+      "proposed": "Balcony finishing subject to compliance",
+      "included": "UNCONFIRMED",
+      "supplier": "TBD",
+      "warranty": "TBD",
+      "evidence_ref": null,
+      "evidence_status": "MISSING"
+    },
+    {
+      "id": "LIGHT_01",
+      "label": "Lighting",
+      "today": "Not independently inspected",
+      "proposed": "Lighting and electrical plan subject to site survey",
+      "included": "UNCONFIRMED",
+      "supplier": "TBD",
+      "warranty": "TBD",
+      "evidence_ref": null,
+      "evidence_status": "MISSING"
+    }
+  ],
+  "commercial_flow": [
+    "DISCOVER",
+    "INSPECT",
+    "CONFIGURE",
+    "VERIFY",
+    "FINANCE",
+    "OFFER",
+    "CONTRACT",
+    "CLOSE"
+  ],
+  "legal_note": "A digital passport, interface action, hash or DigitalMe entitlement does not convey legal property title. Conveyance, registration and statutory compliance occur through legally operative external processes.",
+  "lead_note": "Role chooser on preview is a visual simulator only. Real disclosure requires server-side DigitalMe authentication, Warden admission, and approved data access.",
+  "evidence_requirements": [
+    "IDENTITY",
+    "PERMISSION",
+    "CONTEXT",
+    "ACTION",
+    "EVIDENCE",
+    "WARDEN_REVIEW",
+    "BNR_REVIEW",
+    "OUTCOME",
+    "RECORD_CLOSURE"
+  ],
+  "presentation": {
+    "cost_mode": "DEPICTION_ONLY",
+    "example_data_status": "USER_SUPPLIED_VISUAL_EXAMPLE",
+    "disclaimer": "All costs, prices, fees, replacement values, percentages, and monetary figures are shown solely to depict the product interface. They are illustrative examples, not verified amounts, quotations, valuations, approved rates, payable amounts, financial projections or offers.",
+    "quote_enabled": false,
+    "payment_enabled": false,
+    "commercial_settlement_enabled": false,
+    "arithmetic_policy": "DISPLAY_EXAMPLES_AS_PROVIDED_DO_NOT_RECONCILE_OR_REPRICE",
+    "base_display": "₹4.80 Cr",
+    "bundle_examples": [
+      {
+        "label": "PROPERTY ONLY",
+        "amount_display": "₹4.80 Cr",
+        "purpose": "DEPICTION_ONLY"
+      },
+      {
+        "label": "PROPERTY + INTERIORS",
+        "amount_display": "₹5.21 Cr",
+        "purpose": "DEPICTION_ONLY"
+      },
+      {
+        "label": "AS SHOWN",
+        "amount_display": "₹5.41 Cr",
+        "purpose": "DEPICTION_ONLY"
+      },
+      {
+        "label": "CUSTOMISE",
+        "amount_display": "Example / Variable",
+        "purpose": "DEPICTION_ONLY"
+      }
+    ]
+  }
+}
+~~~
+
+## Source discipline
+The block above is **planning input**, not authenticated title, building approval, site inspection or a real River receipt. Evidence IDs shown as PLACEHOLDER must never be accepted as closure evidence.

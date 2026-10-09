@@ -1,0 +1,32 @@
+name: "BMP | Support routing"
+description: "Customer or field-ops support route"
+title: "[BMP/SUPPORT_ROUTE] "
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Customer intent
+      description: Supply references, not confidential records.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Estate and location
+      description: Supply references, not confidential records.
+    validations:
+      required: true
+  - type: textarea
+    id: governance
+    attributes:
+      label: Escalation / SLA
+      description: Supply references, not confidential records.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Resolution evidence
+      description: Supply references, not confidential records.
+    validations:
+      required: true

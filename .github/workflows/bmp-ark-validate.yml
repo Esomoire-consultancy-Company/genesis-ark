@@ -1,0 +1,29 @@
+name: BMP ARK fixture validation
+on:
+  pull_request:
+    paths:
+      - 'arks/bmp/**'
+      - '.github/workflows/bmp-ark-validate.yml'
+  push:
+    paths:
+      - 'arks/bmp/**'
+      - '.github/workflows/bmp-ark-validate.yml'
+jobs:
+  fixture:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node arks/bmp/scripts/validate.mjs
+      - run: node arks/bmp/scripts/validate-door-entry.mjs
+      - run: node arks/bmp/scripts/validate-presentation.mjs
+      - run: node arks/bmp/scripts/validate-experience.mjs
+      - run: node arks/bmp/scripts/validate-door-runtime.mjs
+      - run: node arks/bmp/scripts/validate-federation.mjs
+      - run: node arks/bmp/scripts/validate-provider-admission.mjs
+      - run: node arks/bmp/scripts/validate-release-assurance.mjs
+      - run: node arks/bmp/scripts/validate-lab-execution.mjs

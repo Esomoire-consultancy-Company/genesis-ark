@@ -1,0 +1,32 @@
+name: "BMP | Provider integration"
+description: "Integration request and capability registration"
+title: "[BMP/INTEGRATION] "
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Provider and runtime
+      description: Supply references, not confidential records.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: API / contract
+      description: Supply references, not confidential records.
+    validations:
+      required: true
+  - type: textarea
+    id: governance
+    attributes:
+      label: Credential and data handling
+      description: Supply references, not confidential records.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Test and rollback evidence
+      description: Supply references, not confidential records.
+    validations:
+      required: true

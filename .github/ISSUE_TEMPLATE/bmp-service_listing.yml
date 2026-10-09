@@ -1,0 +1,32 @@
+name: "BMP | Service or product listing"
+description: "Listing and provider service request"
+title: "[BMP/SERVICE_LISTING] "
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Commercial scope
+      description: Supply references, not confidential records.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Provider / licence
+      description: Supply references, not confidential records.
+    validations:
+      required: true
+  - type: textarea
+    id: governance
+    attributes:
+      label: Data disclosure policy
+      description: Supply references, not confidential records.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Provenance / acceptance
+      description: Supply references, not confidential records.
+    validations:
+      required: true

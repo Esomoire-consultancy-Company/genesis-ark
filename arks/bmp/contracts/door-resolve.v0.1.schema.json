@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BMP Door resolve request R0.6 — no trust in client privilege claims",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "asset_ref",
+    "door_ref",
+    "requested_state"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "bmp.door-resolve.v0.1"
+    },
+    "asset_ref": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9:_./-]{0,63}$"
+    },
+    "door_ref": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9:_./-]{0,127}$"
+    },
+    "requested_state": {
+      "enum": [
+        "TODAY",
+        "PLANNED",
+        "FINISHED",
+        "CONFIGURED",
+        "DELIVERED"
+      ]
+    },
+    "anchor_ref": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "enum": [
+            "FLOOR_01",
+            "ARCH_01",
+            "GLAZE_01",
+            "KITCHEN_01",
+            "BALC_01",
+            "LIGHT_01"
+          ]
+        }
+      ]
+    },
+    "locale_hint": {
+      "enum": [
+        "en",
+        "en-IN",
+        "en-AE",
+        "ar",
+        "ar-AE"
+      ]
+    }
+  }
+}

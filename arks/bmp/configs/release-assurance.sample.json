@@ -1,0 +1,35 @@
+{
+  "version": "bmp.release-assurance.v0.1",
+  "environment": "staging",
+  "release_sha": "a83ee926e5f5d189b14b039143b13835b94946dc",
+  "asset_ref": "A-1204",
+  "tenant_ref": "DEMO_UNVERIFIED",
+  "submitted_at": 0,
+  "expires_at": 0,
+  "provider_packet": {
+    "version": "bmp.provider-admission.v0.1",
+    "environment": "staging",
+    "release_sha": "a83ee926e5f5d189b14b039143b13835b94946dc",
+    "asset_ref": "A-1204",
+    "tenant_ref": "DEMO_UNVERIFIED",
+    "submitted_at": 0,
+    "expires_at": 0,
+    "provider_attestations": [],
+    "control_evidence": [],
+    "approvals": {}
+  },
+  "plan": {
+    "deployment_ref": "LAB:UNVERIFIED:01",
+    "artifact_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "rollback_artifact_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "rollout_strategy": "CANARY",
+    "initial_percent": 5,
+    "rollback_owner_ref": "DEMO:OPERATOR",
+    "runtime_ref": "DEMO:RUNTIME",
+    "runbook_ref": "DEMO:RUNBOOK",
+    "release_provenance_ref": "river://lab/release/unverified",
+    "rollback_plan_ref": "river://lab/rollback/unverified"
+  },
+  "attestations": {},
+  "approvals": {}
+}
