@@ -1,10 +1,10 @@
 # A-1204 — canonical source fixture
 
-> DRAFT_UNVERIFIED. The following is YAML 1.2-compatible JSON in a fenced YAML block, permitting dependency-free, deterministic consumption by the preview and snapshot verifier. Edit this single source, then regenerate the JSON snapshot through the documented export step.
+> DRAFT_UNVERIFIED — DEPICTION_ONLY. Every cost, price, fee, replacement value and financial figure is solely illustrative for interface presentation and is NOT a verified or payable amount. The following is YAML 1.2-compatible JSON in a fenced YAML block, permitting dependency-free, deterministic consumption by the preview and snapshot verifier. Edit this single source, then regenerate the JSON snapshot through the documented export step.
 
 ~~~yaml
 {
-  "schema_version": "bmp.property-listing.v0.1",
+  "schema_version": "bmp.property-listing.v0.2",
   "asset_id": "A-1204",
   "pilot": "SCOTTS/AMD — A-1204",
   "title": "A-1204 | Spatial Property Passport",
@@ -18,17 +18,20 @@
   "property_price": {
     "currency": "INR",
     "indicative_amount": 48000000,
-    "quote_status": "UNVERIFIED",
+    "quote_status": "NOT_A_QUOTE_DEPICTION_ONLY",
     "additional_indicative_lines": [
       {
         "amount": 1800000,
-        "scope": "TBD — source did not specify inclusion"
+        "scope": "TBD — source did not specify inclusion",
+        "purpose": "DEPICTION_ONLY"
       },
       {
         "amount": 1200000,
-        "scope": "TBD — source did not specify inclusion"
+        "scope": "TBD — source did not specify inclusion",
+        "purpose": "DEPICTION_ONLY"
       }
-    ]
+    ],
+    "amount_purpose": "VISUAL_MOCKUP_ONLY"
   },
   "states": [
     "TODAY",
@@ -140,7 +143,39 @@
     "BNR_REVIEW",
     "OUTCOME",
     "RECORD_CLOSURE"
-  ]
+  ],
+  "presentation": {
+    "cost_mode": "DEPICTION_ONLY",
+    "example_data_status": "USER_SUPPLIED_VISUAL_EXAMPLE",
+    "disclaimer": "All costs, prices, fees, replacement values, percentages, and monetary figures are shown solely to depict the product interface. They are illustrative examples, not verified amounts, quotations, valuations, approved rates, payable amounts, financial projections or offers.",
+    "quote_enabled": false,
+    "payment_enabled": false,
+    "commercial_settlement_enabled": false,
+    "arithmetic_policy": "DISPLAY_EXAMPLES_AS_PROVIDED_DO_NOT_RECONCILE_OR_REPRICE",
+    "base_display": "₹4.80 Cr",
+    "bundle_examples": [
+      {
+        "label": "PROPERTY ONLY",
+        "amount_display": "₹4.80 Cr",
+        "purpose": "DEPICTION_ONLY"
+      },
+      {
+        "label": "PROPERTY + INTERIORS",
+        "amount_display": "₹5.21 Cr",
+        "purpose": "DEPICTION_ONLY"
+      },
+      {
+        "label": "AS SHOWN",
+        "amount_display": "₹5.41 Cr",
+        "purpose": "DEPICTION_ONLY"
+      },
+      {
+        "label": "CUSTOMISE",
+        "amount_display": "Example / Variable",
+        "purpose": "DEPICTION_ONLY"
+      }
+    ]
+  }
 }
 ~~~
 

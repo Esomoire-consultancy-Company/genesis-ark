@@ -1,7 +1,8 @@
+import { getPresentationModel } from "./presentation.mjs";
 const $=id=>document.getElementById(id);
 const htmlEscapeNotNeeded=true; // All untrusted fixture content uses textContent, not innerHTML.
 const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n;};
-let data=null;
+let data=null, display=null;
 async function load(){
  try{
   const raw=await fetch("../../docs/LISTING_TEMPLATE.md",{cache:"no-store"});
@@ -15,6 +16,7 @@ async function load(){
   if(!fallback.ok)throw new Error("Listing fallback unavailable: "+err.message);
   data=await fallback.json(); $("data-source").textContent="Source: checked-in listing.json snapshot.";
  }
+ display=getPresentationModel(data); $("presentation-disclaimer").textContent=display.disclaimer;
  for(const state of data.states){const opt=el("option",null,state);opt.value=state;$("stage").append(opt);}
  for(const tier of data.disclosure_levels){const opt=el("option",null,tier);opt.value=tier;$("tier").append(opt);}
  $("listing-title").textContent=data.title;
@@ -38,8 +40,11 @@ function render(){
  }
  $("commercial-steps").replaceChildren();
  data.commercial_flow.forEach((s,i)=>{const row=el("div","step");row.append(el("b",null,i+1),document.createTextNode(s));$("commercial-steps").append(row);});
- $("price").textContent=tier==="GUEST"?"Price gated (demo)":"₹"+(data.property_price.indicative_amount/10000000).toFixed(2)+" Cr";
- $("price-note").textContent=tier==="GUEST"?"Choose a preview persona to see depiction-only sample figures. Not a quote or Warden admission.":"Depiction-only example: ₹18L and ₹12L are sample UI values, not verified costs, approved pricing or an offer.";
+ $("price").textContent=display.base_display;
+ $("price-note").textContent="Depiction only: not a verified valuation, quotation, amount payable or commercial offer.";
+ const group=$("bundle-examples");group.replaceChildren();
+ for(const bundle of display.bundle_examples){const row=el("div","step");const label=el("span",null,bundle.label+" — ");const value=el("strong",null,bundle.amount_display);row.append(label,value);group.append(row);}
+
  $("disclosure").textContent=tier+" preview only. Actual access requires server-side DigitalMe proof, Warden approval, lawful purpose and resource-scoped authorization.";
  const found=data.anchors.filter(a=>a.evidence_status==="PLACEHOLDER").length;
  $("evidence-summary").textContent=data.anchors.length+" anchors; "+found+" mock evidence URI; 0 independently verified receipts supplied.";

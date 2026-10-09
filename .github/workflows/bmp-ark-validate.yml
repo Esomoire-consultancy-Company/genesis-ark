@@ -20,3 +20,4 @@ jobs:
           node-version: '22'
       - run: node arks/bmp/scripts/validate.mjs
       - run: node arks/bmp/scripts/validate-door-entry.mjs
+      - run: node arks/bmp/scripts/validate-presentation.mjs
