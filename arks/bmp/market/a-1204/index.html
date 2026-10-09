@@ -1,27 +1,46 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="BMP ARK governed property passport demonstration for A-1204, unverified pilot.">
-<title>BMP Market | A-1204 Property Passport (Draft)</title>
+<meta name="description" content="BMP ARK A-1204 unverified conceptual property experience. All costs solely for depiction.">
+<title>BMP Market | A-1204 Property Experience R0.5</title>
 <link rel="stylesheet" href="./style.css">
 <script type="module" src="./app.js"></script>
 </head><body>
 <a class="skip" href="#main">Skip to content</a>
-<header class="top"><div class="brand"><span class="orb">B</span><span><b>BMP Market</b><small>GENESIS / PROPERTY PASSPORT</small></span></div><span class="env">RESEARCH PILOT · NOT A LIVE OFFER</span></header>
+<header class="top"><div class="brand"><span class="orb">B</span><span><b>BMP Market</b><small>GENESIS / PROPERTY EXPERIENCE R0.5</small></span></div><span class="env">UNVERIFIED PILOT · NOT A LIVE OFFER</span></header>
 <main id="main">
-<section class="hero"><div><p class="eyebrow">BLUE MINDED PEOPLE / ARK A-1204</p>
-<h1>Property commerce,<br><em>with a proof trail.</em></h1><p class="lead">Explore the physical property, component anchors, buyer configurations and evidence requirements in a governed spatial sales room.</p><div class="chips"><span>Property Passport</span><span>Synnergyze Resolution</span><span>Quantum Room</span><span>River Evidence</span></div></div>
-<div class="illustration" role="img" aria-label="Abstract line-drawn room showing a floor, wall, arch and window; conceptual visualization, not property photography."><div class="room"><div class="arch"></div><div class="window"></div><div class="floor"></div><div class="lines"></div></div><span class="draw-note">CONCEPT STAGE<br>NOT AS-BUILT</span></div></section>
-<section class="toolbar"><div><p class="eyebrow">A-1204 / SPATIAL STAGE</p><h2 id="listing-title">Loading property fixture…</h2><p id="listing-location" class="muted"></p></div><div class="selectors"><label>Stage state<select id="stage"></select></label><label>Preview persona (not authentication)<select id="tier"></select></label></div></section>
-<section class="disclaimer" role="note"><b>Presentation examples only.</b> <span id="presentation-disclaimer">All monetary values depict the interface only; they are not verified quotations, valuations, or offers.</span> Property, anchors and evidence references are unverified. The role selector is a preview, not Warden admission or a rights transfer. <span id="data-source"></span></section>
+<section class="hero"><div><p class="eyebrow">BLUE MINDED PEOPLE / A-1204</p>
+<h1>Walk the space.<br><em>Inspect the possibilities.</em></h1>
+<p class="lead">A governed property-passport prototype for reviewing spatial states, component specifications and an illustrative Door journey—not a verified construction record or commercial transaction.</p>
+<div class="chips"><span>Spatial stages</span><span>Six anchors</span><span>VSR Door preview</span><span>Depiction-only figures</span></div></div>
+<div class="illustration" role="img" aria-label="Conceptual line drawing of an interior with arch, window and floor; not the actual A-1204 building"><div class="room"><div class="arch"></div><div class="window"></div><div class="floor"></div><div class="lines"></div></div><span class="draw-note">ILLUSTRATION ONLY<br>NOT SITE PHOTOGRAPHY</span></div></section>
+<section class="toolbar"><div><p class="eyebrow">A-1204 / SPATIAL STAGE</p><h2 id="listing-title">Loading pilot source…</h2><p id="listing-location" class="muted"></p></div><div class="selectors"><label>Stage<select id="stage" aria-label="Property spatial stage"></select></label><label>Preview persona (no sign-in)<select id="tier" aria-label="Simulated viewer tier"></select></label></div></section>
+<section class="disclaimer" role="note"><b>Presentation examples only.</b> <span id="presentation-disclaimer">All monetary values are for illustrative depiction—not verified costs, quotations, valuations, amounts payable or offers.</span> Property attributes, supplier descriptions and River references remain unverified. The persona selector does not confer access. <span id="data-source"></span></section>
+<section class="stage-experience" aria-label="Stage simulation">
+ <p class="eyebrow">01 / SEE THE STATES</p>
+ <div id="state-rail" class="state-rail" role="group" aria-label="Choose conceptual spatial state"></div>
+ <div class="scene-summary"><div><span id="stage-label" class="tag"></span><h2 id="stage-heading">Concept stage</h2><p id="state-explainer" class="muted"></p></div><p id="stage-warning" class="scene-warning" role="status">Visuals in this pilot are concepts only.</p></div>
+</section>
 <div class="grid"><section class="maincol">
-<div class="section-heading"><div><p class="eyebrow">01 / THE ROOM</p><h2>State of the space</h2></div><span id="stage-label" class="tag"></span></div><p id="state-explainer" class="muted"></p>
+<div class="section-heading"><div><p class="eyebrow">02 / ANCHOR PASSPORT</p><h2>Inspect six components</h2></div><button id="clear-anchor" class="text-button" type="button">Clear focus</button></div>
+<p class="muted">Select any component to see the current reference, proposed specification, inclusion, supplier, warranty and evidence status. Missing or example records remain labelled.</p>
 <div id="anchor-grid" class="anchors"></div>
-<div class="section-heading"><div><p class="eyebrow">02 / CONFIGURE</p><h2>Ask the capability network</h2></div></div>
-<div class="resolver"><label for="intent">Installation or configuration question</label><div class="resolver-row"><input id="intent" value="Can the floor be wood?" maxlength="240"><button id="resolve" type="button">Preview route →</button></div><p id="intent-response" aria-live="polite" class="muted">Example routes through Warden → Genesis → Synnergyze → provider → River. No live quote is issued.</p></div>
-</section><aside class="sidecol"><p class="eyebrow">03 / COMMERCIAL RAIL</p><h2>Discover → Close</h2><div id="commercial-steps" class="steps"></div><hr>
-<p class="eyebrow">EXAMPLE DISPLAY VALUE — NOT VERIFIED</p><strong id="price" class="price">—</strong><p id="price-note" class="muted"></p><h3>Example bundle displays</h3><div id="bundle-examples" class="steps" aria-label="Sample bundle figures for depiction only"></div>
-<h3>Disclosure</h3><p id="disclosure" class="muted"></p><button id="copy" type="button" class="secondary">Copy enquiry reference</button><p id="copy-status" aria-live="polite" class="muted"></p>
-<hr><p class="eyebrow">PROVENANCE</p><p id="evidence-summary" class="muted"></p></aside></div>
-</main><footer><b>BMP ARK · Genesis v0.1</b><span>Prototype only • Warden is the authority gate • River is evidence • DigitalMe rights require valid grants and applicable law</span></footer>
-</body></html>
+<div class="section-heading"><div><p class="eyebrow">03 / CAPABILITY REQUEST</p><h2>Preview Synnergyze routing</h2></div></div>
+<div class="resolver"><label for="intent">Installation or configuration question</label><div class="resolver-row"><input id="intent" value="Can the floor be wood?" maxlength="240"><button id="resolve" type="button">Preview route →</button></div><p id="intent-response" aria-live="polite" class="muted">A conceptual service route only. No Warden decision, provider quote, work order or River receipt is issued.</p></div>
+<section class="door-panel" aria-label="Inactive VSR Door link preview"><p class="eyebrow">04 / VSR DOOR PREVIEW</p><h2>Navigation is not authority</h2><p class="muted">This generates an <b>inactive example URL</b> for developer review. It is not a live QR, buyer invitation, authenticated property Door or working route.</p>
+<label for="door-locale">Language hint (not identity or region admission)</label>
+<select id="door-locale"><option value="en">English</option><option value="en-IN">English (India)</option><option value="en-AE">English (UAE)</option><option value="ar">Arabic</option><option value="ar-AE">Arabic (UAE)</option></select>
+<pre id="door-url" class="door-url" aria-label="Inactive demonstration URL"></pre><p id="door-status" class="muted" aria-live="polite"></p>
+<button id="copy-door" type="button" class="secondary">Copy inactive example link</button><p id="door-copy-status" aria-live="polite" class="muted"></p>
+</section>
+</section><aside class="sidecol"><p class="eyebrow">05 / COMMERCIAL FLOW</p><h2>Discover → Close</h2><div id="commercial-steps" class="steps"></div><hr>
+<p class="eyebrow">EXAMPLE DISPLAY VALUE — NOT VERIFIED</p><strong id="price" class="price">—</strong><p id="price-note" class="muted"></p>
+<h3>Example bundle displays</h3><div id="bundle-examples" class="steps" aria-label="Sample bundle figures for depiction only"></div>
+<h3>Simulated disclosure</h3><p id="disclosure" class="muted"></p><button id="copy" type="button" class="secondary">Copy demo enquiry reference</button><p id="copy-status" aria-live="polite" class="muted"></p><hr>
+<p class="eyebrow">EVIDENCE</p><p id="evidence-summary" class="muted"></p></aside></div>
+<dialog id="anchor-dialog" class="anchor-dialog" aria-labelledby="drawer-title" aria-describedby="drawer-note">
+<div class="drawer-head"><p class="eyebrow">COMPONENT PASSPORT · UNVERIFIED</p><button id="drawer-close" type="button" class="text-button">Close ✕</button></div>
+<h2 id="drawer-title">Anchor details</h2><p id="drawer-note" class="muted"></p><dl id="anchor-fields" class="detail-list"></dl>
+<p class="disclaimer">River-looking references are placeholders until authenticated by the actual evidence service. No inclusion, supplier or warranty is verified.</p>
+</dialog>
+</main><footer><b>BMP ARK · Genesis R0.5</b><span>Depiction only · Guest admission by default · No live offers, reservations or legal title transitions</span></footer></body></html>

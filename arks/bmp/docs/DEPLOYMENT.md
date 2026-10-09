@@ -7,3 +7,6 @@
 5. Re-run validation after every fixture change. Do not promote to real listing until backend Warden admission, signed operator records, storage, River ingestion and approved commercial terms exist.
 
 No image uploads, recording, leads database, payments, reservation infrastructure, DigitalMe principal issuance, title verification or provider execution is implemented here.
+
+## R0.5 Property Experience checks
+Run `node arks/bmp/scripts/validate-experience.mjs`. On local preview, click all five stage buttons, open each of six anchor dialogs using keyboard navigation, and confirm ESC/Close returns focus. The Door link displayed is intentionally `https://example.invalid`: **do not print, share with buyers, or treat it as live**. Sample prices remain solely for depiction.
