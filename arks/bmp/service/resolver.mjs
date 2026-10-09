@@ -1,4 +1,4 @@
-import {createHash, verify as verifySignature, createPublicKey, randomUUID} from "node:crypto";
+import {createHash, verify as verifySignature, randomUUID} from "node:crypto";
 
 export class DoorError extends Error{
   constructor(code,status=403){super(code);this.name="DoorError";this.code=code;this.status=status;}
@@ -21,7 +21,7 @@ export function verifySigned(envelope,{issuer,key,now=()=>Date.now()}){
   try{
     const bytes=Buffer.from(envelope.signature,"base64url");
     if(bytes.length!==64)throw new Error("Bad signature length");
-    signed=verifySignature(null,Buffer.from(JSON.stringify(p),"utf8"),createPublicKey(key),bytes);
+    signed=verifySignature(null,Buffer.from(JSON.stringify(p),"utf8"),key,bytes);
   }catch{throw new DoorError("SIGNATURE_INVALID");}
   if(!signed)throw new DoorError("SIGNATURE_INVALID");
   return p;
