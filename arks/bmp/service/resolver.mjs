@@ -56,6 +56,7 @@ export function createDoorResolver({registry,digitalMe,warden,river,nonceStore,p
        resource.door_ref!==input.door_ref||resource.status!=="VERIFIED_ACTIVE"||
        resource.live_enabled!==true||
        !safeString(resource.resource_ref,128)||!safeString(resource.room_ref,128)||
+       !["GUEST","REGISTERED"].includes(resource.max_disclosure)||
        !Array.isArray(resource.states)||!resource.states.includes(input.requested_state)||
        !Array.isArray(resource.anchors)|| (input.anchor_ref!==null&&!resource.anchors.includes(input.anchor_ref)))
       throw new DoorError("RESOURCE_NOT_ADMITTED",403);

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {createKeyPairSync,sign} from "node:crypto";
+import {generateKeyPairSync,sign} from "node:crypto";
 import {createDoorResolver,validateRequest,verifySigned,DoorError,AUDIENCE,digest} from "../service/resolver.mjs";
 import {createDoorHttpServer} from "../service/http.mjs";
 import {a1204DraftRegistry} from "../service/registry.mjs";
@@ -8,7 +8,7 @@ const now=Date.now();
 const s=Math.floor(now/1000);
 const clock=()=>now;
 const keys=Object.fromEntries(["DigitalMe","Warden","River"].map(name=>{
- const {privateKey,publicKey}=createKeyPairSync("ed25519");
+ const {privateKey,publicKey}=generateKeyPairSync("ed25519");
  return [name,{privateKey,publicKey}];
 }));
 const publicKeys={digitalMe:keys.DigitalMe.publicKey,warden:keys.Warden.publicKey,river:keys.River.publicKey};
@@ -88,7 +88,7 @@ const noIdentity=adapters();
 await rejection(()=>noIdentity.resolver(input,{}),{code:"IDENTITY_REQUIRED",status:401});
 assert.equal(noIdentity.state.wardenCalls,0);
 const noAdapters=()=>createDoorResolver({});
-await rejection(noAdapters,{code:"INTEGRATION_UNAVAILABLE",status:503});
+await rejection(async()=>noAdapters(),{code:"INTEGRATION_UNAVAILABLE",status:503});
 const unavailable=adapters({asset:{...resource,status:"DRAFT_UNVERIFIED"}});
 await rejection(()=>unavailable.resolver(input,{authorization:auth}),{code:"RESOURCE_NOT_ADMITTED"});
 assert.equal(unavailable.state.identityCalls,0);
