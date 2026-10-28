@@ -39,6 +39,9 @@ def test_source_export_counts_unknown_origin_and_no_secrets(tmp_path):
     assert preview["user_messages"] == 2
     assert preview["assistant_outputs"] == 2
     assert preview["unknown_origin_user_messages"] == 2
+    assert preview["attached_assets"] == {"image": 1, "file": 1}
+    assert preview["messages_with_modality"] == {"text": 2, "image": 1, "file": 1}
+    assert preview["responded_input_messages"] == 2
     committed = import_export(p, journal_path=journal, principal_id="DM-ALPHA", commit=True)
     assert committed["new_events"] == 4
     data = journal.read_text()
