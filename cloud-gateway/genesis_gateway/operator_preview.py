@@ -31,7 +31,8 @@ def main() -> None:
     args = parser.parse_args()
     # Fixture is trusted only inside this offline example: not bound to any HTTP route.
     actor = VerifiedOperator("DIGITALME-DEMO-01", frozenset({args.role}),
-                             frozenset({"NODE-DEMO-01"}), authority_verified=True, environments=frozenset({"staging"}))
+                             frozenset({"NODE-DEMO-01"}), authority_verified=True, environments=frozenset({"staging"}),
+                             service_ids=frozenset({"genesis-public-site-preview", "genesis-cloud-gateway-r01"}))
     output = Path(args.output)
     output.write_text(render_private_preview(demo(), actor), encoding="utf-8")
     print("SYNTHETIC_PREVIEW_WRITTEN:" + str(output))
