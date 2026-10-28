@@ -8,7 +8,7 @@ from __future__ import annotations
 import hashlib
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -56,19 +56,38 @@ class WorkNoticeConsent:
         work_id = _identifier(work_id)
         if affirmative is not True or notice_version != NOTICE_VERSION:
             raise AdmissionDenied("R06_NOTICE_ACCEPTANCE_REQUIRED")
-        # Staging verifies expiry, purpose, subject scope, and records durable
-        # consent. Notice is recorded subsequently; a failed notice write must
-        # not report success, and operations must reconcile before deployment.
-        granted = self.staging.opt_in(access_token=access_token, work_id=work_id,
-                                       expires_at=expires_at, now=current)
+        if current.tzinfo is None or expires_at.tzinfo is None:
+            raise AdmissionDenied("R06_TIMEZONE_REQUIRED")
+        current = current.astimezone(timezone.utc)
+        expires_at = expires_at.astimezone(timezone.utc)
+        if not current < expires_at <= current + timedelta(days=30):
+            raise AdmissionDenied("R06_CONSENT_EXPIRY_DENIED")
         rid = "GWIEP-NOTICE-" + uuid4().hex
-        with sqlite3.connect(self.staging.db_path) as db:
+        with sqlite3.connect(self.staging.db_path, timeout=10) as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("""SELECT generation FROM subject_consent WHERE
+                tenant_id=? AND principal_id=? AND source=? AND work_id=?""",
+                (actor.tenant_id, actor.subject, actor.source, work_id)).fetchone()
+            generation = row[0] + 1 if row else 1
+            db.execute("""INSERT INTO subject_consent
+                (tenant_id,principal_id,source,work_id,purpose,expires_at,active,generation)
+                VALUES(?,?,?,?,?,?,1,?)
+                ON CONFLICT(tenant_id,principal_id,source,work_id) DO UPDATE SET
+                purpose=excluded.purpose,expires_at=excluded.expires_at,
+                active=1,generation=excluded.generation""",
+                (actor.tenant_id, actor.subject, actor.source, work_id,
+                 "work_evidence_capture", expires_at.isoformat(), generation))
+            consent_receipt = WorkEvidenceStaging._audit(
+                db, actor, work_id=work_id, action="OPT_IN",
+                generation=generation, now=current)
             db.execute("""INSERT INTO notice_acceptance
                 (receipt_id,tenant_id,principal_id,source,work_id,version,
                  notice_hash,token_id_hash,at,linked_consent_receipt)
                  VALUES (?,?,?,?,?,?,?,?,?,?)""",
                 (rid, actor.tenant_id, actor.subject, actor.source,
                  work_id, NOTICE_VERSION, NOTICE_HASH,
-                 sha256_hex(actor.token_id), current.isoformat(), granted["receipt_id"]))
-        return {**granted, "notice_receipt_id": rid,
+                 sha256_hex(actor.token_id), current.isoformat(), consent_receipt))
+        return {"receipt_id": consent_receipt, "status": "opted_in",
+                "work_id": work_id, "generation": generation,
+                "expires_at": expires_at.isoformat(), "notice_receipt_id": rid,
                 "notice_version": NOTICE_VERSION, "notice_sha256": NOTICE_HASH}
