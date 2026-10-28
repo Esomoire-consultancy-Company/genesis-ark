@@ -33,16 +33,12 @@ def sign_packet(packet: Mapping[str, Any], key: bytes) -> dict:
     return {**packet, "signature": _mac(packet, key)}
 
 
-def accept_packet(
-    journal: EvidenceJournal, packet: Mapping[str, Any], *, key: bytes,
+def verify_capture_envelope(
+    packet: Mapping[str, Any], *, key: bytes,
     expected_station_id: str, expected_principal_id: str, expected_source: str,
     now: datetime | None = None,
-) -> EvidenceReceipt:
-    """Fail-closed local intake, scoped to one authorized source and principal.
-
-    Deduplication is best-effort for a single journal writer; distributed use
-    needs a transactional store and unique constraints before rollout.
-    """
+) -> None:
+    """Validate HMAC signature, source, message schema, and freshness, without writes."""
     if not isinstance(packet, dict) or set(packet) != (_FIELDS | {"signature"}):
         raise ValueError("WORK_CAPTURE_INVALID_ENVELOPE")
     signature = packet.get("signature")
@@ -78,6 +74,19 @@ def accept_packet(
         raise ValueError("WORK_CAPTURE_TIMEZONE_REQUIRED")
     if abs((now - time).total_seconds()) > 300:
         raise ValueError("WORK_CAPTURE_EXPIRED")
+
+
+def accept_packet(
+    journal: EvidenceJournal, packet: Mapping[str, Any], *, key: bytes,
+    expected_station_id: str, expected_principal_id: str, expected_source: str,
+    now: datetime | None = None,
+) -> EvidenceReceipt:
+    """Validate signed packet before deduplication, then append to local River."""
+    verify_capture_envelope(
+        packet, key=key, expected_station_id=expected_station_id,
+        expected_principal_id=expected_principal_id, expected_source=expected_source, now=now,
+    )
+    capture_id = packet["payload"]["capture_id"]
     if not journal.verify_chain():
         raise ValueError("EVIDENCE_CHAIN_INVALID")
     for i, record in enumerate(journal._records(), start=1):
@@ -89,7 +98,9 @@ def accept_packet(
             if (event["event_type"] != packet["kind"] or
                 existing_payload != packet["payload"] or
                 event["principal_id"] != packet["principal_id"] or
-                event["station_id"] != packet["station_id"]):
+                event["station_id"] != packet["station_id"] or
+                event["session_id"] != packet["session_id"] or
+                event["correlation_id"] != packet["correlation_id"]):
                 raise ValueError("WORK_CAPTURE_ID_CONFLICT")
             return EvidenceReceipt(event["event_id"], record["record_hash"],
                                    record["previous_hash"], i)
