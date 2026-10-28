@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1424">
+  <meta name="description" content="Isolated Genesis synthetic actor and permission workbench">
+  <title>Genesis ARK · Synthetic Workbench R0.2</title>
+  <link rel="stylesheet" href="/workbench.css">
+  <script src="/workbench.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to simulation</a>
+  <div class="shell">
+    <aside class="sidebar">
+      <a href="/" class="brand" aria-label="Genesis synthetic workbench home"><span class="mark" aria-hidden="true">G</span><span><strong>GENESIS</strong><small>ARK / TEST LAB</small></span></a>
+      <div class="sidegroup"><div class="kicker">SANDBOX WORKSPACE</div><a class="navitem active" href="#explorer-title"><span aria-hidden="true">◈</span> Synthetic Actors</a><a class="navitem" href="#simulation-title"><span aria-hidden="true">◇</span> Warden Decisions</a><a class="navitem" href="#receipt-title"><span aria-hidden="true">≋</span> River Receipts</a></div>
+      <div class="sidefoot"><div class="safe"><span class="safe-dot" aria-hidden="true"></span> ISOLATED · LOCALHOST</div><p>No production connections. No real membership, licence, settlement, operations or access grants.</p></div>
+    </aside>
+    <main id="main" tabindex="-1">
+      <header class="topbar"><span>WORKSPACE / SIMULATION</span><span class="preview">SYNTHETIC ONLY · R0.2</span></header>
+      <section class="hero"><div class="eyebrow">GENESIS TEST FOUNDATION</div><h1>Governance you can <em>test.</em></h1><p>Choose fictional actors, inspect bounded entitlements, and exercise Warden-style scenarios. Every result is a non-executable synthetic evidence receipt.</p><div class="stats"><div><strong id="actor-count">—</strong><small>FICTIONAL ACTORS</small></div><div><strong id="licence-count">—</strong><small>TEST LICENCES</small></div><div><strong id="scenario-count">—</strong><small>ACCEPTANCE CASES</small></div></div></section>
+      <div class="panels">
+        <section class="panel" aria-labelledby="explorer-title"><div class="panelhead"><div><div class="eyebrow">01 / IDENTITY & ENTITLEMENT</div><h2 id="explorer-title">Actor explorer</h2></div><span class="minitag">DIGITALME + BNR</span></div>
+          <label for="actor">Synthetic DigitalMe Actor</label><select id="actor"></select>
+          <div class="identity-grid"><div><small>STATE</small><strong id="actor-state">—</strong></div><div><small>ROLE</small><strong id="actor-role">—</strong></div><div><small>MEMBERSHIP</small><strong id="membership-state">—</strong></div><div><small>NODE REPRESENTATION</small><strong id="representation-state">—</strong></div></div>
+          <h3>Test licences</h3><div id="actor-licences" class="licence-list" aria-live="polite">Loading fixture…</div><p class="subtle">These IDs do not exist in DigitalMe, BNR or a national registry. They are deliberately prefixed <code>SYN-</code>.</p>
+        </section>
+        <section class="panel" aria-labelledby="simulation-title"><div class="panelhead"><div><div class="eyebrow">02 / WARDEN GATE</div><h2 id="simulation-title">Decision simulator</h2></div><span class="minitag">DENY BY DEFAULT</span></div>
+          <label for="scenario">Acceptance scenario</label><select id="scenario"><option value="">Manual test — select fields below</option></select>
+          <form id="decision-form"><label for="action">Synthetic capability</label><select id="action"></select>
+          <label for="node">BNR node scope</label><select id="node"><option value="">No node selected</option></select>
+          <label for="supplier">Legal supplier reference</label><select id="supplier"><option value="">No legal supplier selected</option></select>
+          <div class="formfooter"><p>Test environment fixed to <code>synthetic-ci</code>. ALLOW does not execute an action.</p><button type="submit" id="run" disabled>Evaluate synthetic request <span aria-hidden="true">↗</span></button></div></form>
+        </section>
+      </div>
+      <section class="panel receipts" aria-labelledby="receipt-title"><div class="panelhead"><div><div class="eyebrow">03 / RIVER EVIDENCE MODEL</div><h2 id="receipt-title">Decision & receipt</h2></div><span id="decision-pill" class="decision pending">NO DECISION</span></div>
+        <p id="decision-explanation" class="receipt-intro" aria-live="polite">The simulation is ready once the fixture catalogue loads. No operational effect is ever performed.</p>
+        <div class="receiptgrid"><div><small>REQUEST</small><strong id="receipt-request">—</strong></div><div><small>REASON CODE</small><strong id="receipt-reason">—</strong></div><div><small>RECEIPT DIGEST</small><code id="receipt-digest">—</code></div><div><small>EXECUTION</small><strong>DISABLED</strong></div></div>
+        <details><summary>Inspect synthetic evidence payload</summary><pre id="receipt-json">{ "synthetic": true, "executable": false }</pre></details>
+      </section>
+      <footer>GENESIS ARK · VERSIONED SYNTHETIC FIXTURE <span>FROZEN TEST CLOCK · NO LIVE CONNECTORS</span></footer>
+    </main>
+  </div>
+</body>
+</html>

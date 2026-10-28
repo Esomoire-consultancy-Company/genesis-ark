@@ -1,0 +1,9 @@
+{
+  "environment": "synthetic-ci",
+  "fixture_id": "GENESIS-SYNTHETIC-BASELINE-R01",
+  "sha256": {
+    "fixtures.json": "555d06afeb03eded5041c45cc762a8f85a319c20542f67929290ca7cfeba5846",
+    "scenarios.json": "851d720619458ea92b068c2403e3639ad8669c02c8ecbf994f45e857e976baed"
+  },
+  "synthetic": true
+}
