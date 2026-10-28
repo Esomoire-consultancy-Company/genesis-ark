@@ -47,6 +47,26 @@ initially, with `knowledge` redirected to `/knowledge` in a later release.
 Custom domains need Railway-provided DNS records and ownership/certificate
 checks. Do not invent DNS targets.
 
+## Genesis / VSR / Quantum Room boundary
+
+This site presents **Genesis** as the network controller and provisioning
+foundation for registered physical and digital nodes, operating on authorised
+servers and edge machines. It is **not** the entire physical estate.
+
+**VSR OS / Browser** is the network operating environment and user-facing
+application/Doors. It is distinct from Genesis, and from a hardware OS kernel.
+
+**Quantum Room** is an authorised, task-specific physical, digital or hybrid
+operational workspace inside an ARK/location. It is distinct from both Genesis
+and VSR. A room does not issue machine-operation authority.
+
+**ARK** is a governed network enclosure inside an existing operation;
+**ARC** is a separate intervention vehicle requiring legal authority.
+Ownership and operating permissions never arise from registration alone.
+
+This functional architecture is proposed; the preview does not certify physical
+sites. The term **BSR** is unresolved and is not introduced as a new product.
+
 ## Digital–physical scope
 
 The public information site describes an infrastructure *doctrine* rather than
