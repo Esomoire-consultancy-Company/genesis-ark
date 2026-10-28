@@ -39,9 +39,40 @@ class PostgresLedger:
         return psycopg.connect(self.dsn, connect_timeout=3)
 
     def ready(self) -> bool:
+        """A spool table alone is insufficient: reject privileged application DSNs.
+
+        Readiness requires usable SELECT/INSERT/sequence privileges and rejects
+        schema CREATE, table mutation, and administrator role attributes.
+        """
         with self._connect() as conn, conn.cursor() as cur:
-            cur.execute("SELECT to_regclass('public.gateway_evidence') IS NOT NULL")
-            return bool(cur.fetchone()[0])
+            cur.execute("""
+                SELECT
+                  to_regclass('public.gateway_evidence') IS NOT NULL,
+                  COALESCE(has_table_privilege(current_user,
+                    to_regclass('public.gateway_evidence'), 'SELECT'), false),
+                  COALESCE(has_table_privilege(current_user,
+                    to_regclass('public.gateway_evidence'), 'INSERT'), false),
+                  COALESCE(has_sequence_privilege(current_user,
+                    to_regclass('public.gateway_evidence_seq_seq'), 'USAGE'), false),
+                  COALESCE(has_table_privilege(current_user,
+                    to_regclass('public.gateway_evidence'), 'UPDATE'), false),
+                  COALESCE(has_table_privilege(current_user,
+                    to_regclass('public.gateway_evidence'), 'DELETE'), false),
+                  COALESCE(has_table_privilege(current_user,
+                    to_regclass('public.gateway_evidence'), 'TRUNCATE'), false),
+                  COALESCE(has_table_privilege(current_user,
+                    to_regclass('public.gateway_evidence'), 'TRIGGER'), false),
+                  has_schema_privilege(current_user, 'public', 'CREATE'),
+                  (SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication
+                     FROM pg_roles WHERE rolname = current_user)
+            """)
+            (exists, can_select, can_insert, can_sequence,
+             can_update, can_delete, can_truncate, can_trigger,
+             can_create, privileged) = cur.fetchone()
+            return all((exists, can_select, can_insert, can_sequence)) and not any(
+                (can_update, can_delete, can_truncate, can_trigger,
+                 can_create, privileged)
+            )
 
     def record_denial(self, intent: dict, issuer: str) -> dict:
         """Record a denial before returning it; never dispatch execution.
