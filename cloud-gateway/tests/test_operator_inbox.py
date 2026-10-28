@@ -8,8 +8,8 @@ from genesis_gateway.operator_inbox import (
 from genesis_gateway.operator_preview import demo
 
 
-def user(role, nodes=(), verified=True, name="ACTOR-TEST-1"):
-    return VerifiedOperator(name, frozenset({role}), frozenset(nodes), authority_verified=verified)
+def user(role, nodes=(), verified=True, name="ACTOR-TEST-1", environments=("staging",)):
+    return VerifiedOperator(name, frozenset({role}), frozenset(nodes), authority_verified=verified, environments=frozenset(environments))
 
 
 def test_only_protected_public_denials_are_classified():
@@ -39,6 +39,7 @@ def test_strict_routing_and_node_scope():
     assert len(q.visible_cases(user("node_operator", ("NODE-OTHER",)))) == 0
     assert q.visible_cases(user("security_custodian", verified=False)) == ()
     assert q.visible_cases(user("auditor")) == ()
+    assert q.visible_cases(user("security_custodian", environments=("production",))) == ()
 
 
 def test_untrusted_operator_cannot_acknowledge_or_read_case():
