@@ -8,6 +8,7 @@ from uuid import uuid4
 import psycopg
 import pytest
 from psycopg.conninfo import make_conninfo
+from psycopg import sql
 
 from genesis_gateway.ledger import IntentConflict, PostgresLedger
 from genesis_gateway.provision import provision_staging
@@ -22,9 +23,15 @@ def provisioned():
     password = secrets.token_urlsafe(40)
     provision_staging(admin, role, password)
     runtime = make_conninfo(admin, user=role, password=password)
-    yield admin, runtime, role
-    # In isolated ephemeral CI DB, cleanup only the role. The fixture's DB is deleted
-    # with the CI service; production or Railway DBs are never passed to this fixture.
+    try:
+        yield admin, runtime, role
+    finally:
+        # Never leave a reusable LOGIN principal even in an ephemeral test DB.
+        with psycopg.connect(admin) as conn, conn.cursor() as cur:
+            cur.execute(sql.SQL("REVOKE ALL ON TABLE public.gateway_evidence FROM {}").format(sql.Identifier(role)))
+            cur.execute(sql.SQL("REVOKE ALL ON SEQUENCE public.gateway_evidence_seq_seq FROM {}").format(sql.Identifier(role)))
+            cur.execute(sql.SQL("REVOKE ALL ON SCHEMA public FROM {}").format(sql.Identifier(role)))
+            cur.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(role)))
 
 
 def test_runtime_role_is_unprivileged_and_ready(provisioned):
@@ -90,3 +97,332 @@ def test_gateway_evidence_hash_chain_across_distinct_intents(provisioned):
         assert parent == previous
         assert hash_record(event, parent) == digest
         previous = digest
+
+
+def test_concurrent_replays_write_one_record(provisioned):
+    from concurrent.futures import ThreadPoolExecutor
+
+    admin, runtime, _ = provisioned
+    request_id = str(uuid4())
+    intent = {
+        "request_id": request_id,
+        "correlation_id": "COR-CONCURRENT",
+        "target_resource_id": "RES-CI-001",
+        "capability": "container.instance.restart",
+    }
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        receipts = list(pool.map(
+            lambda _: PostgresLedger(runtime).record_denial(intent, "DIGITALME-ACTOR-CI"),
+            range(4),
+        ))
+    assert all(receipt == receipts[0] for receipt in receipts)
+    with psycopg.connect(admin) as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM public.gateway_evidence WHERE request_id = %s", (request_id,))
+        assert cur.fetchone()[0] == 1
+
+
+
+def test_runtime_column_update_grant_is_rejected(provisioned):
+    from psycopg import sql
+    admin, runtime, role = provisioned
+    with psycopg.connect(admin) as conn, conn.cursor() as cur:
+        cur.execute(sql.SQL("GRANT UPDATE(event) ON TABLE public.gateway_evidence TO {}").format(sql.Identifier(role)))
+    try:
+        assert PostgresLedger(runtime).ready() is False
+    finally:
+        with psycopg.connect(admin) as conn, conn.cursor() as cur:
+            cur.execute(sql.SQL("REVOKE UPDATE(event) ON TABLE public.gateway_evidence FROM {}").format(sql.Identifier(role)))
+    assert PostgresLedger(runtime).ready() is True
+
+
+def test_runtime_set_capable_privileged_role_rejected(provisioned):
+    from psycopg import sql
+    admin, runtime, role = provisioned
+    elevated = "genesis_gateway_priv_" + secrets.token_hex(4)
+    with psycopg.connect(admin) as conn, conn.cursor() as cur:
+        cur.execute(sql.SQL("CREATE ROLE {} NOLOGIN CREATEDB").format(sql.Identifier(elevated)))
+        cur.execute(sql.SQL("GRANT {} TO {} WITH SET TRUE").format(sql.Identifier(elevated), sql.Identifier(role)))
+    try:
+        assert PostgresLedger(runtime).ready() is False
+    finally:
+        with psycopg.connect(admin) as conn, conn.cursor() as cur:
+            cur.execute(sql.SQL("REVOKE {} FROM {}").format(sql.Identifier(elevated), sql.Identifier(role)))
+            cur.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(elevated)))
+    assert PostgresLedger(runtime).ready() is True
+
+
+def test_gateway_append_only_blocks_owner_mutation(provisioned):
+    admin, runtime, _ = provisioned
+    ledger = PostgresLedger(runtime)
+    ledger.record_denial({
+        "request_id": str(uuid4()), "correlation_id": "IMMUTABLE-CI",
+        "target_resource_id": "RES-TEST-ONLY",
+        "capability": "container.instance.restart",
+    }, "DIGITALME-ACTOR-CI")
+    with psycopg.connect(admin) as conn, conn.cursor() as cur:
+        with pytest.raises(psycopg.errors.RaiseException, match="GATEWAY_EVIDENCE_APPEND_ONLY"):
+            cur.execute("UPDATE public.gateway_evidence SET event = event")
+        conn.rollback()
+        with pytest.raises(psycopg.errors.RaiseException, match="GATEWAY_EVIDENCE_APPEND_ONLY"):
+            cur.execute("TRUNCATE public.gateway_evidence")
+        conn.rollback()
+
+
+def test_database_bound_rate_limit_and_replay(provisioned, monkeypatch):
+    from genesis_gateway import ledger as ledger_module
+    from genesis_gateway.ledger import CapacityExceeded
+    _, runtime, _ = provisioned
+    gateway = PostgresLedger(runtime)
+    intent = {
+        "request_id": str(uuid4()), "correlation_id": "RATE-CI",
+        "target_resource_id": "RES-TEST-ONLY", "capability": "container.instance.restart",
+    }
+    receipt = gateway.record_denial(intent, "DIGITALME-ACTOR-CI")
+    monkeypatch.setattr(ledger_module, "MAX_NEW_INTENTS_PER_MINUTE", 0)
+    assert gateway.record_denial(intent, "DIGITALME-ACTOR-CI") == receipt
+    with pytest.raises(CapacityExceeded, match="INTENT_RATE_LIMIT"):
+        gateway.record_denial({**intent, "request_id": str(uuid4())}, "DIGITALME-ACTOR-CI")
+    monkeypatch.setattr(ledger_module, "MAX_NEW_INTENTS_PER_MINUTE", 60)
+    monkeypatch.setattr(ledger_module, "MAX_SPOOL_ROWS", 0)
+    with pytest.raises(CapacityExceeded, match="EVIDENCE_SPOOL_FULL"):
+        gateway.record_denial({**intent, "request_id": str(uuid4())}, "DIGITALME-ACTOR-CI")
+
+
+def test_independent_auditor_rejects_overprivileged_roles(provisioned):
+    from psycopg import sql
+    from genesis_gateway.provision import scram_verifier
+    from genesis_gateway.spool_integrity import verify_database, EvidenceIntegrityError
+    admin, runtime, _ = provisioned
+    name = "genesis_gateway_audit_" + secrets.token_hex(4)
+    password = secrets.token_urlsafe(40)
+    with psycopg.connect(admin) as conn, conn.cursor() as cur:
+        cur.execute(sql.SQL("CREATE ROLE {} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD {}").format(
+            sql.Identifier(name), sql.Literal(scram_verifier(password))))
+        cur.execute(sql.SQL("GRANT USAGE ON SCHEMA public TO {}").format(sql.Identifier(name)))
+        cur.execute(sql.SQL("GRANT SELECT ON TABLE public.gateway_evidence TO {}").format(sql.Identifier(name)))
+    # The verifier deliberately accepts only PostgreSQL URI DSNs, unlike
+    # psycopg.connect(), which also accepts libpq keyword-style DSNs.
+    from urllib.parse import quote
+    from psycopg.conninfo import conninfo_to_dict
+    params = conninfo_to_dict(admin)
+    auditor = (
+        f"postgresql://{quote(name)}:{quote(password)}@"
+        f"{params.get('host', '127.0.0.1')}:{params.get('port', '5432')}/"
+        f"{quote(params.get('dbname', 'postgres'))}"
+    )
+    try:
+        with pytest.raises(EvidenceIntegrityError, match="AUDIT_ROLE_NOT_READONLY"):
+            verify_database(admin)
+        # The role has only SELECT, independent of the gateway's INSERT capability.
+        assert verify_database(auditor)["external_witnessed"] is False
+        for statement, undo in [
+            ("GRANT TRIGGER ON TABLE public.gateway_evidence TO {}", "REVOKE TRIGGER ON TABLE public.gateway_evidence FROM {}"),
+            ("GRANT pg_read_all_data TO {}", "REVOKE pg_read_all_data FROM {}"),
+            ("GRANT UPDATE ON SEQUENCE public.gateway_evidence_seq_seq TO {}", "REVOKE UPDATE ON SEQUENCE public.gateway_evidence_seq_seq FROM {}"),
+        ]:
+            with psycopg.connect(admin) as conn, conn.cursor() as cur:
+                cur.execute(sql.SQL(statement).format(sql.Identifier(name)))
+            try:
+                with pytest.raises(EvidenceIntegrityError, match="AUDIT_ROLE_NOT_READONLY"):
+                    verify_database(auditor)
+            finally:
+                with psycopg.connect(admin) as conn, conn.cursor() as cur:
+                    cur.execute(sql.SQL(undo).format(sql.Identifier(name)))
+    finally:
+        with psycopg.connect(admin) as conn, conn.cursor() as cur:
+            cur.execute(sql.SQL("REVOKE ALL ON TABLE public.gateway_evidence FROM {}").format(sql.Identifier(name)))
+            cur.execute(sql.SQL("REVOKE ALL ON SCHEMA public FROM {}").format(sql.Identifier(name)))
+            cur.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(name)))
+
+
+def test_scram_verifier_does_not_expose_plaintext():
+    from genesis_gateway.provision import scram_verifier
+    password = "fixture-password-" + secrets.token_urlsafe(40)
+    a = scram_verifier(password)
+    b = scram_verifier(password)
+    assert a.startswith("SCRAM-SHA-256$4096:")
+    assert password not in a
+    assert a != b  # Random salts, same plaintext.
+
+
+def test_populated_legacy_database_upgrade_and_atomic_rejection():
+    """Synthetic-only upgrade on a disposable CI database, never Railway."""
+    import json
+    from pathlib import Path
+    from psycopg.conninfo import conninfo_to_dict
+    from genesis_gateway.ledger import hash_record
+
+    admin = os.getenv("GENESIS_TEST_ADMIN_DATABASE_URL", "")
+    if os.getenv("GENESIS_TEST_EPHEMERAL_DATABASE") != "1" or not admin:
+        pytest.skip("Explicit ephemeral PostgreSQL CI database required")
+    if (os.getenv("GITHUB_ACTIONS") != "true"
+            or os.getenv("GITHUB_REPOSITORY") != "Esomoire-consultancy-Company/genesis-ark"
+            or os.getenv("RUNNER_ENVIRONMENT") != "github-hosted"):
+        pytest.fail("EPHEMERAL_TEST_REQUIRES_TRUSTED_GITHUB_CI")
+    marker = os.getenv("GENESIS_TEST_MARKER", "")
+    if not marker.startswith("ci-") or len(marker) < 20:
+        pytest.fail("EPHEMERAL_SERVER_MARKER_REQUIRED")
+    params = conninfo_to_dict(admin)
+    # A loopback address is insufficient proof in the presence of tunnels.
+    # Verify the CI-provisioned per-run marker before CREATE/DROP DATABASE.
+    if (params.get("dbname") != "genesis_ci"
+            or params.get("host") not in ("127.0.0.1", "localhost")
+            or params.get("port", "5432") != "5432"):
+        pytest.fail("UNSAFE_EPHEMERAL_TEST_TARGET")
+    with psycopg.connect(admin) as probe:
+        actual = probe.execute(
+            "SELECT value FROM public.genesis_ci_ephemeral_marker"
+        ).fetchone()
+        if actual is None or actual[0] != marker:
+            pytest.fail("EPHEMERAL_SERVER_IDENTITY_MISMATCH")
+
+    database_name = "genesis_gateway_upgrade_ci_" + secrets.token_hex(4)
+    target = make_conninfo(admin, dbname=database_name)
+    migration_dir = Path(__file__).resolve().parents[1] / "migrations"
+    initial = (migration_dir / "001_gateway_evidence.sql").read_text(encoding="utf-8")
+    hardening = (migration_dir / "002_gateway_evidence_hardening.sql").read_text(encoding="utf-8")
+    with psycopg.connect(admin, autocommit=True) as conn:
+        conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database_name)))
+    try:
+        record = {
+            "schema_version": "genesis-gateway-evidence.r0.1",
+            "event_id": str(uuid4()), "event_type": "warden.decision.denied",
+            "occurred_at": "2026-10-28T00:00:00+00:00",
+            "issuer_id": "DIGITALME-ACTOR-SYNTHETIC",
+            "intent": {
+                "request_id": str(uuid4()), "correlation_id": "SYNTHETIC-UPGRADE",
+                "target_resource_id": "RES-SYNTHETIC",
+                "capability": "container.instance.restart",
+            },
+            "result": "DENY", "reason_code": "WARDEN_NOT_PROVISIONED",
+            "execution_invoked": False,
+        }
+        digest = hash_record(record, None)
+        with psycopg.connect(target) as conn:
+            with conn.cursor() as cur:
+                cur.execute(initial)
+                cur.execute(
+                    "INSERT INTO public.gateway_evidence "
+                    "(request_id, event_id, event, previous_hash, record_hash) "
+                    "VALUES (%s, %s, %s::jsonb, %s, %s)",
+                    (record["intent"]["request_id"], record["event_id"],
+                     json.dumps(record), None, digest),
+                )
+
+        # Incompatible pre-existing schemas must never be accepted silently.
+        with psycopg.connect(target) as conn:
+            conn.execute("ALTER TABLE public.gateway_evidence ADD COLUMN unexpected text")
+        with psycopg.connect(target) as conn:
+            with pytest.raises(psycopg.errors.RaiseException, match="GATEWAY_EVIDENCE_SCHEMA_MISMATCH"):
+                conn.execute(hardening)
+            conn.rollback()
+            found = conn.execute(
+                "SELECT count(*) FROM pg_trigger WHERE tgrelid = "
+                "'public.gateway_evidence'::regclass AND NOT tgisinternal"
+            ).fetchone()[0]
+            assert found == 0
+            assert conn.execute("SELECT record_hash FROM public.gateway_evidence").fetchone()[0] == digest
+
+        with psycopg.connect(target) as conn:
+            conn.execute("ALTER TABLE public.gateway_evidence DROP COLUMN unexpected")
+            conn.execute("ALTER TABLE public.gateway_evidence ALTER COLUMN created_at DROP DEFAULT")
+        with psycopg.connect(target) as conn:
+            with pytest.raises(psycopg.errors.RaiseException, match="GATEWAY_EVIDENCE_SCHEMA_MISMATCH"):
+                conn.execute(hardening)
+            conn.rollback()
+        with psycopg.connect(target) as conn:
+            conn.execute("ALTER TABLE public.gateway_evidence ALTER COLUMN created_at SET DEFAULT now()")
+            conn.execute("ALTER TABLE public.gateway_evidence ALTER COLUMN seq DROP DEFAULT")
+        with psycopg.connect(target) as conn:
+            with pytest.raises(psycopg.errors.RaiseException, match="GATEWAY_EVIDENCE_SCHEMA_MISMATCH"):
+                conn.execute(hardening)
+            conn.rollback()
+        with psycopg.connect(target) as conn:
+            conn.execute(
+                "ALTER TABLE public.gateway_evidence ALTER COLUMN seq "
+                "SET DEFAULT nextval('public.gateway_evidence_seq_seq'::regclass)"
+            )
+            conn.execute(hardening)
+        with psycopg.connect(target) as conn:
+            assert conn.execute("SELECT count(*) FROM public.gateway_evidence").fetchone()[0] == 1
+            assert conn.execute("SELECT record_hash FROM public.gateway_evidence").fetchone()[0] == digest
+            with pytest.raises(psycopg.errors.UniqueViolation):
+                second = {**record, "event_id": str(uuid4()),
+                          "intent": {**record["intent"], "request_id": str(uuid4())}}
+                conn.execute(
+                    "INSERT INTO public.gateway_evidence "
+                    "(request_id, event_id, event, previous_hash, record_hash) "
+                    "VALUES (%s, %s, %s::jsonb, NULL, %s)",
+                    (second["intent"]["request_id"], second["event_id"],
+                     json.dumps(second), hash_record(second, None)),
+                )
+            conn.rollback()
+            # A fork from the same non-null parent must also be forbidden.
+            conn.execute(
+                "INSERT INTO public.gateway_evidence "
+                "(request_id, event_id, event, previous_hash, record_hash) "
+                "VALUES (%s, %s, %s::jsonb, %s, %s)",
+                (second["intent"]["request_id"], second["event_id"],
+                 json.dumps(second), digest, hash_record(second, digest)),
+            )
+            fork = {**second, "event_id": str(uuid4()),
+                    "intent": {**second["intent"], "request_id": str(uuid4())}}
+            with pytest.raises(psycopg.errors.UniqueViolation):
+                conn.execute(
+                    "INSERT INTO public.gateway_evidence "
+                    "(request_id, event_id, event, previous_hash, record_hash) "
+                    "VALUES (%s, %s, %s::jsonb, %s, %s)",
+                    (fork["intent"]["request_id"], fork["event_id"],
+                     json.dumps(fork), digest, hash_record(fork, digest)),
+                )
+            conn.rollback()
+        with psycopg.connect(target) as conn:
+            with pytest.raises(psycopg.errors.RaiseException, match="GATEWAY_EVIDENCE_APPEND_ONLY"):
+                conn.execute("DELETE FROM public.gateway_evidence")
+            conn.rollback()
+            # Safe re-application must preserve the entire synthetic evidence row.
+            conn.execute(hardening)
+        with psycopg.connect(target) as conn:
+            assert conn.execute("SELECT record_hash FROM public.gateway_evidence").fetchone()[0] == digest
+    finally:
+        with psycopg.connect(admin, autocommit=True) as conn:
+            conn.execute(sql.SQL("DROP DATABASE {} WITH (FORCE)").format(sql.Identifier(database_name)))
+
+
+def test_runtime_rejects_wrong_named_unique_index(provisioned):
+    admin, runtime, _ = provisioned
+    with psycopg.connect(admin) as conn:
+        conn.execute(
+            "ALTER INDEX public.gateway_evidence_prev_unique_r02 "
+            "RENAME TO gateway_evidence_prev_saved_ci"
+        )
+        conn.execute(
+            "CREATE UNIQUE INDEX gateway_evidence_prev_unique_r02 "
+            "ON public.gateway_evidence (request_id)"
+        )
+    try:
+        assert PostgresLedger(runtime).ready() is False
+    finally:
+        with psycopg.connect(admin) as conn:
+            conn.execute("DROP INDEX public.gateway_evidence_prev_unique_r02")
+            conn.execute(
+                "ALTER INDEX public.gateway_evidence_prev_saved_ci "
+                "RENAME TO gateway_evidence_prev_unique_r02"
+            )
+    assert PostgresLedger(runtime).ready() is True
+
+
+def test_scram_verifier_rejects_unicode_passwords():
+    from genesis_gateway.provision import scram_verifier
+    with pytest.raises(ValueError, match="UNSUPPORTED_RUNTIME_PASSWORD_CHARACTERS"):
+        scram_verifier("anything-not-ascii-\u00e9")
+
+
+def test_scram_verifier_allows_printable_ascii_spaces():
+    from genesis_gateway.provision import scram_verifier
+
+    spaced = "ci test password with spaces 0123456789"
+    verifier = scram_verifier(spaced)
+    assert verifier.startswith("SCRAM-SHA-256$4096:")
+    assert spaced not in verifier
+    assert verifier != scram_verifier(spaced)  # Independent random salts.

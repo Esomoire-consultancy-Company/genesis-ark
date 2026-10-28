@@ -104,3 +104,91 @@ def test_duplicate_request_id_is_idempotent_but_reuse_conflicts():
 def test_unconfigured_gateway_never_accepts_intents():
     client = TestClient(create_app(Settings(), FakeLedger()))
     assert client.post("/v1/intents", json=intent(), headers={"Authorization": f"Bearer {KEY}"}).status_code == 503
+
+
+def test_settings_repr_never_exposes_credentials():
+    rendered = repr(CFG)
+    assert KEY not in rendered
+    assert CFG.database_url not in rendered
+
+
+def test_non_ascii_bearer_fails_with_401_not_500():
+    client = TestClient(create_app(CFG, FakeLedger()))
+    res = client.post("/v1/intents", json=intent(), headers={b"authorization": b"Bearer caf\xe9"})
+    assert res.status_code == 401
+
+
+
+def test_untrusted_exception_text_never_leaks_credentials(caplog):
+    class LeakingLedger(FakeLedger):
+        def ready(self):
+            raise RuntimeError(f"private {CFG.database_url} {KEY}")
+
+        def record_denial(self, entry, issuer):
+            raise RuntimeError(f"private {CFG.database_url} {KEY}")
+
+    client = TestClient(create_app(CFG, LeakingLedger()))
+    assert client.get("/readyz").status_code == 503
+    assert client.post(
+        "/v1/intents", json=intent(), headers={"Authorization": f"Bearer {KEY}"}
+    ).status_code == 503
+    assert CFG.database_url not in caplog.text
+    assert KEY not in caplog.text
+    assert "RuntimeError" in caplog.text
+
+
+
+def test_authenticated_write_never_bypasses_failed_readiness():
+    store = FakeLedger(ready=False)
+    client = TestClient(create_app(CFG, store))
+    response = client.post(
+        "/v1/intents", json=intent(),
+        headers={"Authorization": f"Bearer {KEY}"}
+    )
+    assert response.status_code == 503
+    assert response.json()["detail"] == "EVIDENCE_SCHEMA_NOT_READY"
+    assert store.entries == {}
+
+
+def test_readiness_failure_does_not_leak_exception_text(caplog):
+    class Unsafe(Exception):
+        pass
+
+    class NotReadyLedger(FakeLedger):
+        def ready(self):
+            raise Unsafe(f"password={KEY}; dsn={CFG.database_url}")
+
+    client = TestClient(create_app(CFG, NotReadyLedger()))
+    response = client.post(
+        "/v1/intents", json=intent(),
+        headers={"Authorization": f"Bearer {KEY}"}
+    )
+    assert response.status_code == 503
+    assert KEY not in caplog.text
+    assert CFG.database_url not in caplog.text
+
+
+def test_rate_limit_and_full_spool_http_mappings():
+    from genesis_gateway.ledger import CapacityExceeded
+
+    class FullLedger(FakeLedger):
+        def __init__(self, reason):
+            super().__init__()
+            self.reason = reason
+
+        def record_denial(self, entry, issuer):
+            raise CapacityExceeded(self.reason)
+
+    auth = {"Authorization": f"Bearer {KEY}"}
+    rate = TestClient(create_app(CFG, FullLedger("INTENT_RATE_LIMIT"))).post(
+        "/v1/intents", json=intent(), headers=auth
+    )
+    assert rate.status_code == 429
+    assert rate.json()["detail"] == "INTENT_RATE_LIMIT"
+    assert rate.headers["retry-after"] == "60"
+
+    full = TestClient(create_app(CFG, FullLedger("EVIDENCE_SPOOL_FULL"))).post(
+        "/v1/intents", json=intent(), headers=auth
+    )
+    assert full.status_code == 503
+    assert full.json()["detail"] == "EVIDENCE_SPOOL_FULL"

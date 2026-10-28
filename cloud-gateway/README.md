@@ -32,11 +32,13 @@ Create a PostgreSQL service **in a staging Railway environment**, with a
 separate migration role and restricted runtime role. Apply:
 
 ```bash
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/001_gateway_evidence.sql
+psql "$GENESIS_MIGRATION_ADMIN_DATABASE_URL" --single-transaction -v ON_ERROR_STOP=1 \
+  -f migrations/001_gateway_evidence.sql \
+  -f migrations/002_gateway_evidence_hardening.sql
 ```
 
 The runtime database user must be restricted to SELECT and INSERT for the
-`gateway_evidence` table, with sequence USAGE if required. Migration privileges
+`gateway_evidence` table, with sequence USAGE required by BIGSERIAL. Migration privileges
 must not be present in the runtime credentials. Protect the spool against
 alteration and deletion by the application account, and use external backup,
 retention, reconciliation, and immutable export controls before any production claim.
@@ -86,16 +88,20 @@ python -m pip install -r requirements.txt
 python -m genesis_gateway.provision
 ```
 
-The bootstrap creates `gateway_evidence` and grants the new runtime role
-only schema usage, table SELECT/INSERT, and evidence sequence USAGE. It rejects
+The bootstrap applies the base and R0.2 hardening migrations, then grants the
+new runtime role only schema USAGE, table SELECT/INSERT and evidence sequence
+USAGE. It rejects
 pre-existing role names; it does not alter an existing role or grant UPDATE/
 DELETE/DDL. Provision a new secret for the app and attach a runtime-role
 `DATABASE_URL` to the gateway through Railway variables. Keep the administrator
 URL solely in the short-lived migration environment.
 
 This release does **not** include a remote SQL executor. The migration is
-**not applied** until the one-shot command has actually run against Railway
-staging and its success has been independently checked. The PostgreSQL 18
+**not provisioned with the restricted runtime role** until the one-shot command
+has run against staging and its success has been independently checked. A manual
+`psql` migration installs both schema versions and immutable-spool controls,
+but does not provision the restricted runtime role or its credentials.
+The PostgreSQL 18
 contract workflow runs against a disposable CI database, never the user's
 Railway services.
 
@@ -115,5 +121,13 @@ green image build alone.
    is not externally witnessed, tamper-proof, or the RiverOS canonical ledger.
 4. The DB migration is manual, and application roles/backup policies must be
    configured by an operator. Run migrations before treating `/readyz` as ready.
-5. No frontend, execution adapters, settlement, or federation endpoints are
+5. New unique intents are limited to 60/minute and 100,000 total local spool
+   rows, with exact idempotent replay preserved. These controls are not edge
+   protection, volume monitoring, retention or independent witnessing.
+6. The hardening migration uses single-genesis and unique-predecessor indexes
+   plus mutation-denial triggers; privileged database owners still require
+   independent monitoring, backups and external witness anchoring.
+7. The provisioning SQL stores a salted SCRAM verifier, not the plaintext
+   runtime password. Restrict SQL log access; verifiers are still sensitive.
+8. No frontend, execution adapters, settlement, or federation endpoints are
    enabled. No production cutover is authorized by this scaffold.

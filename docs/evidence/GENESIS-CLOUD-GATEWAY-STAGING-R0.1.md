@@ -11,7 +11,7 @@
 - PR: #15 (draft, not merged at acceptance)
 - Gateway deployed from commit: `4131e9cf3514ed60723dd1afc8ae86180675f8c3`
 - Python: 3.12 (Railpack requirements installation)
-- GitHub Actions: unit tests on Python 3.11 and 3.12 passed; separate PostgreSQL 18 contract job passed.
+- GitHub Actions **historical staging baseline**: Python 3.11/3.12 unit and PostgreSQL 18 contract checks passed at commit `d8955084859b6c655d595cc8e28165fa05927aa6`: https://github.com/Esomoire-consultancy-Company/genesis-ark/actions/runs/40643665360 . This does not cover unmerged PR #24 hardening; consult its separately recorded CI runs.
 - An additional staging-only smoke runner exists in commit `6dcf44fc2307dd816d6301607e81d094d2abda80`, not required by the pinned HTTP gateway.
 
 ## Live Railway observations
@@ -43,6 +43,7 @@ A denial receipt was inserted in the staging database. No Docker adapter, arbitr
 - The runtime PostgreSQL connection uses a dedicated non-admin role. The migration utility grants schema USAGE, table SELECT/INSERT and sequence USAGE, not UPDATE/DELETE/DDL.
 - The gateway readiness check rejects administrator/overprivileged database roles.
 - The temporary migration identity used the PostgreSQL administrator DSN; that temporary Railway service was deleted after successful provisioning.
+- **Credential rotation not independently evidenced:** deleting the temporary job does not revoke a PostgreSQL administrator password. Verify rotation and record a dated secret-lifecycle receipt before promotion.
 - No public Railway domain was provisioned for the gateway.
 - The hash-chain spool is **not** the independent, authoritative RiverOS ledger, and passing this smoke test is not federation or settlement certification.
 - Backups, restoration drills, Warden policy engine integration, principal-specific SSO, rate limiting, credential rotation, privacy assessment and external evidence witnessing remain promotion gates.
