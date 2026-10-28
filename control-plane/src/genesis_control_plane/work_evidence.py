@@ -166,6 +166,9 @@ def summarize_work_journal(path: Path, work_id: str) -> dict[str, Any]:
         elif kind == "work.reopened":
             reopened.add(p["deliverable_id"])
             finalized.discard(p["deliverable_id"])
+            # A revised deliverable needs fresh verification and acceptance.
+            approvals.discard(p["deliverable_id"])
+            verifications.discard(p["deliverable_id"])
     confirmed, unconfirmed = Counter(), Counter()
     natures, modalities, media_assets = Counter(), Counter(), Counter()
     for p in inputs.values():
