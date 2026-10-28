@@ -1,0 +1,21 @@
+name: SARFAESI Rule 9 offline screening tests
+on:
+  pull_request:
+    paths:
+      - 'assurance/sarfaesi-rule9/**'
+      - '.github/workflows/sarfaesi-rule9.yml'
+  push:
+    paths:
+      - 'assurance/sarfaesi-rule9/**'
+      - '.github/workflows/sarfaesi-rule9.yml'
+permissions:
+  contents: read
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test assurance/sarfaesi-rule9/rule9_guard.test.mjs

@@ -1,0 +1,20 @@
+{
+  "caseRef": "DRT-II Chennai SA 412/2024 (public secondary report)",
+  "sourceClassification": "secondary digest; no signed final or interim order attached",
+  "asOf": "2026-10-06",
+  "authoritativeInterimOrderAvailable": false,
+  "interimOrderEffect": "subject_to_outcome",
+  "bankDeferralClaimed": true,
+  "bankDeferralDocumentAvailable": false,
+  "confirmationDate": null,
+  "balance75ExpectedINR": 12262500,
+  "balance75ReceivedINR": 0,
+  "balance75PaymentDate": null,
+  "paymentLedgerVerified": false,
+  "writtenExtension": {
+    "claimed": false,
+    "documentAvailable": false,
+    "agreedDeadline": null
+  },
+  "ibcMoratorium": "unknown"
+}
