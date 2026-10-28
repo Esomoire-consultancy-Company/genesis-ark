@@ -20,6 +20,8 @@ class SecretWork:
     case_id: str
     secret_name: str
     environment: str
+    origin_service_id: str
+    node_id: str | None
     requester_id: str
     action: str
     status: str
@@ -28,6 +30,16 @@ class SecretWork:
     approval_receipt: str | None = None
     checker_id: str | None = None
     check_receipt: str | None = None
+
+
+def _can_view_work(actor: VerifiedOperator, work: SecretWork) -> bool:
+    """No permission is implied by role/environment without service grants."""
+    return (
+        actor.authority_verified and _valid_id(actor.actor_id)
+        and work.environment in actor.environments
+        and work.origin_service_id in actor.service_ids
+        and (work.node_id is None or work.node_id in actor.node_ids)
+    )
 
 
 class SyntheticSecretWorkflow:
@@ -58,16 +70,19 @@ class SyntheticSecretWorkflow:
             return existing
         receipt = _digest({"event": "secret.work.requested", "case": case.evidence_hash,
                            "work_id": work_id, "actor": actor.actor_id, "action": action})
-        value = SecretWork(work_id, case_id, case.event.secret_name, case.event.environment,
-                           actor.actor_id, action, "pending_approval", receipt)
+        value = SecretWork(
+            work_id, case_id, case.event.secret_name, case.event.environment,
+            case.event.origin_service_id, case.event.node_id, actor.actor_id,
+            action, "pending_approval", receipt,
+        )
         self._work[work_id] = value
         return value
 
     def approve(self, *, approver: VerifiedOperator, work_id: str) -> SecretWork:
         work = self._work.get(work_id)
-        if work is None or not approver.authority_verified or not _valid_id(approver.actor_id):
+        if work is None or not _can_view_work(approver, work):
             raise AccessDenied("APPROVAL_DENIED")
-        if "secret_change_approver" not in approver.roles or work.environment not in approver.environments:
+        if "secret_change_approver" not in approver.roles:
             raise AccessDenied("APPROVAL_DENIED")
         if approver.actor_id == work.requester_id:
             raise AccessDenied("DUAL_CONTROL_REQUIRED")
@@ -87,8 +102,8 @@ class SyntheticSecretWorkflow:
         work = self._work.get(work_id)
         if work is None or work.approval_receipt is None or not _valid_id(inventory_receipt):
             raise AccessDenied("UNVERIFIED_CHANGE")
-        if (not checker.authority_verified or "secret_state_verifier" not in checker.roles
-                or work.environment not in checker.environments or not _valid_id(checker.actor_id)
+        if (not _can_view_work(checker, work)
+                or "secret_state_verifier" not in checker.roles
                 or checker.actor_id in (work.requester_id, work.approver_id)):
             raise AccessDenied("INDEPENDENT_VERIFIER_REQUIRED")
         if work.checker_id is not None:
