@@ -15,6 +15,7 @@ from urllib.parse import urlsplit
 GITHUB = "https://github.com/Esomoire-consultancy-Company/genesis-ark"
 NAV = [
     ("/", "Overview"),
+    ("/infrastructure", "Infrastructure"),
     ("/architecture", "Architecture"),
     ("/knowledge", "Knowledge Hub"),
     ("/evidence", "Evidence"),
@@ -23,36 +24,57 @@ NAV = [
 PAGES = {
     "/": {
         "label": "PUBLIC PREVIEW · R0.1",
-        "title": "An open window into a governed digital infrastructure.",
-        "lead": "Genesis ARK is an orchestration repository for the Genesis Stack and Virtual Silk Road ecosystem. This preview explains the published architecture without exposing its private operations.",
+        "title": "Network control for the physical and digital world.",
+        "lead": "Genesis provides control and provisioning for a registered network of physical and digital nodes. VSR is the network operating environment, and Quantum Room is the governed workspace. Together with lawful operators and real assets, they support digital–physical infrastructure. This is not physical-site certification.",
         "content": """<div class="feature-grid">
-          <article class="feature"><div class="feature-index">01 / DISCOVER</div><h2>Understand the architecture</h2><p>See how identity, operations, governance and evidence relate without confusing public interfaces with private infrastructure.</p><a class="text-link" href="/architecture">Explore architecture →</a></article>
+          <article class="feature"><div class="feature-index">01 / NETWORK</div><h2>Genesis control foundation</h2><p>Register nodes, provision machine and server connections, and maintain network lifecycle and state without assuming ownership of physical assets.</p><a class="text-link" href="/infrastructure">Explore infrastructure →</a></article>
           <article class="feature"><div class="feature-index">02 / LEARN</div><h2>Find source-backed knowledge</h2><p>Public documentation is traceable to repository revisions. Private records remain with their authorised custodians.</p><a class="text-link" href="/knowledge">Visit Knowledge Hub →</a></article>
           <article class="feature"><div class="feature-index">03 / VERIFY</div><h2>Separate claims from proof</h2><p>Implementation, test, deployment and independent evidence are different milestones—and must be labelled as such.</p><a class="text-link" href="/evidence">Inspect evidence model →</a></article>
         </div>
-        <section class="statement"><div><span class="overline">FOUNDING PRINCIPLE</span><h2>Public knowledge. Controlled authority. Verifiable evidence.</h2></div><p>Discoverability does not imply permission. A member or system must pass the relevant identity and Warden gates before touching protected resources.</p></section>"""
+        <section class="statement"><div><span class="overline">FOUNDING PRINCIPLE</span><h2>Genesis provisions. VSR operates the network experience. Quantum Room hosts the work.</h2></div><p>Discoverability does not imply permission. A member or system must pass the relevant identity and Warden gates before touching protected resources.</p></section>"""
+    },
+    "/infrastructure": {
+        "label": "DIGITAL–PHYSICAL ESTATE · CONTROL AND OPERATIONS",
+        "title": "A governed network spanning physical and digital environments.",
+        "lead": "Genesis is the network control foundation implemented on authorised machines and servers. VSR is the network operating environment; Quantum Room is a bounded physical, digital or hybrid workspace. Together with registered actors, assets and locations, they form the wider infrastructure.",
+        "content": """<div class="architecture">
+          <div class="arch-root"><span>GENESIS · NETWORK CONTROLLER</span><strong>Node registry, provisioning, network state and device/server lifecycle</strong><p>Infrastructure control plane, not a public application or a Quantum Room.</p></div>
+          <div class="arch-row">
+            <article><span>VSR OS / BROWSER · NETWORK OPERATING ENVIRONMENT</span><strong>Applications, navigation and Doors</strong><p>The user-facing access and service environment; not the underlying machine OS kernel.</p></article>
+            <article><span>QUANTUM ROOM · GOVERNED WORKSPACE</span><strong>Physical, digital or hybrid runtime</strong><p>A location- and permission-bound context for participants, devices, workflows and approvals inside an ARK.</p></article>
+          </div>
+          <div class="arch-foot">Warden governs authority, Synnergyze coordinates operations, Sentinel observes and RiverOS preserves event evidence.</div>
+        </div>
+        <div class="feature-grid">
+          <article class="feature"><div class="feature-index">01 / PHYSICAL</div><h2>Places and machines</h2><p>Factories, warehouses, utilities, vehicles and devices remain with their lawful owners and custodians.</p></article>
+          <article class="feature"><div class="feature-index">02 / DIGITAL</div><h2>Network and application</h2><p>Genesis provisions nodes; VSR exposes authorised Doors; Quantum Rooms host bounded workflows.</p></article>
+          <article class="feature"><div class="feature-index">03 / GOVERNANCE</div><h2>Safety, consent and evidence</h2><p>Registering an asset does not grant permission to operate it or transfer its legal control.</p></article>
+        </div>
+        <section class="statement"><div><span class="overline">PHYSICAL AUTHORITY</span><h2>Registration is not operational permission.</h2></div><p>Real equipment requires independent safety, legal, custodial and task-level authority checks before execution.</p></section>
+        <div class="link-panel"><div><span class="overline">NETWORK AND INTERVENTION</span><h2>ARK participation ≠ ARC intervention</h2><p>An ARK is a governed private-network workspace without takeover. An ARC requires a separate, evidenced legal and contractual mandate.</p></div><a class="outline-link" href="/architecture">See responsibilities →</a></div>
+        <section class="note"><strong>Current implementation boundary</strong><p>All physical node passport and Quantum Room examples remain synthetic. No factory, vehicle, machine or physical node is certified operational by this preview.</p></section>"""
     },
     "/architecture": {
         "label": "PLATFORM · BOUNDARIES",
         "title": "One platform. Distinct responsibilities.",
-        "lead": "Genesis is the orchestration root. The other components have separate contracts so that discovery, authorization, execution and evidence cannot be mistaken for one another.",
+        "lead": "Genesis governs the network control foundation; VSR provides the network operating environment; Quantum Rooms provide bounded operational workspaces. Warden, Synnergyze, BNR, DigitalMe and RiverOS keep distinct contracts.",
         "content": """<div class="architecture">
-          <div class="arch-root"><span>GENESIS STACK</span><strong>Provisioning, environment and lifecycle boundaries</strong></div>
+          <div class="arch-root"><span>GENESIS · NETWORK CONTROL FOUNDATION</span><strong>Node identity, provisioning, service state and device/server lifecycle</strong></div>
           <div class="arch-row">
-            <article><span>SYNNERGYZE MCP</span><strong>Operational routing</strong><p>Skills, tools, workflows and connector orchestration under declared contracts.</p></article>
-            <article><span>WARDEN</span><strong>Authority &amp; consent</strong><p>Task-level policy and permission decisions. No implied execution right.</p></article>
+            <article><span>VSR OS / BROWSER · NETWORK OPERATING ENVIRONMENT</span><strong>Doors, navigation and applications</strong><p>Authorised access surface, separate from Genesis and the host machine kernel.</p></article>
+            <article><span>QUANTUM ROOM · GOVERNED RUNTIME</span><strong>Physical, digital or hybrid workspaces</strong><p>People, devices, sessions and workflows inside an authorised ARK or operating location.</p></article>
           </div>
           <div class="arch-row">
-            <article><span>DIGITALME / BNR</span><strong>Identity &amp; registry</strong><p>Actor representation, entitlements, memberships and provenance.</p></article>
-            <article><span>RIVEROS</span><strong>Events &amp; evidence</strong><p>Receipts, reconciliation, preservation and external witnessing.</p></article>
-          </div><div class="arch-foot">VSR / user interfaces present authorised capabilities; they do not replace the source registries.</div>
+            <article><span>SYNNERGYZE / WARDEN</span><strong>Operations and authority</strong><p>Synnergyze routes work; Warden enforces permission, consent, safety and revocation.</p></article>
+            <article><span>BNR / DIGITALME / RIVEROS</span><strong>Registry, identity and evidence</strong><p>Representation, accountable actor identity and event preservation remain separate responsibilities.</p></article>
+          </div><div class="arch-foot">Node registration is not physical ownership, possession or a machine command.</div>
         </div>
         <section class="note"><strong>Current implementation boundary</strong><p>The cloud gateway R0.1 is a separate deny-only HTTP service in staging. It is not a public execution endpoint and does not replace Warden or the canonical RiverOS ledger.</p></section>"""
     },
     "/knowledge": {
         "label": "KNOWLEDGE HUB · PUBLIC INDEX",
         "title": "Know what exists—and what is verified.",
-        "lead": "The Knowledge Hub is intended as a federated discovery layer. It points to source-controlled knowledge without assuming ownership of private documents, databases or institutional records.",
+        "lead": "The Knowledge Hub is a proposed federated index for Genesis nodes, VSR network operating environments, Quantum Rooms and physical/digital asset passports. It references source-controlled knowledge without assuming ownership of private documents, assets, facilities or institutional records.",
         "content": """<div class="steps">
             <div><span>01</span><div><h2>Register</h2><p>Assign a stable passport to each public knowledge item: origin, revision, owner, classification and review date.</p></div></div>
             <div><span>02</span><div><h2>Validate</h2><p>Check sources, approval status and whether the claim refers to a proposal, an implementation, a passing test or an operational deployment.</p></div></div>
@@ -97,7 +119,7 @@ def render_page(path: str) -> str:
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
-<meta name="description" content="Public-information preview of Genesis ARK architecture, knowledge and evidence.">
+<meta name="description" content="Public preview of Genesis network control, VSR environments, Quantum Rooms and evidence.">
 <title>%%TITLE%% — Genesis ARK</title>
 <link rel="stylesheet" href="/assets/site.css"></head>
 <body><a class="skip" href="#main">Skip to content</a>
@@ -110,7 +132,7 @@ def render_page(path: str) -> str:
 <h1>%%HEADING%%</h1><p class="hero-lead">%%LEAD%%</p>
 <div class="hero-actions"><a class="primary-link" href="/knowledge">Explore the Knowledge Hub <span aria-hidden="true">↗</span></a><a class="secondary-link" href="%%GITHUB%%" rel="noopener noreferrer">View source on GitHub <span aria-hidden="true">↗</span></a></div>
 </div></section><section class="content-shell">%%CONTENT%%</section></main>
-<footer><div class="footer-inner"><div><strong>GENESIS ARK</strong><p>Public information only. Authority, records and execution remain privately governed.</p></div><div><span>Navigation</span><a href="/architecture">Architecture</a><a href="/evidence">Evidence</a><a href="/status">Status</a></div><div><span>Source</span><a href="%%GITHUB%%" rel="noopener noreferrer">GitHub repository ↗</a><small>Preview release R0.1 · No member enrollment · No public API</small></div></div>
+<footer><div class="footer-inner"><div><strong>GENESIS ARK</strong><p>Public information only. Authority, records and execution remain privately governed.</p></div><div><span>Navigation</span><a href="/infrastructure">Infrastructure</a><a href="/architecture">Architecture</a><a href="/evidence">Evidence</a><a href="/status">Status</a></div><div><span>Source</span><a href="%%GITHUB%%" rel="noopener noreferrer">GitHub repository ↗</a><small>Preview release R0.1 · No member enrollment · No public API</small></div></div>
 <div class="footer-bottom">Reference information, not a representation of production availability or institutional authority.</div></footer></body></html>""".replace("%%TITLE%%", escape("Overview" if path == "/" else page["title"])) .replace("%%NAV%%", nav).replace("%%LABEL%%", escape(page["label"])).replace("%%HEADING%%", escape(page["title"])).replace("%%LEAD%%", escape(page["lead"])).replace("%%CONTENT%%", page["content"]).replace("%%GITHUB%%", GITHUB)
 
 

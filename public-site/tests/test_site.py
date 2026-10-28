@@ -8,7 +8,7 @@ import server
 
 class PublicSiteTests(unittest.TestCase):
     def test_all_public_pages_render(self):
-        for path in ["/", "/architecture", "/knowledge", "/evidence", "/status"]:
+        for path in ["/", "/infrastructure", "/architecture", "/knowledge", "/evidence", "/status"]:
             status, mime, body = server.route(path)
             text = body.decode("utf-8")
             self.assertEqual(status, 200)
@@ -18,6 +18,32 @@ class PublicSiteTests(unittest.TestCase):
             self.assertIn("noindex,nofollow", text)
             self.assertNotIn("%%", text)
             self.assertNotIn('href="http://postgres', text)
+
+    def test_infrastructure_page_preserves_physical_authority_boundaries(self):
+        code, mime, body = server.route("/infrastructure")
+        page = body.decode("utf-8")
+        self.assertEqual(code, 200)
+        self.assertIn("ARK participation", page)
+        self.assertIn("ARC intervention", page)
+        self.assertIn("no factory", page.lower())
+        self.assertIn('href="/infrastructure"', server.route("/")[2].decode("utf-8"))
+        self.assertIn("Quantum Rooms", server.route("/knowledge")[2].decode("utf-8"))
+
+    def test_genesis_vsr_quantum_room_boundaries(self):
+        overview = server.route("/")[2].decode("utf-8")
+        infrastructure = server.route("/infrastructure")[2].decode("utf-8")
+        architecture = server.route("/architecture")[2].decode("utf-8")
+        self.assertIn("Genesis network", overview)
+        self.assertIn("VSR", overview)
+        self.assertIn("Quantum Room", overview)
+        self.assertIn("GENESIS · NETWORK CONTROLLER", infrastructure)
+        self.assertIn("VSR OS / BROWSER · NETWORK OPERATING ENVIRONMENT", infrastructure)
+        self.assertIn("QUANTUM ROOM · GOVERNED WORKSPACE", infrastructure)
+        self.assertIn("GENESIS · NETWORK CONTROL FOUNDATION", architecture)
+        self.assertIn("QUANTUM ROOM · GOVERNED RUNTIME", architecture)
+        self.assertIn("Node registration is not physical ownership", architecture)
+        self.assertNotIn("BSR OS", infrastructure)
+        self.assertNotIn("Genesis is proposed as a digital–physical infrastructure fabric", infrastructure)
 
     def test_knowledge_source_is_immutable(self):
         code, mime, body = server.route("/knowledge")

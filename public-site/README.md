@@ -5,7 +5,8 @@ credentials, user accounts, analytics, API proxy, cookies or submission forms.**
 
 ## Pages
 
-- `/` — public overview
+- `/` — digital–physical infrastructure overview (proposed, not commissioned)
+- `/infrastructure` — physical assets, digital systems, ARK/ARC boundaries and safety gates
 - `/architecture` — explanatory roles and boundaries
 - `/knowledge` — knowledge registry principles and source blueprint
 - `/evidence` — evidence maturity levels and accepted staging record
@@ -45,6 +46,34 @@ The two custom hostnames may point to the same public-information service
 initially, with `knowledge` redirected to `/knowledge` in a later release.
 Custom domains need Railway-provided DNS records and ownership/certificate
 checks. Do not invent DNS targets.
+
+## Genesis / VSR / Quantum Room boundary
+
+This site presents **Genesis** as the network controller and provisioning
+foundation for registered physical and digital nodes, operating on authorised
+servers and edge machines. It is **not** the entire physical estate.
+
+**VSR OS / Browser** is the network operating environment and user-facing
+application/Doors. It is distinct from Genesis, and from a hardware OS kernel.
+
+**Quantum Room** is an authorised, task-specific physical, digital or hybrid
+operational workspace inside an ARK/location. It is distinct from both Genesis
+and VSR. A room does not issue machine-operation authority.
+
+**ARK** is a governed network enclosure inside an existing operation;
+**ARC** is a separate intervention vehicle requiring legal authority.
+Ownership and operating permissions never arise from registration alone.
+
+This functional architecture is proposed; the preview does not certify physical
+sites. The term **BSR** is unresolved and is not introduced as a new product.
+
+## Digital–physical scope
+
+The public information site describes an infrastructure *doctrine* rather than
+proving a physical location exists or is commissioned. Its node passport model,
+synthetic tests, governance boundaries and field acceptance checklist are
+specified in `docs/architecture/GENESIS-DIGITAL-PHYSICAL-INFRASTRUCTURE-R0.1.md`.
+The website remains a public preview without machinery control or facility data.
 
 ## Promotion gates
 
