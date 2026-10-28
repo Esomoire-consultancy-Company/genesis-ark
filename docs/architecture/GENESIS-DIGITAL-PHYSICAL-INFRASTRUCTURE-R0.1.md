@@ -7,9 +7,9 @@
 
 ## 1. Definition
 
-**Genesis is a governed digital–physical infrastructure fabric** connecting people,
-places, machines, assets, goods, utilities, software and institutions through
-identity, explicit permission, operations, observation and evidence.
+**The Genesis ecosystem supports governed digital–physical infrastructure.** Genesis itself is the **network controller and provisioning foundation** for registered nodes and their lifecycle. Its control software operates on authorised physical servers and edge machines; it is not the entire estate, an application marketplace, or an operating workspace.
+
+**VSR OS / Browser** is the network operating and access environment—the user-facing application and Door surface. **Quantum Room** is a bounded, authorised operational workspace or session for a physical, digital or hybrid location. Registered physical sites, assets and custodians complete the infrastructure picture. These roles are distinct and must not be combined in public claims.
 
 A website, knowledge hub, GitHub repository or cloud service is only an interface
 or component of that fabric. It is not by itself evidence of an operational
@@ -19,7 +19,7 @@ The term *infrastructure* describes the target operating model, **not a claim of
 public or governmental infrastructure designation, property ownership, or
 regulatory approval**.
 
-## 2. Three non-substitutable layers
+## 2. Three non-substitutable planes
 
 | Plane | Responsibilities | Source of truth |
 |---|---|---|
@@ -30,18 +30,36 @@ regulatory approval**.
 **Boundary:** Digital twins and dashboards are representations; they do not
 replace physical verification or confer ownership, possession, control or licences.
 
-## 3. Responsibility map
+## 3. Network-controller / environment / room boundary
 
-- **Genesis / EmpireOS:** provisioning and lifecycle control for registered devices, licences and environments.
+| Component | Class | Primary job | What it is NOT |
+|---|---|---|---|
+| Physical host / edge machine | Hardware and site infrastructure | Compute, device connectivity, location-specific control boundaries | A proof of network ownership or Warden authority |
+| Genesis | Network controller / distributed server services | Node registration, provisioning, state, device/server lifecycle, network control services | VSR application, Quantum Room, or automatically an industrial machine controller |
+| VSR OS / Browser | Network operating environment / application | Navigation, network participation, approved interfaces and Doors | The host machine OS kernel; Genesis network control server |
+| ARK | Governed, location-bound network enclosure | Participating people, assets, permissions and approved Doors within existing operations | Transfer of ownership or takeover |
+| Quantum Room | Bounded runtime within an authorised ARK or location | Participants, machines/devices, sessions, approvals, workflow context and evidence capture | New legal entity, Genesis controller, or permission grant |
+| ARC | Separate intervention / recovery vehicle | Only documented, legally authorised intervention under a distinct mandate | Ordinary ARK membership or Quantum Room session |
+
+A possible interaction is **an authorised physical host running Genesis node/control services → VSR Browser presents a permitted Door → an authorised ARK hosts a Quantum Room for a particular work order**. These are functional relationships, not a claim that every component lives on one machine, or that Genesis can command any attached device.
+
+Warden policies must be enforced **per consequential action**, Synnergyze coordinates the approved task, and RiverOS preserves event evidence. A successful room entrance, device connection or server deployment does not prove physical commissioning or confer operational authority.
+
+**Naming discipline:** VSR is the established Virtual Silk Road network operating environment. The utterance “BSR” is unresolved; do not create or substitute a BSR product or rename VSR without separate clarification and approved registry change.
+
+## 4. Responsibility map
+
+- **Genesis:** network controller and provisioning services for registered nodes, distributed servers and their lifecycle; **EmpireOS:** licencing and machine/fleet control boundaries where implemented.
 - **BNR / DigitalMe:** member, legal-actor and location registration; chain of representation; accountable custodian.
 - **Synnergyze MCP:** routing people, contracts, skills, tools, work orders and commercial processes within assigned authority.
 - **Warden:** consent, policy, physical-safety and legal-authority checks at each consequential step; default DENY on missing or stale evidence.
 - **Sentinel:** time-bounded observation and quality of signals; *observation is never a permission*.
 - **RiverOS:** durable event and evidence trail with source, timestamps, hashes, reconciliation, retention and independent witnessing where implemented.
 - **SILK:** separately authorised obligation, accounting and settlement routes, **never implied by a software receipt**.
-- **VSR:** approved public and member experiences, scoped to the person's representation and the node's declared capabilities.
+- **VSR OS / Browser:** the network operating environment and approved public/member application, with Doors scoped to representation and node capabilities.
+- **Quantum Room:** the governed physical, digital or hybrid task/session context within an authorised ARK or location; not a separate authority or infrastructure root.
 
-## 4. ARK vs ARC must never collapse
+## 5. ARK vs ARC must never collapse
 
 - **ARK:** a governed network/workspace within an independently owned and
   operated physical or digital location. Existing owner/operator/legal authority
@@ -53,7 +71,7 @@ replace physical verification or confer ownership, possession, control or licenc
 Both can share data protocols; they must have **distinct authority chains,
 contract types, transaction rights and published descriptions**.
 
-## 5. Node passport and the physical–digital binding
+## 6. Node passport and the physical–digital binding
 
 A proposed node passport MUST distinguish:
 
@@ -75,7 +93,7 @@ The attached `infrastructure/` synthetic passport verifier checks **shape and
 consistency only**. It is not an identity verifier, surveying instrument, building
 safety certificate or Warden grant.
 
-## 6. Mandatory lifecycle gates
+## 7. Mandatory lifecycle gates
 
 ```text
 DISCOVER -> REGISTER -> VERIFY PHYSICAL + DIGITAL ->
@@ -98,7 +116,7 @@ MAINTAIN / REVALIDATE -> SUSPEND / RETIRE / HAND BACK
   adapter, machine command, utility control or payment instruction is enabled
   by this doctrine.
 
-## 7. Persistent LBM and OCM
+## 8. Persistent LBM and OCM
 
 Every node-oriented workflow is subject to:
 
@@ -114,7 +132,7 @@ Every node-oriented workflow is subject to:
 
 Neither protocol implies permission to operate the machine or use private data.
 
-## 8. Events, actions, accounting and evidence
+## 9. Events, actions, accounting and evidence
 
 The transaction/accounting model MUST bind a labelled user action to its effect:
 
@@ -132,7 +150,7 @@ For every relevant event capture:
 Not every click generates a financial obligation; record `non_billable` or
 `no_settlement` explicitly instead of inventing an invoice.
 
-## 9. Public Knowledge Hub
+## 10. Public Knowledge Hub
 
 The VSR public page may disclose only approved classes, infrastructure
 principles, public programme records and **verified claims**. It MUST NOT
@@ -143,7 +161,7 @@ Public labels must distinguish `concept`, `implemented`, `tested`,
 `staging`, `operational`, `independently-witnessed`. A dated status page
 must say clearly that it is not a live operational feed.
 
-## 10. Acceptance for a first physical node
+## 11. Acceptance for a first physical node
 
 Minimum independently checkable evidence:
 - lawful site/asset/contractual attachment and named real custodian;
@@ -157,7 +175,7 @@ Minimum independently checkable evidence:
 
 This is the proposed acceptance contract; **no site is certified by writing this document**.
 
-## 11. Immediate programme
+## 12. Immediate programme
 
 R0.1: publish doctrine, synthetic passport validator and source-backed public
 overview (this change).  
