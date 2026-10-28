@@ -98,7 +98,13 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
 
         request = intent.model_dump(mode="json")
         try:
+            # Health alone never authorizes intake. Enforce the database
+            # migration/privilege readiness gate on every authenticated write.
+            if not store.ready():
+                raise HTTPException(503, detail="EVIDENCE_SCHEMA_NOT_READY")
             return store.record_denial(request, cfg.issuer_id)
+        except HTTPException:
+            raise
         except IntentConflict:
             raise HTTPException(409, detail="REQUEST_ID_CONFLICT") from None
         except CapacityExceeded as exc:

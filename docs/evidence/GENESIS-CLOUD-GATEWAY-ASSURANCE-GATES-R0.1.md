@@ -25,3 +25,35 @@ The new migration has not been run against Railway staging or production.
 Complete disposable-database tests, migration review, credential rotation
 evidence, backup/restore drill and security approval before staging changes.
 Do not merge, execute Docker commands, issue Warden PERMIT or settle Silk funds.
+
+
+## CI migration rehearsal (synthetic only)
+The dedicated PostgreSQL 18 CI contract creates a disposable database with a
+randomly generated name, applies legacy R0.1 DDL, inserts a synthetic denial
+event, rejects a deliberately incompatible schema without destroying its row,
+then applies the R0.2 hardening migration. It checks preservation of the original
+event hash, single-genesis uniqueness, mutation denial, and idempotent migration
+re-application before dropping the disposable database. The test is disabled
+unless the explicit ephemeral flag is set and the database target is the
+localhost genesis_ci test instance. It does not use or modify Railway data.
+
+## Separate staging migration approval gate
+1. Record the staging deployment SHA, existing schema/role grants, evidence
+   row count and final digest using a separately authorized read-only account.
+2. Perform independently verified encrypted backup and restore to a separate
+   isolated test database; verify exact count, keys and head digest.
+3. Review existing rows for duplicate genesis predecessors, forks, duplicate
+   hashes and schema drift before scheduling maintenance. Do not delete evidence
+   to make a migration pass.
+4. Obtain explicit authorized change approval and a cutover/rollback owner.
+5. Only then execute the R0.2 migration using a temporary migration identity
+   and verify readiness, unchanged historical hash chain, and restored roles.
+6. Rotate administrator credentials, revoke temporary access and record the
+   secret lifecycle without exposing the secret itself.
+7. Independently witness the resulting digest before considering it RiverOS
+   evidence. A local database hash is not an external attestation.
+
+Reversing an append-only migration in place would weaken assurances. If the
+migration is incompatible, stop intake and restore a verified isolated backup
+under an approved recovery plan. Never automatically drop the triggers or indexes
+on a live evidence spool.

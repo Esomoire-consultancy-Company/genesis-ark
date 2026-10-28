@@ -135,3 +135,34 @@ def test_untrusted_exception_text_never_leaks_credentials(caplog):
     assert CFG.database_url not in caplog.text
     assert KEY not in caplog.text
     assert "RuntimeError" in caplog.text
+
+
+
+def test_authenticated_write_never_bypasses_failed_readiness():
+    store = FakeLedger(ready=False)
+    client = TestClient(create_app(CFG, store))
+    response = client.post(
+        "/v1/intents", json=intent(),
+        headers={"Authorization": f"Bearer {KEY}"}
+    )
+    assert response.status_code == 503
+    assert response.json()["detail"] == "EVIDENCE_SCHEMA_NOT_READY"
+    assert store.entries == {}
+
+
+def test_readiness_failure_does_not_leak_exception_text(caplog):
+    class Unsafe(Exception):
+        pass
+
+    class NotReadyLedger(FakeLedger):
+        def ready(self):
+            raise Unsafe(f"password={KEY}; dsn={CFG.database_url}")
+
+    client = TestClient(create_app(CFG, NotReadyLedger()))
+    response = client.post(
+        "/v1/intents", json=intent(),
+        headers={"Authorization": f"Bearer {KEY}"}
+    )
+    assert response.status_code == 503
+    assert KEY not in caplog.text
+    assert CFG.database_url not in caplog.text

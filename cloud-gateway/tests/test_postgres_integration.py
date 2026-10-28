@@ -243,3 +243,98 @@ def test_scram_verifier_does_not_expose_plaintext():
     assert a.startswith("SCRAM-SHA-256$4096:")
     assert password not in a
     assert a != b  # Random salts, same plaintext.
+
+
+def test_populated_legacy_database_upgrade_and_atomic_rejection():
+    """Synthetic-only upgrade on a disposable CI database, never Railway."""
+    import json
+    from pathlib import Path
+    from psycopg.conninfo import conninfo_to_dict
+    from genesis_gateway.ledger import hash_record
+
+    admin = os.getenv("GENESIS_TEST_ADMIN_DATABASE_URL", "")
+    if os.getenv("GENESIS_TEST_EPHEMERAL_DATABASE") != "1" or not admin:
+        pytest.skip("Explicit ephemeral PostgreSQL CI database required")
+    params = conninfo_to_dict(admin)
+    # Destructive CREATE/DROP test must be impossible with a Railway or
+    # production DSN, even if somebody sets the ephemeral flag accidentally.
+    if (params.get("dbname") != "genesis_ci"
+            or params.get("host") not in ("127.0.0.1", "localhost")
+            or params.get("port", "5432") != "5432"):
+        pytest.fail("UNSAFE_EPHEMERAL_TEST_TARGET")
+
+    database_name = "genesis_gateway_upgrade_ci_" + secrets.token_hex(4)
+    target = make_conninfo(admin, dbname=database_name)
+    migration_dir = Path(__file__).resolve().parents[1] / "migrations"
+    initial = (migration_dir / "001_gateway_evidence.sql").read_text(encoding="utf-8")
+    hardening = (migration_dir / "002_gateway_evidence_hardening.sql").read_text(encoding="utf-8")
+    with psycopg.connect(admin, autocommit=True) as conn:
+        conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database_name)))
+    try:
+        record = {
+            "schema_version": "genesis-gateway-evidence.r0.1",
+            "event_id": str(uuid4()), "event_type": "warden.decision.denied",
+            "occurred_at": "2026-10-28T00:00:00+00:00",
+            "issuer_id": "DIGITALME-ACTOR-SYNTHETIC",
+            "intent": {
+                "request_id": str(uuid4()), "correlation_id": "SYNTHETIC-UPGRADE",
+                "target_resource_id": "RES-SYNTHETIC",
+                "capability": "container.instance.restart",
+            },
+            "result": "DENY", "reason_code": "WARDEN_NOT_PROVISIONED",
+            "execution_invoked": False,
+        }
+        digest = hash_record(record, None)
+        with psycopg.connect(target) as conn:
+            with conn.cursor() as cur:
+                cur.execute(initial)
+                cur.execute(
+                    "INSERT INTO public.gateway_evidence "
+                    "(request_id, event_id, event, previous_hash, record_hash) "
+                    "VALUES (%s, %s, %s::jsonb, %s, %s)",
+                    (record["intent"]["request_id"], record["event_id"],
+                     json.dumps(record), None, digest),
+                )
+
+        # Incompatible pre-existing schemas must never be accepted silently.
+        with psycopg.connect(target) as conn:
+            conn.execute("ALTER TABLE public.gateway_evidence ADD COLUMN unexpected text")
+        with psycopg.connect(target) as conn:
+            with pytest.raises(psycopg.errors.RaiseException, match="GATEWAY_EVIDENCE_SCHEMA_MISMATCH"):
+                conn.execute(hardening)
+            conn.rollback()
+            found = conn.execute(
+                "SELECT count(*) FROM pg_trigger WHERE tgrelid = "
+                "'public.gateway_evidence'::regclass AND NOT tgisinternal"
+            ).fetchone()[0]
+            assert found == 0
+            assert conn.execute("SELECT record_hash FROM public.gateway_evidence").fetchone()[0] == digest
+
+        with psycopg.connect(target) as conn:
+            conn.execute("ALTER TABLE public.gateway_evidence DROP COLUMN unexpected")
+            conn.execute(hardening)
+        with psycopg.connect(target) as conn:
+            assert conn.execute("SELECT count(*) FROM public.gateway_evidence").fetchone()[0] == 1
+            assert conn.execute("SELECT record_hash FROM public.gateway_evidence").fetchone()[0] == digest
+            with pytest.raises(psycopg.errors.UniqueViolation):
+                second = {**record, "event_id": str(uuid4()),
+                          "intent": {**record["intent"], "request_id": str(uuid4())}}
+                conn.execute(
+                    "INSERT INTO public.gateway_evidence "
+                    "(request_id, event_id, event, previous_hash, record_hash) "
+                    "VALUES (%s, %s, %s::jsonb, NULL, %s)",
+                    (second["intent"]["request_id"], second["event_id"],
+                     json.dumps(second), hash_record(second, None)),
+                )
+            conn.rollback()
+        with psycopg.connect(target) as conn:
+            with pytest.raises(psycopg.errors.RaiseException, match="GATEWAY_EVIDENCE_APPEND_ONLY"):
+                conn.execute("DELETE FROM public.gateway_evidence")
+            conn.rollback()
+            # Safe re-application must preserve the entire synthetic evidence row.
+            conn.execute(hardening)
+        with psycopg.connect(target) as conn:
+            assert conn.execute("SELECT record_hash FROM public.gateway_evidence").fetchone()[0] == digest
+    finally:
+        with psycopg.connect(admin, autocommit=True) as conn:
+            conn.execute(sql.SQL("DROP DATABASE {} WITH (FORCE)").format(sql.Identifier(database_name)))
