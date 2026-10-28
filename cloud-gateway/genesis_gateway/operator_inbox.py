@@ -19,6 +19,10 @@ _SECRET = re.compile(r"^[A-Z][A-Z0-9_]{1,127}$")
 
 EventKind = Literal["public_intent_probe", "sensitive_path_probe", "intent_denied", "secret_state"]
 Status = Literal["new", "acknowledged"]
+NodeResolution = Literal["unknown_external", "pending_mapping", "verified"]
+
+PUBLIC_PREVIEW_SERVICE = "genesis-public-site-preview"
+GATEWAY_SERVICE = "genesis-cloud-gateway-r01"
 
 
 class AccessDenied(PermissionError):
@@ -39,6 +43,8 @@ class VerifiedOperator:
     # This flag is set only by the trusted auth adapter, NEVER from HTTP input.
     authority_verified: bool = False
     environments: frozenset[str] = frozenset()
+    # Explicit service entitlements from the trusted operator registry, not the request.
+    service_ids: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -52,6 +58,9 @@ class SecurityEvent:
     # For registry events, this is a *name/reference*, never secret material.
     secret_name: str | None = None
     secret_state: str | None = None
+    # Service of observation is not proof of the originating actor or node.
+    origin_service_id: str | None = None
+    node_resolution: NodeResolution = "pending_mapping"
 
 
 @dataclass(frozen=True)
@@ -83,6 +92,8 @@ def _digest(value: dict) -> str:
 def _validate(event: SecurityEvent) -> None:
     if not all(_valid_id(value) for value in (event.event_id, event.environment, event.source_receipt)):
         raise InvalidEvent("INVALID_EVENT_IDENTITY")
+    if not _valid_id(event.origin_service_id):
+        raise InvalidEvent("ORIGIN_SERVICE_UNVERIFIED")
     if event.node_id is not None and not _valid_id(event.node_id):
         raise InvalidEvent("INVALID_NODE")
     if event.correlation_id is not None and not _valid_id(event.correlation_id):
@@ -96,10 +107,22 @@ def _validate(event: SecurityEvent) -> None:
             raise InvalidEvent("INVALID_SECRET_STATE")
     elif event.secret_name is not None or event.secret_state is not None:
         raise InvalidEvent("SECRET_METADATA_NOT_ALLOWED")
-    if event.kind == "intent_denied" and (not event.node_id or not event.correlation_id):
-        raise InvalidEvent("INTENT_REQUIRES_NODE_AND_CORRELATION")
-    if event.kind in {"public_intent_probe", "sensitive_path_probe"} and event.node_id is not None:
-        raise InvalidEvent("UNAUTHENTICATED_PROBE_CANNOT_CLAIM_NODE")
+    if event.node_resolution not in {"unknown_external", "pending_mapping", "verified"}:
+        raise InvalidEvent("INVALID_NODE_RESOLUTION")
+    if event.kind == "intent_denied":
+        if not event.node_id or not event.correlation_id or event.node_resolution != "verified":
+            raise InvalidEvent("INTENT_REQUIRES_VERIFIED_NODE_AND_CORRELATION")
+    elif event.kind in {"public_intent_probe", "sensitive_path_probe"}:
+        if (event.node_id is not None or event.correlation_id is not None
+                or event.node_resolution != "unknown_external"
+                or event.origin_service_id != PUBLIC_PREVIEW_SERVICE):
+            raise InvalidEvent("UNAUTHENTICATED_PROBE_CANNOT_CLAIM_NODE")
+    elif event.kind == "secret_state":
+        if event.correlation_id is not None:
+            raise InvalidEvent("SECRET_CORRELATION_UNEXPECTED")
+        expected = "verified" if event.node_id is not None else "pending_mapping"
+        if event.node_resolution != expected:
+            raise InvalidEvent("INCONSISTENT_NODE_RESOLUTION")
 
 
 def classify_public_denial(*, event_id: str, path: str, status: int,
@@ -114,8 +137,11 @@ def classify_public_denial(*, event_id: str, path: str, status: int,
     route = path.partition("?")[0]
     if route not in {"/v1/intents", "/secrets", "/.env"}:
         return None
-    event = SecurityEvent(event_id, "public_intent_probe" if route == "/v1/intents" else "sensitive_path_probe",
-                          environment, None, None, source_receipt)
+    event = SecurityEvent(
+        event_id, "public_intent_probe" if route == "/v1/intents" else "sensitive_path_probe",
+        environment, None, None, source_receipt, origin_service_id=PUBLIC_PREVIEW_SERVICE,
+        node_resolution="unknown_external",
+    )
     _validate(event)
     return event
 
@@ -126,18 +152,31 @@ def record_gateway_denial(*, event_id: str, trusted_node_id: str,
     """Pass only server-validated ledger receipt + authenticated registry mapping."""
     if not re.fullmatch(r"[0-9a-f]{64}", evidence_hash):
         raise InvalidEvent("INVALID_LEDGER_HASH")
-    event = SecurityEvent(event_id, "intent_denied", environment, trusted_node_id,
-                          trusted_correlation_id, evidence_hash)
+    event = SecurityEvent(
+        event_id, "intent_denied", environment, trusted_node_id,
+        trusted_correlation_id, evidence_hash, origin_service_id=GATEWAY_SERVICE,
+        node_resolution="verified",
+    )
     _validate(event)
     return event
 
 
 def record_secret_status(*, event_id: str, secret_reference: str,
                          state: str, registry_receipt_id: str,
-                         environment: str = "staging") -> SecurityEvent:
-    """Accept registry metadata only, never read os.environ or secret values."""
-    event = SecurityEvent(event_id, "secret_state", environment, None, None,
-                          registry_receipt_id, secret_reference, state)
+                         environment: str = "staging",
+                         trusted_node_id: str | None = None,
+                         trusted_origin_service_id: str = GATEWAY_SERVICE) -> SecurityEvent:
+    """Use verified registry ownership when present, never secret values.
+
+    Both trusted_* parameters are exclusively for a trusted server-side vault
+    metadata adapter. Never populate them from an external request.
+    """
+    event = SecurityEvent(
+        event_id, "secret_state", environment, trusted_node_id, None,
+        registry_receipt_id, secret_reference, state,
+        origin_service_id=trusted_origin_service_id,
+        node_resolution="verified" if trusted_node_id is not None else "pending_mapping",
+    )
     _validate(event)
     return event
 
@@ -156,6 +195,9 @@ def _authorized(operator: VerifiedOperator, case: Case) -> bool:
         return False
     if case.queue_role not in operator.roles or case.event.environment not in operator.environments:
         return False
+    # A role + environment alone cannot grant all unassigned cases.
+    if case.event.origin_service_id not in operator.service_ids:
+        return False
     return case.event.node_id is None or case.event.node_id in operator.node_ids
 
 
@@ -170,7 +212,7 @@ class SyntheticCaseQueue:
         queue_role, severity = _route(event)
         event_details = {field: getattr(event, field) for field in event.__dataclass_fields__}
         evidence = _digest({"event": event_details, "queue_role": queue_role, "severity": severity})
-        case_id = "CASE-" + hashlib.sha256(f"{event.environment}:{event.event_id}".encode("ascii")).hexdigest()[:20]
+        case_id = "CASE-" + hashlib.sha256(f"{event.environment}:{event.origin_service_id}:{event.event_id}".encode("ascii")).hexdigest()[:20]
         prior = self._cases.get(case_id)
         if prior:
             if prior.evidence_hash != evidence:
@@ -236,10 +278,19 @@ def render_private_preview(queue: SyntheticCaseQueue, operator: VerifiedOperator
             "secret_state": "Secret metadata needs custodian review",
         }[event.kind]
         reference = event.secret_name if event.kind == "secret_state" else (event.correlation_id or "-")
-        values = (case.case_id, summary, event.environment, event.node_id or "Unassigned",
-                  case.queue_role, reference, case.severity, case.status, case.evidence_hash[:16])
+        values = (
+            case.case_id, summary, event.environment, event.origin_service_id,
+            event.node_id or "Not verified", event.node_resolution,
+            case.queue_role, case.intended_recipient_id or "Pending",
+            case.assignee_id or "Pending", reference,
+            case.severity, case.status, case.evidence_hash[:16],
+        )
         rows.append("<tr>" + "".join("<td>" + escape(str(v)) + "</td>" for v in values) + "</tr>")
-    head = ("Case", "Event", "Environment", "Node", "Queue", "Reference", "Severity", "Status", "Receipt")
+    head = (
+        "Case", "Event", "Environment", "Origin service", "Node",
+        "Node resolution", "Queue", "Recipient", "Assignee",
+        "Reference", "Severity", "Status", "Receipt",
+    )
     return ("<!doctype html><html lang='en'><head><meta charset='utf-8'>"
             "<meta name='viewport' content='width=device-width,initial-scale=1'>"
             "<meta name='robots' content='noindex,nofollow'><title>Genesis Operator Inbox - SYNTHETIC</title>"
