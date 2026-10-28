@@ -303,6 +303,17 @@ def import_export(path: Path, *, journal_path: Path, principal_id: str,
             duplicates += 1
         else:
             missing.append((kind, payload))
+    channels = Counter()
+    modality_messages = Counter()
+    attachments_by_modality = Counter()
+    linked_reply_inputs = set()
+    for kind, payload in events:
+        if kind == "work.input":
+            channels[payload["channel"]] += 1
+            modality_messages.update(set(payload["modalities"]))
+            attachments_by_modality.update(a["modality"] for a in payload.get("attachments", []))
+        elif payload.get("reply_to_message_id"):
+            linked_reply_inputs.add(payload["reply_to_message_id"])
     if commit:
         for kind, payload in missing:
             append_work_event(journal, kind=kind, payload=payload,
@@ -316,7 +327,10 @@ def import_export(path: Path, *, journal_path: Path, principal_id: str,
             "already_recorded": duplicates,
             "user_messages": sum(1 for k, _ in events if k == "work.input"),
             "assistant_outputs": sum(1 for k, _ in events if k == "work.output"),
-            "unknown_origin_user_messages": sum(1 for k, _ in events if k == "work.input"),
+            "unknown_origin_user_messages": channels["import_unknown"],
+            "channels": dict(channels), "messages_with_modality": dict(modality_messages),
+            "attached_assets": dict(attachments_by_modality),
+            "responded_input_messages": len(linked_reply_inputs),
             "missingness": {k: v for k, v in counts.items() if k.endswith("skipped") or
                             k.endswith("without_mapping") or k.endswith("without_user_parent") or
                             k.endswith("without_id") or k.endswith("without_timestamp")},
