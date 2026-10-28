@@ -47,4 +47,15 @@ node --check gateway/portal.js
 python3 gateway/check.py
 ```
 
+
+### Browser acceptance
+
+On an environment with Chromium/Chrome and a matching `chromedriver` available (such as the configured GitHub Actions Ubuntu runner):
+
+```sh
+python3 gateway/browser_smoke.py
+```
+
+The browser smoke suite exercises role changes, architecture selection, catalogue filtering, LBM/OCM, skip-link focus, keyboard activation, console errors and document overflow at **320 × 720, 390 × 844, 768 × 1024 and 1440 × 900**. It produces screenshots in `gateway-qa/screenshots/`; CI uploads them as a short-lived review artifact. Automated smoke testing is **not** a substitute for manual visual and assistive-technology inspection. No website is published by these tests.
+
 This static portal does not replace existing technical documentation, and the repository root README remains the engineer-facing index.
