@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+from threading import BoundedSemaphore
 from html import escape
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
@@ -70,15 +71,15 @@ PAGES = {
         <div class="table-row" role="row"><span role="cell">Tested</span><span role="cell">Defined checks passed in a specified environment</span></div>
         <div class="table-row" role="row"><span role="cell">Deployed</span><span role="cell">A specific service revision was deployed</span></div>
         <div class="table-row" role="row"><span role="cell">Independently witnessed</span><span role="cell">A distinct authorised custodian validated evidence outside the source system</span></div></div>
-        <div class="link-panel"><div><span class="overline">SOURCE-BACKED EXAMPLE</span><h2>Cloud Gateway staging acceptance</h2><p>The R0.1 acceptance record describes a private, deny-only gateway test—not public API availability, Warden PERMIT, or independent RiverOS certification.</p></div><a class="outline-link" href="https://github.com/Esomoire-consultancy-Company/genesis-ark/blob/feat/genesis-ark-cloud-gateway-r01/docs/evidence/GENESIS-CLOUD-GATEWAY-STAGING-R0.1.md" rel="noopener noreferrer">View evidence record ↗</a></div>"""
+        <div class="link-panel"><div><span class="overline">PUBLIC EVIDENCE · PENDING</span><h2>Cloud Gateway staging evidence</h2><p>A stable, approved public evidence record is not yet published. Any internal staging acceptance is distinct from a production release, Warden PERMIT, or independent RiverOS certification.</p></div></div>"""
     },
     "/status": {
         "label": "STATUS · PUBLISHED SNAPSHOT",
         "title": "Status with a timestamp.",
         "lead": "This page is a manually published evidence snapshot dated 28 October 2026. It is not live monitoring and must not be used for operational decision-making.",
         "content": """<div class="status-grid">
-          <article><div class="status-tag">STAGING / VERIFIED 28 OCT 2026</div><h2>Genesis Cloud Gateway R0.1</h2><p>Restricted staging acceptance recorded. Deny-only execution mode; no public API domain.</p></article>
-          <article><div class="status-tag">STAGING / VERIFIED 28 OCT 2026</div><h2>PostgreSQL evidence spool</h2><p>Storage and restricted-role migration passed the recorded acceptance checks. This is not the canonical RiverOS ledger.</p></article>
+          <article><div class="status-tag">STAGING / REPORTED 28 OCT 2026</div><h2>Genesis Cloud Gateway R0.1</h2><p>Restricted staging acceptance recorded. Deny-only execution mode; no public API domain.</p></article>
+          <article><div class="status-tag">STAGING / REPORTED 28 OCT 2026</div><h2>PostgreSQL evidence spool</h2><p>Storage and restricted-role migration passed the recorded acceptance checks. This is not the canonical RiverOS ledger.</p></article>
           <article><div class="status-tag neutral">NOT CERTIFIED</div><h2>Production / Federation</h2><p>No production promotion, independent RiverOS witnessing or Warden permit integration is asserted by this preview.</p></article>
         </div>
         <section class="note"><strong>For current operational state</strong><p>Authorised operators should consult the source deployment platform and private evidence registry. Historical snapshots may become stale.</p></section>"""
@@ -114,7 +115,10 @@ def render_page(path: str) -> str:
 
 
 def route(path: str) -> tuple[int, str, bytes]:
-    path = urlsplit(path).path
+    try:
+        path = urlsplit(path).path
+    except ValueError:
+        return 400, "text/plain; charset=utf-8", b"Bad request"
     if path == "/healthz":
         return 200, "application/json; charset=utf-8", json.dumps({"status": "ok", "site": "genesis-ark-public-preview", "api_enabled": False}).encode("utf-8")
     if path == "/robots.txt":
@@ -128,6 +132,11 @@ def route(path: str) -> tuple[int, str, bytes]:
 
 
 class Handler(BaseHTTPRequestHandler):
+    # Do not let a stalled connection hold a worker indefinitely.
+    timeout = 10
+    server_version = "GenesisARKPublic/0.1"
+    sys_version = ""
+
     def do_GET(self):
         self.respond(send_body=True)
 
@@ -150,6 +159,36 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(data)
 
 
+class BoundedHTTPServer(ThreadingHTTPServer):
+    """Limit concurrent HTTP connection handlers, including idle clients."""
+
+    daemon_threads = True
+    request_queue_size = 32
+    max_connections = 32
+
+    def __init__(self, server_address, RequestHandlerClass):
+        self._slots = BoundedSemaphore(self.max_connections)
+        super().__init__(server_address, RequestHandlerClass)
+
+    def process_request(self, request, client_address):
+        if not self._slots.acquire(blocking=False):
+            # Drop excess clients without allocating more request threads.
+            self.shutdown_request(request)
+            return
+        try:
+            super().process_request(request, client_address)
+        except Exception:
+            self._slots.release()
+            self.shutdown_request(request)
+            raise
+
+    def process_request_thread(self, request, client_address):
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._slots.release()
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8080"))
-    ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()
+    BoundedHTTPServer(("0.0.0.0", port), Handler).serve_forever()
