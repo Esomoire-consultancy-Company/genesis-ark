@@ -87,7 +87,7 @@ def test_two_independent_admins_required_to_register_grant(api, env):
                   token=proposer, data=requested)
     assert create.status == 202
     proposal = create.body["proposal_id"]
-    with pytest.raises(AdmissionDenied, match="UNAMBIGUOUS_CONSENT_REQUIRED"):
+    with pytest.raises(AdmissionDenied, match="SOURCE_NOT_REGISTERED"):
         actor = env["verifier"].verify(mint(env), required_scope="work:capture", now=NOW)
         api.staging.warden_store.resolve(actor, work_id="GW-001", now=NOW)
     single = call(api, method="POST", path=f"/v1/admin/reviews/{proposal}/approve",
