@@ -349,23 +349,32 @@ class WorkEvidenceStaging:
             rows = db.execute("""SELECT packet_json,status FROM capture_outbox
                 WHERE tenant_id=? AND principal_id=? AND work_id=?""",
                 (actor.tenant_id, actor.subject, work_id)).fetchall()
-        counts, channels, media, assets = Counter(), Counter(), Counter(), Counter()
+        counts, projected_kinds = Counter(), Counter()
+        channels, media, assets = Counter(), Counter(), Counter()
         for raw, state in rows:
             event = json.loads(raw)
             counts[state] += 1
+            counts["submitted_" + event["kind"]] += 1
+            # Submission is not evidence of RiverOS projection. Withdrawn
+            # or failed packets are never represented as recorded inputs.
+            if state != "projected":
+                continue
+            projected_kinds[event["kind"]] += 1
             payload = event["payload"]
             if event["kind"] == "work.input":
                 channels[payload["channel"]] += 1
                 media.update(set(payload["modalities"]))
                 assets.update(a["modality"] for a in payload.get("attachments", []))
-            counts[event["kind"]] += 1
         return {
             "work_id": work_id, "tenant_id": actor.tenant_id,
             "principal_id": actor.subject, "accepted": len(rows),
             "pending": counts["pending"], "projected": counts["projected"],
-            "blocked": counts["blocked"], "input_messages": counts["work.input"],
-            "assistant_outputs": counts["work.output"],
-            "tool_invocations": counts["work.tool"], "revisions": counts["work.revision"],
+            "blocked": counts["blocked"],
+            "submitted_input_messages": counts["submitted_work.input"],
+            "input_messages": projected_kinds["work.input"],
+            "assistant_outputs": projected_kinds["work.output"],
+            "tool_invocations": projected_kinds["work.tool"],
+            "revisions": projected_kinds["work.revision"],
             "channels": dict(channels), "modalities": dict(media),
             "attachments": dict(assets), "source": "staging_outbox",
             "verified_execution_count": None, "finalized_count": None,
