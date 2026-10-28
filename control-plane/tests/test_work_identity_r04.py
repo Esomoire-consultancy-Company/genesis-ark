@@ -72,7 +72,7 @@ def provision(env, *, tenant="BNR-T1", sub="DM-001", work="GW-001"):
     source = RegisteredSource(tenant, sub, "GES-ALPHA-001", "APP-01",
                               frozenset({"typed", "voice_dictation", "voice_live"}))
     grant = ConsentGrant("CONSENT-" + tenant + "-" + sub + "-" + work, tenant, sub,
-                         "GES-ALPHA-001", "APP-01", work, NOW+timedelta(hours=1))
+                         "GES-ALPHA-001", "APP-01", work, datetime.now(timezone.utc)+timedelta(days=1))
     admin = administrator(tenant)
     env["store"].register_source(admin, source=source)
     env["store"].register_grant(admin, grant=grant)
@@ -206,5 +206,5 @@ def test_tampered_river_blocks_private_read(env):
 
 
 def test_no_evidence_or_table_enumeration_before_capture(env):
-    result = env["fabric"].private_counts(access_token=mint(env), work_id="GW-001", now=NOW)
-    raise AssertionError("reader should deny when no journal exists") if result else AssertionError("reader must deny")
+    with pytest.raises(AdmissionDenied, match="EVIDENCE_NOT_READY"):
+        env["fabric"].private_counts(access_token=mint(env), work_id="GW-001", now=NOW)
