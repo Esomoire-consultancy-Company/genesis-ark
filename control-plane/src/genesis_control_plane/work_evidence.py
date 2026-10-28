@@ -27,10 +27,10 @@ REQUIRED = {
     "work.reopened": "deliverable_id",
 }
 FIELDS = {
-    "work.input": frozenset({"work_id", "message_id", "channel", "provenance", "nature", "modalities", "attachments", "conversation_id", "parent_message_id"}),
-    "work.output": frozenset({"work_id", "response_id", "reply_to_message_id", "conversation_id", "deliverable_id"}),
-    "work.tool": frozenset({"work_id", "tool_call_id", "capability", "outcome", "execution_id", "command_id"}),
-    "work.revision": frozenset({"work_id", "revision_id", "parent_response_id", "deliverable_id"}),
+    "work.input": frozenset({"work_id", "message_id", "channel", "provenance", "nature", "modalities", "attachments", "conversation_id", "parent_message_id", "capture_id", "source_occurred_at"}),
+    "work.output": frozenset({"work_id", "response_id", "reply_to_message_id", "conversation_id", "deliverable_id", "capture_id", "source_occurred_at"}),
+    "work.tool": frozenset({"work_id", "tool_call_id", "capability", "outcome", "execution_id", "command_id", "capture_id"}),
+    "work.revision": frozenset({"work_id", "revision_id", "parent_response_id", "deliverable_id", "capture_id"}),
     "work.verified": frozenset({"work_id", "deliverable_id", "verification_receipt_id"}),
     "work.approved": frozenset({"work_id", "deliverable_id", "approval_receipt_id"}),
     "work.finalized": frozenset({"work_id", "deliverable_id", "version"}),
