@@ -5,9 +5,10 @@ from genesis_gateway.operator_preview import demo
 from genesis_gateway.secret_workflow import SyntheticSecretWorkflow
 
 
-def actor(name, role, verified=True, environment="staging"):
-    return VerifiedOperator(name, frozenset({role}), frozenset(), verified,
-                            frozenset({environment}))
+def actor(name, role, verified=True, environment="staging",
+          services=("genesis-cloud-gateway-r01",), nodes=()):
+    return VerifiedOperator(name, frozenset({role}), frozenset(nodes), verified,
+                            frozenset({environment}), frozenset(services))
 
 
 def setup():
@@ -37,7 +38,8 @@ def test_no_self_approval_or_self_check():
     w, case, custodian = setup()
     w.request(actor=custodian, case_id=case.case_id, work_id="WORK-02", action="rotate")
     self_approver = VerifiedOperator(custodian.actor_id, frozenset({"secret_change_approver"}),
-                                     frozenset(), True, frozenset({"staging"}))
+                                     frozenset(), True, frozenset({"staging"}),
+                                     frozenset({"genesis-cloud-gateway-r01"}))
     with pytest.raises(AccessDenied, match="DUAL_CONTROL_REQUIRED"):
         w.approve(approver=self_approver, work_id="WORK-02")
     with pytest.raises(AccessDenied):
@@ -55,6 +57,9 @@ def test_wrong_environment_and_unverified_actor_blocked():
     with pytest.raises(AccessDenied):
         w.approve(approver=actor("APPROVER-02", "secret_change_approver", environment="production"),
                   work_id="WORK-03")
+    with pytest.raises(AccessDenied):
+        w.approve(approver=actor("APPROVER-03", "secret_change_approver",
+                                 services=("genesis-public-site-preview",)), work_id="WORK-03")
 
 
 def test_reject_arbitrary_secret_payload_and_request_mismatch():
@@ -67,3 +72,30 @@ def test_reject_arbitrary_secret_payload_and_request_mismatch():
     assert w.request(actor=custodian, case_id=case.case_id, work_id="WORK-04", action="rotate") == item
     with pytest.raises(InvalidEvent):
         w.request(actor=custodian, case_id=case.case_id, work_id="WORK-04", action="add")
+
+
+def test_node_mapped_vault_work_requires_node_scope_for_all_three_roles():
+    from genesis_gateway.operator_inbox import record_secret_status, SyntheticCaseQueue
+    q = SyntheticCaseQueue()
+    event = record_secret_status(
+        event_id="CONFIG-NODE-01", secret_reference="SERVICE_API_KEY",
+        state="rotation_due", registry_receipt_id="VAULT-0001",
+        trusted_node_id="NODE-SCOPED-01",
+    )
+    case = q.ingest(event)
+    workflow = SyntheticSecretWorkflow(q)
+    custodian = actor("CUSTODIAN-10", "configuration_custodian", nodes=("NODE-SCOPED-01",))
+    assert workflow.request(actor=custodian, case_id=case.case_id,
+                            work_id="WORK-NODE-01", action="rotate").node_id == "NODE-SCOPED-01"
+    with pytest.raises(AccessDenied):
+        workflow.approve(approver=actor("APPROVER-11", "secret_change_approver"),
+                         work_id="WORK-NODE-01")
+    workflow.approve(approver=actor("APPROVER-11", "secret_change_approver",
+                                   nodes=("NODE-SCOPED-01",)), work_id="WORK-NODE-01")
+    with pytest.raises(AccessDenied):
+        workflow.synthetic_check(checker=actor("CHECKER-11", "secret_state_verifier"),
+                                 work_id="WORK-NODE-01", inventory_receipt="INV-001")
+    assert workflow.synthetic_check(
+        checker=actor("CHECKER-11", "secret_state_verifier", nodes=("NODE-SCOPED-01",)),
+        work_id="WORK-NODE-01", inventory_receipt="INV-001"
+    ).status == "checked_synthetic_only"
