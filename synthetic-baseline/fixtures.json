@@ -1,0 +1,297 @@
+{
+  "schema_version": "0.1",
+  "fixture_id": "GENESIS-SYNTHETIC-BASELINE-R01",
+  "synthetic": true,
+  "environment": "synthetic-ci",
+  "test_clock": "2026-10-28T10:00:00Z",
+  "organizations": [
+    {
+      "id": "SYN-ORG-COMMONS-01",
+      "kind": "commons",
+      "name": "Example Commons (Synthetic)"
+    },
+    {
+      "id": "SYN-ORG-BNR-01-01",
+      "kind": "bnr_node",
+      "name": "Example BNR Node A (Synthetic)"
+    },
+    {
+      "id": "SYN-ORG-BNR-02-01",
+      "kind": "bnr_node",
+      "name": "Example BNR Node B (Synthetic)"
+    },
+    {
+      "id": "SYN-ORG-SUPPLIER-01",
+      "kind": "legal_supplier",
+      "name": "Example Supplier (Synthetic)"
+    }
+  ],
+  "actors": [
+    {
+      "id": "SYN-ACTOR-CREATOR-01",
+      "role": "creator",
+      "state": "ACTIVE"
+    },
+    {
+      "id": "SYN-ACTOR-REP-01",
+      "role": "representative",
+      "state": "ACTIVE"
+    },
+    {
+      "id": "SYN-ACTOR-AUDITOR-01",
+      "role": "auditor",
+      "state": "ACTIVE"
+    },
+    {
+      "id": "SYN-ACTOR-OPERATOR-01",
+      "role": "operator",
+      "state": "ACTIVE"
+    },
+    {
+      "id": "SYN-ACTOR-REVIEWER-01",
+      "role": "warden_reviewer",
+      "state": "ACTIVE"
+    },
+    {
+      "id": "SYN-ACTOR-NONMEMBER-01",
+      "role": "representative",
+      "state": "ACTIVE"
+    },
+    {
+      "id": "SYN-ACTOR-EXPIRED-01",
+      "role": "representative",
+      "state": "ACTIVE"
+    },
+    {
+      "id": "SYN-ACTOR-REVOKED-01",
+      "role": "representative",
+      "state": "ACTIVE"
+    },
+    {
+      "id": "SYN-ACTOR-WRONGNODE-01",
+      "role": "representative",
+      "state": "ACTIVE"
+    },
+    {
+      "id": "SYN-ACTOR-DISABLED-01",
+      "role": "creator",
+      "state": "DISABLED"
+    }
+  ],
+  "memberships": [
+    {
+      "actor_id": "SYN-ACTOR-CREATOR-01",
+      "commons_id": "SYN-ORG-COMMONS-01",
+      "state": "ACTIVE"
+    },
+    {
+      "actor_id": "SYN-ACTOR-REP-01",
+      "commons_id": "SYN-ORG-COMMONS-01",
+      "state": "ACTIVE"
+    },
+    {
+      "actor_id": "SYN-ACTOR-AUDITOR-01",
+      "commons_id": "SYN-ORG-COMMONS-01",
+      "state": "ACTIVE"
+    },
+    {
+      "actor_id": "SYN-ACTOR-OPERATOR-01",
+      "commons_id": "SYN-ORG-COMMONS-01",
+      "state": "ACTIVE"
+    },
+    {
+      "actor_id": "SYN-ACTOR-REVIEWER-01",
+      "commons_id": "SYN-ORG-COMMONS-01",
+      "state": "ACTIVE"
+    },
+    {
+      "actor_id": "SYN-ACTOR-EXPIRED-01",
+      "commons_id": "SYN-ORG-COMMONS-01",
+      "state": "ACTIVE"
+    },
+    {
+      "actor_id": "SYN-ACTOR-REVOKED-01",
+      "commons_id": "SYN-ORG-COMMONS-01",
+      "state": "REVOKED"
+    },
+    {
+      "actor_id": "SYN-ACTOR-WRONGNODE-01",
+      "commons_id": "SYN-ORG-COMMONS-01",
+      "state": "ACTIVE"
+    },
+    {
+      "actor_id": "SYN-ACTOR-DISABLED-01",
+      "commons_id": "SYN-ORG-COMMONS-01",
+      "state": "ACTIVE"
+    }
+  ],
+  "representations": [
+    {
+      "id": "SYN-REP-REP-01",
+      "actor_id": "SYN-ACTOR-REP-01",
+      "node_id": "SYN-ORG-BNR-01",
+      "state": "ACTIVE",
+      "valid_until": "2026-12-31T23:59:59Z"
+    },
+    {
+      "id": "SYN-REP-EXPIRED-01",
+      "actor_id": "SYN-ACTOR-EXPIRED-01",
+      "node_id": "SYN-ORG-BNR-01",
+      "state": "ACTIVE",
+      "valid_until": "2026-12-31T23:59:59Z"
+    },
+    {
+      "id": "SYN-REP-REVOKED-01",
+      "actor_id": "SYN-ACTOR-REVOKED-01",
+      "node_id": "SYN-ORG-BNR-01",
+      "state": "ACTIVE",
+      "valid_until": "2026-12-31T23:59:59Z"
+    },
+    {
+      "id": "SYN-REP-WRONGNODE-01",
+      "actor_id": "SYN-ACTOR-WRONGNODE-01",
+      "node_id": "SYN-ORG-BNR-02",
+      "state": "ACTIVE",
+      "valid_until": "2026-12-31T23:59:59Z"
+    }
+  ],
+  "licences": [
+    {
+      "id": "SYN-LIC-CREATOR-01",
+      "actor_id": "SYN-ACTOR-CREATOR-01",
+      "actions": [
+        "creator.draft.synthetic"
+      ],
+      "state": "ACTIVE",
+      "valid_until": "2026-12-31T23:59:59Z",
+      "synthetic": true
+    },
+    {
+      "id": "SYN-LIC-REP-01",
+      "actor_id": "SYN-ACTOR-REP-01",
+      "actions": [
+        "subscription.quote.synthetic"
+      ],
+      "state": "ACTIVE",
+      "valid_until": "2026-12-31T23:59:59Z",
+      "synthetic": true,
+      "node_id": "SYN-ORG-BNR-01",
+      "legal_supplier_id": "SYN-ORG-SUPPLIER-01"
+    },
+    {
+      "id": "SYN-LIC-AUDITOR-01",
+      "actor_id": "SYN-ACTOR-AUDITOR-01",
+      "actions": [
+        "river.evidence.read.synthetic"
+      ],
+      "state": "ACTIVE",
+      "valid_until": "2026-12-31T23:59:59Z",
+      "synthetic": true
+    },
+    {
+      "id": "SYN-LIC-OPERATOR-01",
+      "actor_id": "SYN-ACTOR-OPERATOR-01",
+      "actions": [
+        "node.workflow.simulate.synthetic",
+        "node.service.promote.synthetic"
+      ],
+      "state": "ACTIVE",
+      "valid_until": "2026-12-31T23:59:59Z",
+      "synthetic": true
+    },
+    {
+      "id": "SYN-LIC-REVIEWER-01",
+      "actor_id": "SYN-ACTOR-REVIEWER-01",
+      "actions": [
+        "warden.review.synthetic"
+      ],
+      "state": "ACTIVE",
+      "valid_until": "2026-12-31T23:59:59Z",
+      "synthetic": true
+    },
+    {
+      "id": "SYN-LIC-EXPIRED-01",
+      "actor_id": "SYN-ACTOR-EXPIRED-01",
+      "actions": [
+        "subscription.quote.synthetic"
+      ],
+      "state": "ACTIVE",
+      "valid_until": "2026-10-27T23:59:59Z",
+      "synthetic": true,
+      "node_id": "SYN-ORG-BNR-01",
+      "legal_supplier_id": "SYN-ORG-SUPPLIER-01"
+    },
+    {
+      "id": "SYN-LIC-REVOKED-01",
+      "actor_id": "SYN-ACTOR-REVOKED-01",
+      "actions": [
+        "subscription.quote.synthetic"
+      ],
+      "state": "ACTIVE",
+      "valid_until": "2026-12-31T23:59:59Z",
+      "synthetic": true,
+      "node_id": "SYN-ORG-BNR-01",
+      "legal_supplier_id": "SYN-ORG-SUPPLIER-01"
+    },
+    {
+      "id": "SYN-LIC-WRONGNODE-01",
+      "actor_id": "SYN-ACTOR-WRONGNODE-01",
+      "actions": [
+        "subscription.quote.synthetic"
+      ],
+      "state": "ACTIVE",
+      "valid_until": "2026-12-31T23:59:59Z",
+      "synthetic": true,
+      "node_id": "SYN-ORG-BNR-02",
+      "legal_supplier_id": "SYN-ORG-SUPPLIER-01"
+    },
+    {
+      "id": "SYN-LIC-DISABLED-01",
+      "actor_id": "SYN-ACTOR-DISABLED-01",
+      "actions": [
+        "creator.draft.synthetic"
+      ],
+      "state": "ACTIVE",
+      "valid_until": "2026-12-31T23:59:59Z",
+      "synthetic": true
+    }
+  ],
+  "action_policies": [
+    {
+      "action": "creator.draft.synthetic",
+      "role": "creator",
+      "requires_representation": false,
+      "review_required": false
+    },
+    {
+      "action": "subscription.quote.synthetic",
+      "role": "representative",
+      "requires_representation": true,
+      "review_required": false
+    },
+    {
+      "action": "river.evidence.read.synthetic",
+      "role": "auditor",
+      "requires_representation": false,
+      "review_required": false
+    },
+    {
+      "action": "node.workflow.simulate.synthetic",
+      "role": "operator",
+      "requires_representation": false,
+      "review_required": false
+    },
+    {
+      "action": "node.service.promote.synthetic",
+      "role": "operator",
+      "requires_representation": false,
+      "review_required": true
+    },
+    {
+      "action": "warden.review.synthetic",
+      "role": "warden_reviewer",
+      "requires_representation": false,
+      "review_required": false
+    }
+  ]
+}

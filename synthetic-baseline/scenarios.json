@@ -1,0 +1,169 @@
+[
+  {
+    "name": "creator_draft_allow",
+    "request": {
+      "actor_id": "SYN-ACTOR-CREATOR-01",
+      "action": "creator.draft.synthetic"
+    },
+    "decision": "ALLOW",
+    "reason_code": "SYNTHETIC_POLICY_ALLOW"
+  },
+  {
+    "name": "representative_quote_allow",
+    "request": {
+      "actor_id": "SYN-ACTOR-REP-01",
+      "action": "subscription.quote.synthetic",
+      "node_id": "SYN-ORG-BNR-01",
+      "legal_supplier_id": "SYN-ORG-SUPPLIER-01"
+    },
+    "decision": "ALLOW",
+    "reason_code": "SYNTHETIC_POLICY_ALLOW"
+  },
+  {
+    "name": "auditor_read_allow",
+    "request": {
+      "actor_id": "SYN-ACTOR-AUDITOR-01",
+      "action": "river.evidence.read.synthetic"
+    },
+    "decision": "ALLOW",
+    "reason_code": "SYNTHETIC_POLICY_ALLOW"
+  },
+  {
+    "name": "operator_simulate_allow",
+    "request": {
+      "actor_id": "SYN-ACTOR-OPERATOR-01",
+      "action": "node.workflow.simulate.synthetic"
+    },
+    "decision": "ALLOW",
+    "reason_code": "SYNTHETIC_POLICY_ALLOW"
+  },
+  {
+    "name": "operator_promote_escalate",
+    "request": {
+      "actor_id": "SYN-ACTOR-OPERATOR-01",
+      "action": "node.service.promote.synthetic"
+    },
+    "decision": "ESCALATE",
+    "reason_code": "SYNTHETIC_REVIEW_REQUIRED"
+  },
+  {
+    "name": "warden_review_allow",
+    "request": {
+      "actor_id": "SYN-ACTOR-REVIEWER-01",
+      "action": "warden.review.synthetic"
+    },
+    "decision": "ALLOW",
+    "reason_code": "SYNTHETIC_POLICY_ALLOW"
+  },
+  {
+    "name": "non_member_denied",
+    "request": {
+      "actor_id": "SYN-ACTOR-NONMEMBER-01",
+      "action": "subscription.quote.synthetic",
+      "node_id": "SYN-ORG-BNR-01",
+      "legal_supplier_id": "SYN-ORG-SUPPLIER-01"
+    },
+    "decision": "DENY",
+    "reason_code": "COMMONS_MEMBERSHIP_REQUIRED"
+  },
+  {
+    "name": "expired_licence_denied",
+    "request": {
+      "actor_id": "SYN-ACTOR-EXPIRED-01",
+      "action": "subscription.quote.synthetic",
+      "node_id": "SYN-ORG-BNR-01",
+      "legal_supplier_id": "SYN-ORG-SUPPLIER-01"
+    },
+    "decision": "DENY",
+    "reason_code": "SYNTHETIC_LICENCE_EXPIRED_OR_INACTIVE"
+  },
+  {
+    "name": "revoked_membership_denied",
+    "request": {
+      "actor_id": "SYN-ACTOR-REVOKED-01",
+      "action": "subscription.quote.synthetic",
+      "node_id": "SYN-ORG-BNR-01",
+      "legal_supplier_id": "SYN-ORG-SUPPLIER-01"
+    },
+    "decision": "DENY",
+    "reason_code": "COMMONS_MEMBERSHIP_INACTIVE"
+  },
+  {
+    "name": "wrong_node_denied",
+    "request": {
+      "actor_id": "SYN-ACTOR-WRONGNODE-01",
+      "action": "subscription.quote.synthetic",
+      "node_id": "SYN-ORG-BNR-01",
+      "legal_supplier_id": "SYN-ORG-SUPPLIER-01"
+    },
+    "decision": "DENY",
+    "reason_code": "NODE_REPRESENTATION_DENIED"
+  },
+  {
+    "name": "legal_supplier_missing_denied",
+    "request": {
+      "actor_id": "SYN-ACTOR-REP-01",
+      "action": "subscription.quote.synthetic",
+      "node_id": "SYN-ORG-BNR-01"
+    },
+    "decision": "DENY",
+    "reason_code": "LEGAL_SUPPLIER_REQUIRED"
+  },
+  {
+    "name": "licence_scope_denied",
+    "request": {
+      "actor_id": "SYN-ACTOR-REP-01",
+      "action": "subscription.quote.synthetic",
+      "node_id": "SYN-ORG-BNR-01",
+      "legal_supplier_id": "SYN-ORG-COMMONS-01"
+    },
+    "decision": "DENY",
+    "reason_code": "LEGAL_SUPPLIER_DENIED"
+  },
+  {
+    "name": "role_denied",
+    "request": {
+      "actor_id": "SYN-ACTOR-CREATOR-01",
+      "action": "river.evidence.read.synthetic"
+    },
+    "decision": "DENY",
+    "reason_code": "ROLE_DENIED"
+  },
+  {
+    "name": "identity_disabled",
+    "request": {
+      "actor_id": "SYN-ACTOR-DISABLED-01",
+      "action": "creator.draft.synthetic"
+    },
+    "decision": "DENY",
+    "reason_code": "IDENTITY_INACTIVE"
+  },
+  {
+    "name": "real_environment_denied",
+    "request": {
+      "actor_id": "SYN-ACTOR-CREATOR-01",
+      "action": "creator.draft.synthetic",
+      "environment": "production"
+    },
+    "decision": "DENY",
+    "reason_code": "ENVIRONMENT_DENIED"
+  },
+  {
+    "name": "unknown_actor_denied",
+    "request": {
+      "actor_id": "SYN-ACTOR-UNKNOWN-01",
+      "action": "creator.draft.synthetic"
+    },
+    "decision": "DENY",
+    "reason_code": "UNKNOWN_ACTOR"
+  },
+  {
+    "name": "unknown_action_denied",
+    "request": {
+      "actor_id": "SYN-ACTOR-CREATOR-01",
+      "action": "subscription.settle"
+    },
+    "decision": "DENY",
+    "reason_code": "UNKNOWN_ACTION"
+  }
+]
