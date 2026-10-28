@@ -204,3 +204,13 @@ def test_r05_purpose_and_consent_duration_denied(stage, env):
     with pytest.raises(AdmissionDenied, match="R05_CONSENT_DURATION_DENIED"):
         stage.opt_in(access_token=access(env), work_id="GW-001",
                      expires_at=NOW+timedelta(days=31), now=NOW)
+
+
+def test_projected_private_counts_fail_closed_on_river_tamper(stage, env):
+    provision(env)
+    optin(stage, env)
+    stage.admit(access_token=access(env), packet=packet(), now=NOW)
+    assert stage.drain(now=NOW)["projected"] == 1
+    stage.river_path.write_text(stage.river_path.read_text().replace("voice_dictation", "typed"))
+    with pytest.raises(AdmissionDenied, match="R05_RIVER_CHAIN_INVALID"):
+        stage.private_progress(access_token=access(env), work_id="GW-001", now=NOW)
