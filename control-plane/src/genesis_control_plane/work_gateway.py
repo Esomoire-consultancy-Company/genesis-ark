@@ -196,9 +196,10 @@ class WorkIntakeGateway:
         identity_signing_key: bytes, source_signing_key: bytes,
         source: RegisteredSource, grant: ConsentGrant,
     ):
-        _check_key(identity_signing_key)
+        if identity_signing_key is not None:
+            _check_key(identity_signing_key)
         _check_key(source_signing_key)
-        if hmac.compare_digest(identity_signing_key, source_signing_key):
+        if identity_signing_key is not None and hmac.compare_digest(identity_signing_key, source_signing_key):
             raise AdmissionDenied("GATEWAY_KEY_SEPARATION_REQUIRED")
         if ledger_path.resolve() == journal_path.resolve():
             raise AdmissionDenied("GATEWAY_STORAGE_PATH_CONFLICT")
@@ -235,8 +236,16 @@ class WorkIntakeGateway:
         }))
 
     def admit(self, *, session_token: dict, packet: dict, now: datetime | None = None) -> AdmissionReceipt:
+        """R0.3 local fixture session route; not for public bearer tokens."""
         now = now or datetime.now(timezone.utc)
+        if self.identity_signing_key is None:
+            raise AdmissionDenied("GATEWAY_LOCAL_SESSION_DISABLED")
         claims = verify_local_session(session_token, self.identity_signing_key, now=now)
+        return self._admit_trusted_claims(claims=claims, packet=packet, now=now)
+
+    def _admit_trusted_claims(self, *, claims: Mapping[str, str], packet: dict,
+                              now: datetime) -> AdmissionReceipt:
+        """Internal route: caller MUST have independently verified the identity."""
         self.warden.authorize(claims=claims, packet=packet, now=now)
         try:
             verify_capture_envelope(
