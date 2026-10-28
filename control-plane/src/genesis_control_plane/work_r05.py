@@ -349,6 +349,12 @@ class WorkEvidenceStaging:
             rows = db.execute("""SELECT packet_json,status FROM capture_outbox
                 WHERE tenant_id=? AND principal_id=? AND work_id=?""",
                 (actor.tenant_id, actor.subject, work_id)).fetchall()
+        if any(state == "projected" for _, state in rows):
+            # Never advertise projected evidence as trustworthy if the
+            # associated River receipt or hash chain is unavailable.
+            check = self.reconcile()
+            if check["projected_mismatches"]:
+                raise AdmissionDenied("R05_PROJECTED_RECEIPT_INVALID")
         counts, projected_kinds = Counter(), Counter()
         channels, media, assets = Counter(), Counter(), Counter()
         for raw, state in rows:
