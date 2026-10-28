@@ -27,7 +27,7 @@ class PublicSiteTests(unittest.TestCase):
         self.assertIn("ARC intervention", page)
         self.assertIn("no factory", page.lower())
         self.assertIn('href="/infrastructure"', server.route("/")[2].decode("utf-8"))
-        self.assertIn("Digital–physical", server.route("/knowledge")[2].decode("utf-8").replace("digital–physical", "Digital–physical"))
+        self.assertIn("physical infrastructure passports", server.route("/knowledge")[2].decode("utf-8"))
 
     def test_knowledge_source_is_immutable(self):
         code, mime, body = server.route("/knowledge")
