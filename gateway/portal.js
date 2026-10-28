@@ -148,11 +148,11 @@ function setNode(node) {
 let activeFilter = 'all';
 function updateCapabilities() {
   const input = document.getElementById('capability-search');
-  const query = (input ? input.value : '').trim().toLocaleLowerCase();
+  const query = (input ? input.value : '').trim().toLowerCase();
   let visibleCount = 0;
   document.querySelectorAll('.cap-card').forEach(card => {
     const isKind = activeFilter === 'all' || card.dataset.kind === activeFilter;
-    const isMatch = ((card.dataset.search || '') + ' ' + (card.textContent || '')).toLocaleLowerCase().includes(query);
+    const isMatch = ((card.dataset.search || '') + ' ' + (card.textContent || '')).toLowerCase().includes(query);
     const visible = isKind && isMatch;
     card.hidden = !visible;
     if (visible) visibleCount++;
