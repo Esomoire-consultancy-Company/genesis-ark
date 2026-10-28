@@ -26,12 +26,21 @@ REQUIRED = {
     "work.approved": "deliverable_id", "work.finalized": "deliverable_id",
     "work.reopened": "deliverable_id",
 }
-FORBIDDEN = frozenset({"raw_text", "transcript", "audio_bytes", "image_bytes", "secret", "password", "authorization"})
+FIELDS = {
+    "work.input": frozenset({"work_id", "message_id", "channel", "provenance", "nature", "modalities", "attachments", "conversation_id", "parent_message_id"}),
+    "work.output": frozenset({"work_id", "response_id", "reply_to_message_id", "conversation_id", "deliverable_id"}),
+    "work.tool": frozenset({"work_id", "tool_call_id", "capability", "outcome", "execution_id", "command_id"}),
+    "work.revision": frozenset({"work_id", "revision_id", "parent_response_id", "deliverable_id"}),
+    "work.verified": frozenset({"work_id", "deliverable_id", "verification_receipt_id"}),
+    "work.approved": frozenset({"work_id", "deliverable_id", "approval_receipt_id"}),
+    "work.finalized": frozenset({"work_id", "deliverable_id", "version"}),
+    "work.reopened": frozenset({"work_id", "deliverable_id", "version"}),
+}
 
 
 def _required_str(payload: Mapping[str, Any], name: str) -> str:
     value = payload.get(name)
-    if not isinstance(value, str) or not value.strip():
+    if not isinstance(value, str) or not value.strip() or len(value) > 256:
         raise ValueError(f"WORK_EVIDENCE_REQUIRED_{name.upper()}")
     return value
 
@@ -41,7 +50,7 @@ def validate_payload(kind: str, payload: Mapping[str, Any]) -> None:
         raise ValueError("WORK_EVIDENCE_UNSUPPORTED_EVENT")
     _required_str(payload, "work_id")
     _required_str(payload, REQUIRED[kind])
-    if any(key in payload for key in FORBIDDEN):
+    if any(key not in FIELDS[kind] for key in payload):
         raise ValueError("WORK_EVIDENCE_RAW_CONTENT_FORBIDDEN")
     if kind == "work.input":
         channel = payload.get("channel")
@@ -55,14 +64,14 @@ def validate_payload(kind: str, payload: Mapping[str, Any]) -> None:
         if payload.get("nature") not in NATURES:
             raise ValueError("WORK_EVIDENCE_BAD_NATURE")
         media = payload.get("modalities", [])
-        if not isinstance(media, list) or not media or any(x not in MODALITIES for x in media):
+        if not isinstance(media, list) or not media or len(media) > 5 or any(x not in MODALITIES for x in media):
             raise ValueError("WORK_EVIDENCE_BAD_MODALITIES")
         attachments = payload.get("attachments", [])
-        if not isinstance(attachments, list):
+        if not isinstance(attachments, list) or len(attachments) > 100:
             raise ValueError("WORK_EVIDENCE_BAD_ATTACHMENTS")
         seen = set()
         for item in attachments:
-            if not isinstance(item, dict):
+            if not isinstance(item, dict) or set(item) != {"asset_id", "modality"}:
                 raise ValueError("WORK_EVIDENCE_BAD_ATTACHMENTS")
             identifier = _required_str(item, "asset_id")
             if identifier in seen or item.get("modality") not in MODALITIES or item["modality"] not in media:
