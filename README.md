@@ -116,8 +116,8 @@ node --check gateway/portal.js
 Technical changes belong in reviewable issues and pull requests. Review the relevant subsystem's documented scope and tests, and never include credentials, private evidence or personal member information in public discussions.
 
 - [Read the documentation](docs)
-- [Review open issues](../../issues)
-- [View pull requests](../../pulls)
+- [Review open issues](https://github.com/Esomoire-consultancy-Company/genesis-ark/issues)
+- [View pull requests](https://github.com/Esomoire-consultancy-Company/genesis-ark/pulls)
 - [Read the Apache-2.0 licence](LICENSE)
 
 **GitHub is the public engineering registry; it is not the authority for membership, identity, commercial provisioning or operational permissions.** Future authenticated workflows require independent governance and enforcement.
