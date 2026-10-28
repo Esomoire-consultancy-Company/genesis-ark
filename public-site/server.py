@@ -15,6 +15,7 @@ from urllib.parse import urlsplit
 GITHUB = "https://github.com/Esomoire-consultancy-Company/genesis-ark"
 NAV = [
     ("/", "Overview"),
+    ("/infrastructure", "Infrastructure"),
     ("/architecture", "Architecture"),
     ("/knowledge", "Knowledge Hub"),
     ("/evidence", "Evidence"),
@@ -23,19 +24,32 @@ NAV = [
 PAGES = {
     "/": {
         "label": "PUBLIC PREVIEW · R0.1",
-        "title": "An open window into a governed digital infrastructure.",
-        "lead": "Genesis ARK is an orchestration repository for the Genesis Stack and Virtual Silk Road ecosystem. This preview explains the published architecture without exposing its private operations.",
+        "title": "Infrastructure for the physical and digital world.",
+        "lead": "Genesis connects people, places, machines and intelligent systems through governed operations and verifiable evidence. This public preview describes the proposed infrastructure fabric; it does not certify any physical site or operating licence.",
         "content": """<div class="feature-grid">
-          <article class="feature"><div class="feature-index">01 / DISCOVER</div><h2>Understand the architecture</h2><p>See how identity, operations, governance and evidence relate without confusing public interfaces with private infrastructure.</p><a class="text-link" href="/architecture">Explore architecture →</a></article>
+          <article class="feature"><div class="feature-index">01 / CONNECT</div><h2>Places meet systems</h2><p>Facilities, utilities, vehicles and machines can be represented alongside the people, permissions and digital systems that support them.</p><a class="text-link" href="/infrastructure">Explore infrastructure →</a></article>
           <article class="feature"><div class="feature-index">02 / LEARN</div><h2>Find source-backed knowledge</h2><p>Public documentation is traceable to repository revisions. Private records remain with their authorised custodians.</p><a class="text-link" href="/knowledge">Visit Knowledge Hub →</a></article>
           <article class="feature"><div class="feature-index">03 / VERIFY</div><h2>Separate claims from proof</h2><p>Implementation, test, deployment and independent evidence are different milestones—and must be labelled as such.</p><a class="text-link" href="/evidence">Inspect evidence model →</a></article>
         </div>
-        <section class="statement"><div><span class="overline">FOUNDING PRINCIPLE</span><h2>Public knowledge. Controlled authority. Verifiable evidence.</h2></div><p>Discoverability does not imply permission. A member or system must pass the relevant identity and Warden gates before touching protected resources.</p></section>"""
+        <section class="statement"><div><span class="overline">FOUNDING PRINCIPLE</span><h2>Physical presence. Digital continuity. Governed authority.</h2></div><p>Discoverability does not imply permission. A member or system must pass the relevant identity and Warden gates before touching protected resources.</p></section>"""
+    },
+    "/infrastructure": {
+        "label": "DIGITAL–PHYSICAL · FOUNDING DOCTRINE",
+        "title": "Infrastructure is more than software.",
+        "lead": "Genesis is proposed as a digital–physical infrastructure fabric. It connects the identities of real places and assets with accountable digital operations, without claiming ownership, commissioning, or permission to operate them.",
+        "content": """<div class="feature-grid">
+          <article class="feature"><div class="feature-index">01 / PHYSICAL</div><h2>Places and assets</h2><p>Factories, warehouses, buildings, zones, machines, vehicles, utilities and operating locations remain subject to their real owners, operators and statutory requirements.</p></article>
+          <article class="feature"><div class="feature-index">02 / DIGITAL</div><h2>Systems and connections</h2><p>Device passports, edge services, workflows, networks, software releases and knowledge records create traceable representations of physical activity.</p></article>
+          <article class="feature"><div class="feature-index">03 / GOVERNANCE</div><h2>Authority and evidence</h2><p>BNR / DigitalMe representation, Warden permission gates, Synnergyze work orders, Sentinel observations and RiverOS receipts remain separate responsibilities.</p></article>
+        </div>
+        <section class="statement"><div><span class="overline">OPERATIONAL DOCTRINE</span><h2>A digital twin is not a licence to operate.</h2></div><p>Physical verification, lawful custodianship, safety acceptance and time-bounded authorisation are required independently of any digital deployment. Public information never grants device or machine-control privileges.</p></section>
+        <div class="link-panel"><div><span class="overline">TWO GOVERNED ROUTES</span><h2>ARK participation ≠ ARC intervention</h2><p>An ARK establishes a permitted private-network workspace within an existing operation without takeover. An ARC is a distinct intervention vehicle requiring its own documented legal and contractual authority.</p></div><a class="outline-link" href="/architecture">See system responsibilities →</a></div>
+        <section class="note"><strong>Current implementation status</strong><p>Digital–physical node passports and acceptance checks are being developed with synthetic data. No factory, transport system, machine or physical node is certified operational by this preview.</p></section>"""
     },
     "/architecture": {
         "label": "PLATFORM · BOUNDARIES",
         "title": "One platform. Distinct responsibilities.",
-        "lead": "Genesis is the orchestration root. The other components have separate contracts so that discovery, authorization, execution and evidence cannot be mistaken for one another.",
+        "lead": "Genesis is the orchestration root. The physical and digital planes are linked by distinct identity, governance and evidence responsibilities, so registration, observation and permission cannot be confused with operation.",
         "content": """<div class="architecture">
           <div class="arch-root"><span>GENESIS STACK</span><strong>Provisioning, environment and lifecycle boundaries</strong></div>
           <div class="arch-row">
@@ -52,7 +66,7 @@ PAGES = {
     "/knowledge": {
         "label": "KNOWLEDGE HUB · PUBLIC INDEX",
         "title": "Know what exists—and what is verified.",
-        "lead": "The Knowledge Hub is intended as a federated discovery layer. It points to source-controlled knowledge without assuming ownership of private documents, databases or institutional records.",
+        "lead": "The Knowledge Hub is intended as a federated discovery layer for digital systems and physical infrastructure passports. It references source-controlled knowledge without assuming ownership of private documents, assets, facilities or institutional records.",
         "content": """<div class="steps">
             <div><span>01</span><div><h2>Register</h2><p>Assign a stable passport to each public knowledge item: origin, revision, owner, classification and review date.</p></div></div>
             <div><span>02</span><div><h2>Validate</h2><p>Check sources, approval status and whether the claim refers to a proposal, an implementation, a passing test or an operational deployment.</p></div></div>
@@ -97,7 +111,7 @@ def render_page(path: str) -> str:
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
-<meta name="description" content="Public-information preview of Genesis ARK architecture, knowledge and evidence.">
+<meta name="description" content="Public-information preview of Genesis ARK digital-physical infrastructure, knowledge and evidence.">
 <title>%%TITLE%% — Genesis ARK</title>
 <link rel="stylesheet" href="/assets/site.css"></head>
 <body><a class="skip" href="#main">Skip to content</a>
@@ -110,7 +124,7 @@ def render_page(path: str) -> str:
 <h1>%%HEADING%%</h1><p class="hero-lead">%%LEAD%%</p>
 <div class="hero-actions"><a class="primary-link" href="/knowledge">Explore the Knowledge Hub <span aria-hidden="true">↗</span></a><a class="secondary-link" href="%%GITHUB%%" rel="noopener noreferrer">View source on GitHub <span aria-hidden="true">↗</span></a></div>
 </div></section><section class="content-shell">%%CONTENT%%</section></main>
-<footer><div class="footer-inner"><div><strong>GENESIS ARK</strong><p>Public information only. Authority, records and execution remain privately governed.</p></div><div><span>Navigation</span><a href="/architecture">Architecture</a><a href="/evidence">Evidence</a><a href="/status">Status</a></div><div><span>Source</span><a href="%%GITHUB%%" rel="noopener noreferrer">GitHub repository ↗</a><small>Preview release R0.1 · No member enrollment · No public API</small></div></div>
+<footer><div class="footer-inner"><div><strong>GENESIS ARK</strong><p>Public information only. Authority, records and execution remain privately governed.</p></div><div><span>Navigation</span><a href="/infrastructure">Infrastructure</a><a href="/architecture">Architecture</a><a href="/evidence">Evidence</a><a href="/status">Status</a></div><div><span>Source</span><a href="%%GITHUB%%" rel="noopener noreferrer">GitHub repository ↗</a><small>Preview release R0.1 · No member enrollment · No public API</small></div></div>
 <div class="footer-bottom">Reference information, not a representation of production availability or institutional authority.</div></footer></body></html>""".replace("%%TITLE%%", escape("Overview" if path == "/" else page["title"])) .replace("%%NAV%%", nav).replace("%%LABEL%%", escape(page["label"])).replace("%%HEADING%%", escape(page["title"])).replace("%%LEAD%%", escape(page["lead"])).replace("%%CONTENT%%", page["content"]).replace("%%GITHUB%%", GITHUB)
 
 
