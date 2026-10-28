@@ -114,5 +114,5 @@ def test_settings_repr_never_exposes_credentials():
 
 def test_non_ascii_bearer_fails_with_401_not_500():
     client = TestClient(create_app(CFG, FakeLedger()))
-    res = client.post("/v1/intents", json=intent(), headers={"Authorization": "Bearer caf\u00e9"})
+    res = client.post("/v1/intents", json=intent(), headers={b"authorization": b"Bearer caf\xe9"})
     assert res.status_code == 401
