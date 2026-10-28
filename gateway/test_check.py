@@ -200,7 +200,11 @@ class GatewayValidatorTests(unittest.TestCase):
         self.assertIn("permissions: {}", workflow)
         self.assertIn("persist-credentials: false", workflow)
         used_actions = re.findall(r"\buses: (actions/[\w-]+)@([^\s]+)", workflow)
-        self.assertEqual(len(used_actions), 3)
+        self.assertEqual(
+            {name for name, _ in used_actions},
+            {"actions/checkout", "actions/setup-python", "actions/setup-node",
+             "actions/upload-artifact"},
+        )
         for name, ref in used_actions:
             with self.subTest(name=name):
                 self.assertRegex(ref, r"^[0-9a-f]{40}$")
