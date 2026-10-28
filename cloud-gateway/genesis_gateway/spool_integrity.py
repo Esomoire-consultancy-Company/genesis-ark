@@ -86,8 +86,23 @@ def verify_database(dsn: str, *, expected_head: str | None = None) -> dict:
     import psycopg
     with psycopg.connect(dsn, connect_timeout=5) as conn:
         with conn.cursor() as cur:
-            cur.execute("SET TRANSACTION READ ONLY")
-            # An exact bound prevents a partial verification from being labelled complete.
+            # One consistent snapshot: a new insertion between count and fetch
+            # must not corrupt the meaning of "full history".
+            cur.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY")
+            cur.execute("""
+                SELECT
+                    (SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication
+                       FROM pg_roles WHERE rolname = current_user),
+                    has_schema_privilege(current_user, 'public', 'CREATE'),
+                    has_table_privilege(current_user, 'public.gateway_evidence', 'SELECT'),
+                    has_table_privilege(current_user, 'public.gateway_evidence', 'INSERT'),
+                    has_table_privilege(current_user, 'public.gateway_evidence', 'UPDATE'),
+                    has_table_privilege(current_user, 'public.gateway_evidence', 'DELETE'),
+                    has_table_privilege(current_user, 'public.gateway_evidence', 'TRUNCATE')
+            """)
+            privileged, create_schema, can_select, can_insert, can_update, can_delete, can_truncate = cur.fetchone()
+            if not can_select or any((privileged, create_schema, can_insert, can_update, can_delete, can_truncate)):
+                raise EvidenceIntegrityError("AUDIT_ROLE_NOT_READONLY")
             cur.execute("SELECT count(*) FROM public.gateway_evidence")
             total = cur.fetchone()[0]
             if total == 0 or total > MAX_ROWS:
