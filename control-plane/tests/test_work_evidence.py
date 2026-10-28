@@ -46,6 +46,12 @@ def test_finalization_requires_prior_approval_and_verification(tmp_path):
     assert summarize_work_journal(path, "W-01")["finalized_deliverables"] == 1
     add(j, "work.reopened", deliverable_id="D-1")
     assert summarize_work_journal(path, "W-01")["finalized_deliverables"] == 0
+    add(j, "work.finalized", deliverable_id="D-1")
+    assert summarize_work_journal(path, "W-01")["finalized_deliverables"] == 0
+    add(j, "work.verified", deliverable_id="D-1")
+    add(j, "work.approved", deliverable_id="D-1")
+    add(j, "work.finalized", deliverable_id="D-1")
+    assert summarize_work_journal(path, "W-01")["finalized_deliverables"] == 1
 
 
 def test_no_raw_text_or_claimed_voice_origin(tmp_path):
