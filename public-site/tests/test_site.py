@@ -27,7 +27,23 @@ class PublicSiteTests(unittest.TestCase):
         self.assertIn("ARC intervention", page)
         self.assertIn("no factory", page.lower())
         self.assertIn('href="/infrastructure"', server.route("/")[2].decode("utf-8"))
-        self.assertIn("physical infrastructure passports", server.route("/knowledge")[2].decode("utf-8"))
+        self.assertIn("Quantum Rooms", server.route("/knowledge")[2].decode("utf-8"))
+
+    def test_genesis_vsr_quantum_room_boundaries(self):
+        overview = server.route("/")[2].decode("utf-8")
+        infrastructure = server.route("/infrastructure")[2].decode("utf-8")
+        architecture = server.route("/architecture")[2].decode("utf-8")
+        self.assertIn("Genesis network", overview)
+        self.assertIn("VSR", overview)
+        self.assertIn("Quantum Room", overview)
+        self.assertIn("GENESIS · NETWORK CONTROLLER", infrastructure)
+        self.assertIn("VSR OS / BROWSER · NETWORK OPERATING ENVIRONMENT", infrastructure)
+        self.assertIn("QUANTUM ROOM · GOVERNED WORKSPACE", infrastructure)
+        self.assertIn("GENESIS · NETWORK CONTROL FOUNDATION", architecture)
+        self.assertIn("QUANTUM ROOM · GOVERNED RUNTIME", architecture)
+        self.assertIn("Node registration is not physical ownership", architecture)
+        self.assertNotIn("BSR OS", infrastructure)
+        self.assertNotIn("Genesis is proposed as a digital–physical infrastructure fabric", infrastructure)
 
     def test_knowledge_source_is_immutable(self):
         code, mime, body = server.route("/knowledge")
