@@ -200,6 +200,25 @@ def layout(driver: Driver, width: int) -> None:
     assert_ok(measures["body"] <= width + 2, f"{width}px: horizontal overflow in body")
     assert_ok(measures["clickable"], f"{width}px: interactive button below 24px")
     assert_ok(measures["hero"] > 100, f"{width}px: invisible hero")
+    if width <= 520:
+        # Mobile hero metrics must remain a single aligned row, not wrap 2+1.
+        stats = driver.js("""
+          return [...document.querySelectorAll('.hero-facts > div')].map(el => {
+            const box = el.getBoundingClientRect();
+            return {top: box.top, left: box.left, right: box.right,
+                    width: box.width};
+          });
+        """)
+        assert_ok(len(stats) == 3, f"{width}px: expected three metrics")
+        assert_ok(
+            max(s["top"] for s in stats) - min(s["top"] for s in stats) <= 2,
+            f"{width}px: hero metrics wrap onto multiple rows: {stats}"
+        )
+        assert_ok(
+            all(s["width"] >= 60 for s in stats)
+            and all(s["right"] <= width + 2 for s in stats),
+            f"{width}px: hero metrics clipped: {stats}"
+        )
 
 
 def interactions(driver: Driver, width: int, origin: str) -> None:
