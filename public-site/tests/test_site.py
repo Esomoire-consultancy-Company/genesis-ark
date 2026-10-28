@@ -19,6 +19,15 @@ class PublicSiteTests(unittest.TestCase):
             self.assertNotIn("%%", text)
             self.assertNotIn('href="http://postgres', text)
 
+    def test_knowledge_source_is_immutable(self):
+        code, mime, body = server.route("/knowledge")
+        self.assertEqual(code, 200)
+        self.assertIn(
+            b"/blob/9060824c202f8a020d2565db5db0b256602617b4/docs/knowledge-hub-proxy.md",
+            body,
+        )
+        self.assertNotIn(b"/blob/main/docs/knowledge-hub-proxy.md", body)
+
     def test_health_does_not_claim_api_access(self):
         code, mime, body = server.route("/healthz")
         self.assertEqual(code, 200)
