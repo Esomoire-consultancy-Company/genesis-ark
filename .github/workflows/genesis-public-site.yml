@@ -1,0 +1,23 @@
+name: Genesis ARK Public Site Preview
+on:
+  push:
+    paths:
+      - 'public-site/**'
+      - '.github/workflows/genesis-public-site.yml'
+  pull_request:
+    paths:
+      - 'public-site/**'
+      - '.github/workflows/genesis-public-site.yml'
+jobs:
+  public-site-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and verify public routes
+        working-directory: public-site
+        run: |
+          python -m py_compile server.py
+          python -m unittest discover -s tests -v
