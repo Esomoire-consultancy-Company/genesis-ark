@@ -255,13 +255,26 @@ def test_populated_legacy_database_upgrade_and_atomic_rejection():
     admin = os.getenv("GENESIS_TEST_ADMIN_DATABASE_URL", "")
     if os.getenv("GENESIS_TEST_EPHEMERAL_DATABASE") != "1" or not admin:
         pytest.skip("Explicit ephemeral PostgreSQL CI database required")
+    if (os.getenv("GITHUB_ACTIONS") != "true"
+            or os.getenv("GITHUB_REPOSITORY") != "Esomoire-consultancy-Company/genesis-ark"
+            or os.getenv("RUNNER_ENVIRONMENT") != "github-hosted"):
+        pytest.fail("EPHEMERAL_TEST_REQUIRES_TRUSTED_GITHUB_CI")
+    marker = os.getenv("GENESIS_TEST_MARKER", "")
+    if not marker.startswith("ci-") or len(marker) < 20:
+        pytest.fail("EPHEMERAL_SERVER_MARKER_REQUIRED")
     params = conninfo_to_dict(admin)
-    # Destructive CREATE/DROP test must be impossible with a Railway or
-    # production DSN, even if somebody sets the ephemeral flag accidentally.
+    # A loopback address is insufficient proof in the presence of tunnels.
+    # Verify the CI-provisioned per-run marker before CREATE/DROP DATABASE.
     if (params.get("dbname") != "genesis_ci"
             or params.get("host") not in ("127.0.0.1", "localhost")
             or params.get("port", "5432") != "5432"):
         pytest.fail("UNSAFE_EPHEMERAL_TEST_TARGET")
+    with psycopg.connect(admin) as probe:
+        actual = probe.execute(
+            "SELECT value FROM public.genesis_ci_ephemeral_marker"
+        ).fetchone()
+        if actual is None or actual[0] != marker:
+            pytest.fail("EPHEMERAL_SERVER_IDENTITY_MISMATCH")
 
     database_name = "genesis_gateway_upgrade_ci_" + secrets.token_hex(4)
     target = make_conninfo(admin, dbname=database_name)

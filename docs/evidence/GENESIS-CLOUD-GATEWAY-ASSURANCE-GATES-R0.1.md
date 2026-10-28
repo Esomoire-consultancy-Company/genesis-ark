@@ -29,14 +29,20 @@ Do not merge, execute Docker commands, issue Warden PERMIT or settle Silk funds.
 
 
 ## CI migration rehearsal (synthetic only)
-The dedicated PostgreSQL 18 CI contract creates a disposable database with a
-randomly generated name, applies legacy R0.1 DDL, inserts a synthetic denial
-event, rejects a deliberately incompatible schema without destroying its row,
-then applies the R0.2 hardening migration. It checks preservation of the original
-event hash, single-genesis uniqueness, mutation denial, and idempotent migration
-re-application before dropping the disposable database. The test is disabled
-unless the explicit ephemeral flag is set and the database target is the
-localhost genesis_ci test instance. It does not use or modify Railway data.
+The dedicated PostgreSQL 18 GitHub Actions contract provisions a per-run
+database-identity marker, then creates a randomly named disposable database.
+It applies legacy R0.1 DDL and synthetic denial evidence, verifies incompatible
+schemas fail without losing the historical row, installs R0.2, checks chain
+uniqueness and mutation denial, and destroys only that random CI database.
+Execution is not silently disabled by target mismatch: the test **fails**
+with UNSAFE_EPHEMERAL_TEST_TARGET unless the connection identifies the
+genesis_ci database on host 127.0.0.1 or localhost, port 5432. It also requires
+the GitHub-hosted CI environment, explicit ephemeral flag and matching per-run
+marker installed on the PostgreSQL service before the destructive operation.
+A localhost address alone does not rule out tunnels or misconfiguration; the
+marker and CI checks are layered safeguards, not cryptographic proof of server
+identity. The test is intended **only** for GitHub Actions' isolated service,
+never Railway staging or production.
 
 ## Separate staging migration approval gate
 1. Record the staging deployment SHA, existing schema/role grants, evidence

@@ -64,9 +64,24 @@ jobs:
         run: |
           python -m pip install -r requirements.txt
           python -m pip install '.[test]'
+      - name: Initialize disposable PostgreSQL identity marker
+        working-directory: cloud-gateway
+        env:
+          GENESIS_TEST_ADMIN_DATABASE_URL: postgresql://postgres:ci-only-postgres-password@127.0.0.1:5432/genesis_ci
+          GENESIS_TEST_MARKER: ci-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
+        run: |
+          python - <<'PY'
+          import os
+          import psycopg
+          with psycopg.connect(os.environ["GENESIS_TEST_ADMIN_DATABASE_URL"]) as conn:
+              conn.execute("CREATE TABLE public.genesis_ci_ephemeral_marker (value text NOT NULL)")
+              conn.execute("INSERT INTO public.genesis_ci_ephemeral_marker (value) VALUES (%s)",
+                           (os.environ["GENESIS_TEST_MARKER"],))
+          PY
       - name: Verify PostgreSQL migration, permissions and evidence chain
         working-directory: cloud-gateway
         env:
           GENESIS_TEST_ADMIN_DATABASE_URL: postgresql://postgres:ci-only-postgres-password@127.0.0.1:5432/genesis_ci
           GENESIS_TEST_EPHEMERAL_DATABASE: '1'
+          GENESIS_TEST_MARKER: ci-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
         run: python -m pytest -q tests/test_postgres_integration.py
