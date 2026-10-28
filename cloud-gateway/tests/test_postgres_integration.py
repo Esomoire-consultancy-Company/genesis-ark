@@ -30,6 +30,8 @@ def provisioned():
 def test_runtime_role_is_unprivileged_and_ready(provisioned):
     admin, runtime, role = provisioned
     assert PostgresLedger(runtime).ready() is True
+    # A superuser can read and write, but must never pass gateway readiness.
+    assert PostgresLedger(admin).ready() is False
     with psycopg.connect(admin) as conn, conn.cursor() as cur:
         cur.execute(
             "SELECT rolsuper, rolcreatedb, rolcreaterole, rolreplication FROM pg_roles WHERE rolname = %s",
