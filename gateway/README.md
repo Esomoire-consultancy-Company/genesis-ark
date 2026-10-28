@@ -7,7 +7,7 @@ An **explorable public interface** for Genesis ARK. This is a static, zero-backe
 Open `index.html` in a modern browser. It loads `styles.css` and `portal.js` from the same folder. No build step, secret, database, registry, or service token is needed. Some browser setups may require a local HTTP server instead:
 
 ```sh
-python -m http.server 8080 --directory gateway
+python3 -m http.server 8080 --directory gateway
 # Open http://localhost:8080
 ```
 
@@ -44,7 +44,7 @@ No publishing workflow is enabled by this PR. Review the branch and its diff fir
 
 ```sh
 node --check gateway/portal.js
-python gateway/check.py
+python3 gateway/check.py
 ```
 
 This static portal does not replace existing technical documentation, and the repository root README remains the engineer-facing index.
