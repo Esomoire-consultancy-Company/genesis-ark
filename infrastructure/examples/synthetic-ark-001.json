@@ -1,0 +1,24 @@
+{
+  "schema": "genesis.dpi.node-passport.r0.1",
+  "node_id": "ALPHA-NODE-001",
+  "mode": "ARK",
+  "status": "field-review",
+  "actor_id": "DIGITALME-ACTOR-SYNTHETIC-001",
+  "custodian_id": "CUSTODIAN-SYNTHETIC-001",
+  "location_ref": "LOCATION-SYNTHETIC-001",
+  "physical_assets": [
+    "MACHINE-SYNTHETIC-001"
+  ],
+  "digital_services": [
+    "SERVICE-SYNTHETIC-001"
+  ],
+  "authority_evidence_ids": [
+    "CONSENT-SYNTHETIC-001"
+  ],
+  "physical_acceptance_id": null,
+  "digital_acceptance_id": null,
+  "warden_policy_id": null,
+  "river_receipt_ids": [],
+  "execution_enabled": false,
+  "synthetic_only": true
+}
