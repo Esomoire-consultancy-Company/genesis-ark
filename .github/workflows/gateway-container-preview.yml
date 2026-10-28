@@ -1,0 +1,54 @@
+name: Genesis Living Gateway static container acceptance
+on:
+  push:
+    branches:
+      - preview/genesis-living-gateway-staging-r01
+    paths:
+      - 'Dockerfile'
+      - '.dockerignore'
+      - 'railway.json'
+      - 'gateway/**'
+      - '.github/workflows/gateway-container-preview.yml'
+  pull_request:
+    paths:
+      - 'Dockerfile'
+      - '.dockerignore'
+      - 'railway.json'
+      - 'gateway/**'
+      - '.github/workflows/gateway-container-preview.yml'
+permissions: {}
+jobs:
+  static-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Verify repository static sources
+        run: |
+          python3 gateway/check.py
+          python3 -m unittest discover -s gateway -p 'test_*.py'
+          node --check gateway/portal.js
+      - name: Build isolated preview container
+        run: docker build --pull --tag genesis-living-gateway-preview:qa .
+      - name: Verify container HTTP and security contract
+        run: |
+          set -euo pipefail
+          docker run --rm -d --name gateway-preview-qa -p 127.0.0.1:18080:8080 genesis-living-gateway-preview:qa
+          trap 'docker rm -f gateway-preview-qa >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:18080/healthz >/dev/null; then break; fi
+            sleep 1
+          done
+          test "$(curl -fsS http://127.0.0.1:18080/healthz)" = "ok"
+          curl -fsS http://127.0.0.1:18080/ | grep -F "Genesis ARK"
+          curl -fsS http://127.0.0.1:18080/portal.js | grep -F "setRole("
+          curl -fsS http://127.0.0.1:18080/styles.css >/dev/null
+          curl -fsS http://127.0.0.1:18080/favicon.svg >/dev/null
+          test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:18080/README.md)" = "404"
+          test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:18080/control-plane/README.md)" = "404"
+          test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:18080/.git/config)" = "404"
+          curl -sSI http://127.0.0.1:18080/ | grep -i 'content-security-policy:'
+          curl -sSI http://127.0.0.1:18080/ | grep -i 'x-content-type-options: nosniff'
+          curl -sSI http://127.0.0.1:18080/ | grep -i 'x-frame-options: DENY'
