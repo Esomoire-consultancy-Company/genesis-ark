@@ -1,0 +1,3 @@
+# Railpack's pip provider recognizes requirements.txt in the service root.
+# Keep install dependencies sourced from pyproject.toml.
+-e .
