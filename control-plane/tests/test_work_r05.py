@@ -49,6 +49,8 @@ def test_subject_opt_in_outbox_projection_and_counts(stage, env):
     assert not stage.river_path.exists()
     before = stage.private_progress(access_token=access(env), work_id="GW-001", now=NOW)
     assert before["pending"] == 1 and before["projected"] == 0
+    assert before["submitted_input_messages"] == 1 and before["input_messages"] == 0
+    assert before["channels"] == {}
     result = stage.drain(now=NOW)
     assert result == {"projected": 1, "blocked": 0}
     after = stage.private_progress(access_token=access(env), work_id="GW-001", now=NOW)
@@ -76,7 +78,10 @@ def test_withdraw_blocks_queued_work_and_future_intake(stage, env):
     result = stage.withdraw(access_token=access(env), work_id="GW-001", now=NOW)
     assert result["status"] == "withdrawn" and result["generation"] == 2
     assert stage.drain(now=NOW) == {"projected": 0, "blocked": 0}
-    assert stage.private_progress(access_token=access(env), work_id="GW-001", now=NOW)["blocked"] == 1
+    after = stage.private_progress(access_token=access(env), work_id="GW-001", now=NOW)
+    assert after["blocked"] == 1
+    assert after["input_messages"] == 0 and after["submitted_input_messages"] == 1
+    assert after["channels"] == {}
     assert not stage.river_path.exists()
     with pytest.raises(AdmissionDenied, match="R05_SUBJECT_CONSENT_REQUIRED"):
         stage.admit(access_token=access(env), packet=packet(message="MSG-2", capture="CAP-2"), now=NOW)
