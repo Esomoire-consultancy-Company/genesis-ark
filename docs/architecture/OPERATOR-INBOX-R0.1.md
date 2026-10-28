@@ -25,8 +25,10 @@
 - cloud-gateway/genesis_gateway/operator_inbox.py: synthetic typed events, allowlist validation, role/node filtering, deterministic case IDs, duplicate/conflict checks, single-recipient offline handoff planning, human acknowledgement receipts.
 - cloud-gateway/genesis_gateway/operator_preview.py: local static HTML examples per role, no listener or actual authentication.
 - cloud-gateway/tests/test_operator_inbox.py: nine offline unit tests covering cross-node isolation, fake/unverified roles, raw-secret rejection, idempotency, unique-recipient handoff and sanitized display.
+- cloud-gateway/genesis_gateway/secret_workflow.py: staging-only **synthetic** change request -> independent approver -> separate inventory checker; never accepts secret values or executes vault writes.
+- cloud-gateway/tests/test_secret_workflow.py: four additional tests for dual control, environment scope, unauthorized callers and valid status transitions.
 
-From cloud-gateway: python3 -m pytest -q tests/test_operator_inbox.py
+From cloud-gateway: python3 -m pytest -q tests/test_operator_inbox.py tests/test_secret_workflow.py
 Example preview: python3 -m genesis_gateway.operator_preview --role security_custodian --output /tmp/preview.html
 
 ## Production integration gates (NOT IMPLEMENTED)
@@ -36,7 +38,8 @@ Example preview: python3 -m genesis_gateway.operator_preview --role security_cus
 3. Map gateway denial spool to trusted issuer/node registry; preserve append-only evidence; no inferred authorization.
 4. Connect secret-manager inventory only for name, vault reference, assigned owner, expiry and rotation state. Never transmit secret values.
 5. Implement durable case/outbox store, signed Warden decisions, duty roster resolution, reassignment escalation, tamper-evident audit, and separately reconciled RiverOS receipts.
-6. Provide authenticated private Genesis/VSR operator UI, per-node row-level policy, actor-specific read/ack checks, and vault-native remediation deep links; no public operator console.
-7. Run synthetic tests for unknown actor, stale membership, absent custodian, duplicate delivery, rate spikes, signed/unsigned events, unauthorized rotation and failures before staging enablement.
+6. Bind vault edit/rotation requests to a configuration custodian, a different approver, and a third independent checker. Status checks must consume trusted, signed vault inventory receipts; the offline synthetic fixture does NOT verify real inventory state.
+7. Provide authenticated private Genesis/VSR operator UI, per-node row-level policy, actor-specific read/ack checks, and vault-native remediation deep links; no public operator console.
+8. Run synthetic tests for unknown actor, stale membership, absent custodian, duplicate delivery, rate spikes, signed/unsigned events, unauthorized rotation and failures before staging enablement.
 
 **No live collector, delivery, vault access, user/SSO connection, deployment, public DNS, Warden PERMIT or production write is provided by this R0.1 proposal.**
