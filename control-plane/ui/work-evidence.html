@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Genesis Work Evidence — Consent Preview R0.6</title>
+<style>
+:root{color-scheme:light dark;font-family:system-ui,sans-serif}
+body{max-width:740px;margin:2rem auto;padding:0 1.25rem;line-height:1.55}
+main{display:grid;gap:1rem}
+section{border:1px solid #8b8b8b55;border-radius:12px;padding:1rem}
+label{display:block;margin:.75rem 0}
+input[type=text],input[type=date]{width:100%;max-width:420px;box-sizing:border-box;padding:.55rem;font:inherit}
+button{font:inherit;padding:.55rem .9rem;margin:.3rem .3rem .3rem 0}
+button:disabled{opacity:.5}
+pre{white-space:pre-wrap;overflow-wrap:anywhere}
+small,.muted{opacity:.78}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Genesis Work Evidence</h1>
+<p class="muted">Private member consent preview · R0.6 · Not a deployed service</p>
+</header>
+<section>
+<h2>What may be recorded?</h2>
+<p id="noticeText">The authoritative notice is supplied by the staging gateway.</p>
+<small id="noticeVersion">Notice unavailable until an authorized gateway is configured.</small>
+</section>
+<section>
+<h2>Choose your workstream</h2>
+<label for="workId">Workstream ID</label>
+<input type="text" id="workId" autocomplete="off" spellcheck="false" maxlength="128" placeholder="GW-2026-001">
+<label for="expiry">Consent expiry (up to 30 days)</label>
+<input type="date" id="expiry">
+<label><input type="checkbox" id="affirm"> I have read this notice and explicitly authorize work metadata collection for this workstream.</label>
+<button id="optIn" disabled>Authorize recording</button>
+<button id="withdraw" disabled>Withdraw permission</button>
+</section>
+<section>
+<h2>My work evidence</h2>
+<button id="refresh" disabled>Refresh private counts</button>
+<pre id="counts" aria-live="polite">No connected gateway. No evidence is being collected by this page.</pre>
+</section>
+</main>
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const notice = { version: null };
+  const idPattern = /^[A-Za-z0-9][A-Za-z0-9_.:@-]{0,127}$/;
+  const origin = location.origin;
+
+  // A trusted, separately deployed authentication shell must supply a
+  // short-lived access token. Never read/store it in localStorage/cookies.
+  function authAvailable() {
+    return typeof window.GenesisAuth?.getAccessToken === "function" &&
+      location.protocol === "https:";
+  }
+
+  async function send(path, method, payload) {
+    if (!authAvailable()) throw Error("An authorized HTTPS DigitalMe session is required.");
+    const token = await window.GenesisAuth.getAccessToken();
+    if (typeof token !== "string" || token.length < 10) throw Error("Session unavailable.");
+    const response = await fetch(path, {
+      method,
+      mode: "same-origin",
+      credentials: "omit",
+      referrerPolicy: "no-referrer",
+      cache: "no-store",
+      headers: {"Authorization": "Bearer " + token,
+        ...(payload ? {"Content-Type": "application/json"} : {})},
+      ...(payload ? { body: JSON.stringify(payload) } : {})
+    });
+    const json = await response.json();
+    if (!response.ok) throw Error(json.error || "Request refused");
+    return json;
+  }
+
+  function work() {
+    const value = $("workId").value.trim();
+    if (!idPattern.test(value)) throw Error("Enter a valid workstream ID.");
+    return value;
+  }
+  function show(message) { $("counts").textContent = message; }
+  function refreshButtons() {
+    const available = authAvailable() && !!notice.version;
+    $("optIn").disabled = !available || !$("affirm").checked;
+    $("withdraw").disabled = !available;
+    $("refresh").disabled = !available;
+  }
+  $("affirm").addEventListener("change", refreshButtons);
+  $("optIn").addEventListener("click", async () => {
+    try {
+      const date = $("expiry").value;
+      if (!date) throw Error("Select an expiry date.");
+      const expires_at = new Date(date + "T23:59:59Z").toISOString();
+      const result = await send("/v1/work/consent","POST", {
+        work_id: work(), expires_at, notice_version: notice.version,
+        affirmative: $("affirm").checked
+      });
+      show("Consent registered. Receipt: " + result.receipt_id + "\nNotice receipt: " + result.notice_receipt_id);
+    } catch (err) { show(err.message); }
+  });
+  $("withdraw").addEventListener("click", async () => {
+    try {
+      const result = await send("/v1/work/withdraw","POST",{work_id: work()});
+      $("affirm").checked = false; refreshButtons();
+      show("Withdrawal recorded. Receipt: " + result.receipt_id);
+    } catch (err) { show(err.message); }
+  });
+  $("refresh").addEventListener("click", async () => {
+    try {
+      const result = await send("/v1/work/" + encodeURIComponent(work()) + "/progress", "GET");
+      show(JSON.stringify(result, null, 2));
+    } catch (err) { show(err.message); }
+  });
+  if (!authAvailable()) {
+    refreshButtons();
+    return;
+  }
+  // Only the static notice is public; auth-bearing requests are triggered
+  // by explicit user clicks. The R0.6 library is not itself an HTTP server.
+  fetch("/v1/work/notice", {credentials:"omit", cache:"no-store", referrerPolicy:"no-referrer"})
+    .then(r => { if (!r.ok) throw Error("No notice service"); return r.json(); })
+    .then(value => {
+      if (!value.version || !value.text) return;
+      notice.version = value.version;
+      $("noticeText").textContent = value.text;
+      $("noticeVersion").textContent = "Notice version " + value.version;
+      refreshButtons();
+    }).catch(() => {});
+})();
+</script>
+</body>
+</html>
