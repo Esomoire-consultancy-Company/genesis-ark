@@ -38,6 +38,7 @@ class VerifiedOperator:
     node_ids: frozenset[str]
     # This flag is set only by the trusted auth adapter, NEVER from HTTP input.
     authority_verified: bool = False
+    environments: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -153,7 +154,7 @@ def _route(event: SecurityEvent) -> tuple[str, str]:
 def _authorized(operator: VerifiedOperator, case: Case) -> bool:
     if not operator.authority_verified or not _valid_id(operator.actor_id):
         return False
-    if case.queue_role not in operator.roles:
+    if case.queue_role not in operator.roles or case.event.environment not in operator.environments:
         return False
     return case.event.node_id is None or case.event.node_id in operator.node_ids
 
