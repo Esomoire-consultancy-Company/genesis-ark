@@ -94,6 +94,7 @@ def accept_packet(
         existing_payload = event.get("payload", {})
         if (event.get("source") == packet["source"] and
             isinstance(existing_payload, dict) and
+            existing_payload.get("tenant_id") == packet["payload"].get("tenant_id") and
             existing_payload.get("capture_id") == capture_id):
             if (event["event_type"] != packet["kind"] or
                 existing_payload != packet["payload"] or
