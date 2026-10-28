@@ -87,6 +87,7 @@ def test_full_chain_verified_but_not_independently_witnessed():
     lambda r: [r[1]],
     lambda r: [r[0], replace(r[1], previous_hash="0"*64)],
     lambda r: [r[0], replace(r[1], event={**r[1].event, "result": "PERMIT"})],
+    lambda r: [r[0], replace(r[1], record_hash="0"*64)],
     lambda r: [r[0], replace(r[1], request_id=r[0].request_id)],
 ])
 def test_spool_tampering_fails_closed(mutation):
@@ -102,3 +103,17 @@ def test_external_anchor_mismatch_rejected():
 def test_empty_spool_cannot_be_called_verified():
     with pytest.raises(EvidenceIntegrityError, match="EMPTY_SPOOL"):
         verify_rows([])
+
+
+def test_unanchored_local_chain_is_not_reported_as_complete_or_witnessed():
+    proof = verify_rows(rows())
+    assert proof["verification"] == "local-chain-consistent-unanchored"
+    assert proof["external_witnessed"] is False
+
+
+def test_rolled_back_sequence_value_does_not_break_a_valid_hash_chain():
+    pair = rows()
+    pair[1] = replace(pair[1], seq=5)
+    result = verify_rows(pair, expected_head=pair[-1].record_hash)
+    assert result["event_count"] == 2
+    assert result["last_seq"] == 5

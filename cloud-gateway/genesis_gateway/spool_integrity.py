@@ -33,14 +33,20 @@ def verify_rows(rows: Iterable[SpoolRow], *, expected_head: str | None = None) -
     """Validate genesis-to-head continuity; never silently verify a truncated set."""
     previous: str | None = None
     count = 0
+    first_seq: int | None = None
+    last_seq = 0
     request_ids: set[str] = set()
     event_ids: set[str] = set()
     for row in rows:
         count += 1
         if count > MAX_ROWS:
             raise EvidenceIntegrityError("EXPORT_LIMIT_REACHED")
-        if row.seq != count:
-            raise EvidenceIntegrityError("MISSING_OR_REORDERED_SEQUENCE")
+        if row.seq <= last_seq:
+            raise EvidenceIntegrityError("REPEATED_OR_REORDERED_SEQUENCE")
+        # Rolled-back PostgreSQL INSERTs may consume sequence values.
+        if first_seq is None:
+            first_seq = row.seq
+        last_seq = row.seq
         if row.previous_hash != previous:
             raise EvidenceIntegrityError("BROKEN_HASH_LINK")
         event = row.event
@@ -69,9 +75,10 @@ def verify_rows(rows: Iterable[SpoolRow], *, expected_head: str | None = None) -
         raise EvidenceIntegrityError("EXTERNAL_ANCHOR_MISMATCH")
     return {
         "schema": "genesis-gateway-spool-check.r0.2",
-        "verification": "local-spool-verified",
-        "first_seq": 1,
-        "last_seq": count,
+        "verification": ("local-chain-matches-supplied-head" if expected_head is not None
+                         else "local-chain-consistent-unanchored"),
+        "first_seq": first_seq,
+        "last_seq": last_seq,
         "event_count": count,
         "head_hash": previous,
         "external_witnessed": False,
@@ -91,17 +98,24 @@ def verify_database(dsn: str, *, expected_head: str | None = None) -> dict:
             cur.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY")
             cur.execute("""
                 SELECT
-                    (SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication
+                    (SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls
                        FROM pg_roles WHERE rolname = current_user),
                     has_schema_privilege(current_user, 'public', 'CREATE'),
+                    has_database_privilege(current_user, current_database(), 'CREATE'),
+                    pg_has_role(current_user, 'pg_read_all_data', 'member'),
+                    pg_has_role(current_user, 'pg_write_all_data', 'member'),
                     has_table_privilege(current_user, 'public.gateway_evidence', 'SELECT'),
                     has_table_privilege(current_user, 'public.gateway_evidence', 'INSERT'),
                     has_table_privilege(current_user, 'public.gateway_evidence', 'UPDATE'),
                     has_table_privilege(current_user, 'public.gateway_evidence', 'DELETE'),
-                    has_table_privilege(current_user, 'public.gateway_evidence', 'TRUNCATE')
+                    has_table_privilege(current_user, 'public.gateway_evidence', 'TRUNCATE'),
+                    has_table_privilege(current_user, 'public.gateway_evidence', 'TRIGGER')
             """)
-            privileged, create_schema, can_select, can_insert, can_update, can_delete, can_truncate = cur.fetchone()
-            if not can_select or any((privileged, create_schema, can_insert, can_update, can_delete, can_truncate)):
+            (privileged, create_schema, create_database, broad_read, broad_write,
+             can_select, can_insert, can_update, can_delete, can_truncate, can_trigger) = cur.fetchone()
+            if not can_select or any((privileged, create_schema, create_database,
+                                     broad_read, broad_write, can_insert, can_update,
+                                     can_delete, can_truncate, can_trigger)):
                 raise EvidenceIntegrityError("AUDIT_ROLE_NOT_READONLY")
             cur.execute("SELECT count(*) FROM public.gateway_evidence")
             total = cur.fetchone()[0]

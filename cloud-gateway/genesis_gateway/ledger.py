@@ -62,16 +62,23 @@ class PostgresLedger:
                     to_regclass('public.gateway_evidence'), 'TRUNCATE'), false),
                   COALESCE(has_table_privilege(current_user,
                     to_regclass('public.gateway_evidence'), 'TRIGGER'), false),
+                  COALESCE(has_sequence_privilege(current_user,
+                    to_regclass('public.gateway_evidence_seq_seq'), 'UPDATE'), false),
                   has_schema_privilege(current_user, 'public', 'CREATE'),
-                  (SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication
+                  has_database_privilege(current_user, current_database(), 'CREATE'),
+                  pg_has_role(current_user, 'pg_read_all_data', 'member'),
+                  pg_has_role(current_user, 'pg_write_all_data', 'member'),
+                  (SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls
                      FROM pg_roles WHERE rolname = current_user)
             """)
             (exists, can_select, can_insert, can_sequence,
              can_update, can_delete, can_truncate, can_trigger,
-             can_create, privileged) = cur.fetchone()
+             can_sequence_update, can_create, can_create_database,
+             broad_read, broad_write, privileged) = cur.fetchone()
             return all((exists, can_select, can_insert, can_sequence)) and not any(
                 (can_update, can_delete, can_truncate, can_trigger,
-                 can_create, privileged)
+                 can_sequence_update, can_create, can_create_database,
+                 broad_read, broad_write, privileged)
             )
 
     def record_denial(self, intent: dict, issuer: str) -> dict:
@@ -83,9 +90,13 @@ class PostgresLedger:
         issuer+intent; mismatched idempotency keys produce a conflict.
         """
         with self._connect() as conn, conn.cursor() as cur:
+            # Bound lock waits and queries: fail closed under contention.
+            cur.execute("SET LOCAL lock_timeout = '3s'")
+            cur.execute("SET LOCAL statement_timeout = '8s'")
+            cur.execute("SET LOCAL search_path = pg_catalog, public")
             cur.execute("SELECT pg_advisory_xact_lock(%s)", (LOCK_ID,))
             cur.execute(
-                "SELECT event, record_hash, previous_hash FROM gateway_evidence WHERE request_id = %s",
+                "SELECT event, record_hash, previous_hash FROM public.gateway_evidence WHERE request_id = %s",
                 (intent["request_id"],),
             )
             prior = cur.fetchone()
@@ -95,7 +106,7 @@ class PostgresLedger:
                     raise IntentConflict("REQUEST_ID_CONFLICT")
                 return _receipt(event, record_hash, previous_hash)
 
-            cur.execute("SELECT record_hash FROM gateway_evidence ORDER BY seq DESC LIMIT 1")
+            cur.execute("SELECT record_hash FROM public.gateway_evidence ORDER BY seq DESC LIMIT 1")
             row = cur.fetchone()
             previous_hash = row[0] if row else None
             event = {
@@ -111,7 +122,7 @@ class PostgresLedger:
             }
             record_hash = hash_record(event, previous_hash)
             cur.execute(
-                "INSERT INTO gateway_evidence (request_id, event_id, event, record_hash, previous_hash) "
+                "INSERT INTO public.gateway_evidence (request_id, event_id, event, record_hash, previous_hash) "
                 "VALUES (%s, %s, %s::jsonb, %s, %s)",
                 (intent["request_id"], event["event_id"], canonical_json(event), record_hash, previous_hash),
             )

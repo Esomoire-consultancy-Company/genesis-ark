@@ -104,3 +104,15 @@ def test_duplicate_request_id_is_idempotent_but_reuse_conflicts():
 def test_unconfigured_gateway_never_accepts_intents():
     client = TestClient(create_app(Settings(), FakeLedger()))
     assert client.post("/v1/intents", json=intent(), headers={"Authorization": f"Bearer {KEY}"}).status_code == 503
+
+
+def test_settings_repr_never_exposes_credentials():
+    rendered = repr(CFG)
+    assert KEY not in rendered
+    assert CFG.database_url not in rendered
+
+
+def test_non_ascii_bearer_fails_with_401_not_500():
+    client = TestClient(create_app(CFG, FakeLedger()))
+    res = client.post("/v1/intents", json=intent(), headers={"Authorization": "Bearer caf\u00e9"})
+    assert res.status_code == 401

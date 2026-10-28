@@ -36,7 +36,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/001_gateway_evidence.sql
 ```
 
 The runtime database user must be restricted to SELECT and INSERT for the
-`gateway_evidence` table, with sequence USAGE if required. Migration privileges
+`gateway_evidence` table, with sequence USAGE required by BIGSERIAL. Migration privileges
 must not be present in the runtime credentials. Protect the spool against
 alteration and deletion by the application account, and use external backup,
 retention, reconciliation, and immutable export controls before any production claim.
@@ -94,8 +94,9 @@ DELETE/DDL. Provision a new secret for the app and attach a runtime-role
 URL solely in the short-lived migration environment.
 
 This release does **not** include a remote SQL executor. The migration is
-**not applied** until the one-shot command has actually run against Railway
-staging and its success has been independently checked. The PostgreSQL 18
+**not provisioned with the restricted runtime role** until the one-shot command
+has run against staging and its success has been independently checked. A manual
+`psql` migration creates only the table; it does not provision runtime credentials. The PostgreSQL 18
 contract workflow runs against a disposable CI database, never the user's
 Railway services.
 

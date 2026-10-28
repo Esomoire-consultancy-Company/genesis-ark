@@ -7,8 +7,9 @@ members, settle money, or accept client-provided authority decisions.
 from __future__ import annotations
 
 import hmac
+import logging
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Annotated
 from uuid import UUID
 
@@ -17,12 +18,14 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from genesis_gateway.ledger import IntentConflict, PostgresLedger
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True)
 class Settings:
-    api_key: str = ""
+    api_key: str = field(default="", repr=False)
     issuer_id: str = ""
-    database_url: str = ""
+    database_url: str = field(default="", repr=False)
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -79,7 +82,9 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
                 raise HTTPException(503, detail="EVIDENCE_SCHEMA_NOT_READY")
         except HTTPException:
             raise
-        except Exception:
+        except Exception as exc:
+            # Never log driver exceptions: some can include connection secrets.
+            logger.error("Gateway readiness failure: %s", type(exc).__name__)
             raise HTTPException(503, detail="EVIDENCE_UNAVAILABLE") from None
         return {"status": "ready", "mode": "deny-only", "execution_enabled": False}
 
@@ -88,7 +93,7 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
         if not cfg.complete() or store is None:
             raise HTTPException(503, detail="GATEWAY_NOT_PROVISIONED")
         expected = "Bearer " + cfg.api_key
-        if not authorization or not hmac.compare_digest(authorization, expected):
+        if not authorization or not hmac.compare_digest(authorization.encode("utf-8"), expected.encode("utf-8")):
             raise HTTPException(401, detail="UNAUTHENTICATED", headers={"WWW-Authenticate": "Bearer"})
 
         request = intent.model_dump(mode="json")
@@ -96,8 +101,9 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
             return store.record_denial(request, cfg.issuer_id)
         except IntentConflict:
             raise HTTPException(409, detail="REQUEST_ID_CONFLICT") from None
-        except Exception:
-            # Never represent a decision as logged if storage failed.
+        except Exception as exc:
+            # Never return a receipt for a failed evidence write; log no secrets.
+            logger.error("Gateway evidence write failure: %s", type(exc).__name__)
             raise HTTPException(503, detail="EVIDENCE_UNAVAILABLE") from None
 
     return app

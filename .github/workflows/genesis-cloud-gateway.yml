@@ -1,4 +1,6 @@
 name: Genesis ARK Cloud Gateway R0.1
+permissions:
+  contents: read
 on:
   push:
     paths:

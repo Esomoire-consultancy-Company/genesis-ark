@@ -90,3 +90,25 @@ def test_gateway_evidence_hash_chain_across_distinct_intents(provisioned):
         assert parent == previous
         assert hash_record(event, parent) == digest
         previous = digest
+
+
+def test_concurrent_replays_write_one_record(provisioned):
+    from concurrent.futures import ThreadPoolExecutor
+
+    admin, runtime, _ = provisioned
+    request_id = str(uuid4())
+    intent = {
+        "request_id": request_id,
+        "correlation_id": "COR-CONCURRENT",
+        "target_resource_id": "RES-CI-001",
+        "capability": "container.instance.restart",
+    }
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        receipts = list(pool.map(
+            lambda _: PostgresLedger(runtime).record_denial(intent, "DIGITALME-ACTOR-CI"),
+            range(4),
+        ))
+    assert all(receipt == receipts[0] for receipt in receipts)
+    with psycopg.connect(admin) as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM public.gateway_evidence WHERE request_id = %s", (request_id,))
+        assert cur.fetchone()[0] == 1
