@@ -9,12 +9,15 @@ BEGIN
     WHERE attrelid = 'public.gateway_evidence'::regclass
     AND attnum > 0 AND NOT attisdropped
     AND (
-      (attname = 'seq' AND atttypid = 'pg_catalog.int8'::regtype AND attnotnull)
+      (attname = 'seq' AND atttypid = 'pg_catalog.int8'::regtype
+       AND attnotnull AND atthasdef)
       OR (attname IN ('request_id', 'event_id') AND atttypid = 'pg_catalog.uuid'::regtype AND attnotnull)
       OR (attname = 'event' AND atttypid = 'pg_catalog.jsonb'::regtype AND attnotnull)
-      OR (attname = 'previous_hash' AND atttypid = 'pg_catalog.bpchar'::regtype AND atttypmod = 68)
+      OR (attname = 'previous_hash' AND atttypid = 'pg_catalog.bpchar'::regtype
+       AND atttypmod = 68 AND NOT attnotnull)
       OR (attname = 'record_hash' AND atttypid = 'pg_catalog.bpchar'::regtype AND atttypmod = 68 AND attnotnull)
-      OR (attname = 'created_at' AND atttypid = 'pg_catalog.timestamptz'::regtype AND attnotnull)
+      OR (attname = 'created_at' AND atttypid = 'pg_catalog.timestamptz'::regtype
+       AND attnotnull AND atthasdef)
     );
   IF column_count <> 7 OR
     (SELECT count(*) FROM pg_attribute
@@ -22,8 +25,24 @@ BEGIN
       AND attnum > 0 AND NOT attisdropped) <> 7 THEN
     RAISE EXCEPTION 'GATEWAY_EVIDENCE_SCHEMA_MISMATCH';
   END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_attribute a
+    JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+    WHERE a.attrelid = 'public.gateway_evidence'::regclass
+      AND a.attname = 'seq'
+      AND pg_get_expr(d.adbin, d.adrelid) LIKE 'nextval(%'
+  ) OR pg_get_serial_sequence('public.gateway_evidence', 'seq')
+      <> 'public.gateway_evidence_seq_seq' OR NOT EXISTS (
+    SELECT 1 FROM pg_attribute a
+    JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+    WHERE a.attrelid = 'public.gateway_evidence'::regclass
+      AND a.attname = 'created_at'
+      AND pg_get_expr(d.adbin, d.adrelid) = 'now()'
+  ) THEN
+    RAISE EXCEPTION 'GATEWAY_EVIDENCE_DEFAULTS_MISMATCH';
+  END IF;
 END
-$$;
+$;
 
 -- Preserve an append-only single chain, including its null predecessor.
 CREATE UNIQUE INDEX IF NOT EXISTS gateway_evidence_prev_unique_r02

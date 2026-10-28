@@ -120,6 +120,7 @@ def verify_database(dsn: str, *, expected_head: str | None = None) -> dict:
                     has_table_privilege(current_user, 'public.gateway_evidence', 'DELETE'),
                     has_table_privilege(current_user, 'public.gateway_evidence', 'TRUNCATE'),
                     has_table_privilege(current_user, 'public.gateway_evidence', 'TRIGGER'),
+                    has_table_privilege(current_user, 'public.gateway_evidence', 'MAINTAIN'),
                     has_sequence_privilege(current_user,
                         'public.gateway_evidence_seq_seq', 'USAGE'),
                     has_sequence_privilege(current_user,
@@ -130,12 +131,12 @@ def verify_database(dsn: str, *, expected_head: str | None = None) -> dict:
             (privileged, create_schema, create_database, broad_read, broad_write,
              server_read, server_write, server_execute, set_privileged,
              can_select, can_insert, can_update, can_delete, can_truncate,
-             can_trigger, seq_usage, seq_update, seq_select) = cur.fetchone()
+             can_trigger, can_maintain, seq_usage, seq_update, seq_select) = cur.fetchone()
             if not can_select or any((privileged, create_schema, create_database,
                                      broad_read, broad_write, server_read, server_write,
                                      server_execute, set_privileged, can_insert, can_update,
                                      can_delete, can_truncate, can_trigger,
-                                     seq_usage, seq_update, seq_select)):
+                                     can_maintain, seq_usage, seq_update, seq_select)):
                 raise EvidenceIntegrityError("AUDIT_ROLE_NOT_READONLY")
             cur.execute("SELECT count(*) FROM public.gateway_evidence")
             total = cur.fetchone()[0]

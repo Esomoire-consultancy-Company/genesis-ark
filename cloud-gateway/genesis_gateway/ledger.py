@@ -72,6 +72,8 @@ class PostgresLedger:
                     to_regclass('public.gateway_evidence'), 'TRUNCATE'), false),
                   COALESCE(has_table_privilege(current_user,
                     to_regclass('public.gateway_evidence'), 'TRIGGER'), false),
+                  COALESCE(has_table_privilege(current_user,
+                    to_regclass('public.gateway_evidence'), 'MAINTAIN'), false),
                   COALESCE(has_sequence_privilege(current_user,
                     to_regclass('public.gateway_evidence_seq_seq'), 'UPDATE'), false),
                   has_schema_privilege(current_user, 'public', 'CREATE'),
@@ -91,12 +93,12 @@ class PostgresLedger:
                      FROM pg_roles WHERE rolname = current_user)
             """)
             (exists, can_select, can_insert, can_sequence,
-             can_update, can_delete, can_truncate, can_trigger,
+             can_update, can_delete, can_truncate, can_trigger, can_maintain,
              can_sequence_update, can_create, can_create_database,
              broad_read, broad_write, server_read, server_write,
              server_execute, set_privileged, privileged) = cur.fetchone()
             privileges_ok = all((exists, can_select, can_insert, can_sequence)) and not any(
-                (can_update, can_delete, can_truncate, can_trigger,
+                (can_update, can_delete, can_truncate, can_trigger, can_maintain,
                  can_sequence_update, can_create, can_create_database,
                  broad_read, broad_write, server_read, server_write,
                  server_execute, set_privileged, privileged)
@@ -114,9 +116,29 @@ class PostgresLedger:
                   (SELECT count(*) = 2 FROM pg_index i
                     JOIN pg_class c ON c.oid = i.indexrelid
                    WHERE i.indrelid = 'public.gateway_evidence'::regclass
-                     AND c.relname IN ('gateway_evidence_prev_unique_r02',
-                                       'gateway_evidence_one_genesis_r02')
-                     AND i.indisunique AND i.indisvalid)
+                     AND i.indisunique AND i.indisvalid AND i.indisready
+                     AND i.indnkeyatts = 1 AND (
+                       (c.relname = 'gateway_evidence_prev_unique_r02'
+                        AND i.indexprs IS NULL
+                        AND i.indkey[0] = (
+                          SELECT attnum FROM pg_attribute
+                          WHERE attrelid = 'public.gateway_evidence'::regclass
+                          AND attname = 'previous_hash'
+                        )
+                        AND regexp_replace(
+                          COALESCE(pg_get_expr(i.indpred, i.indrelid), ''),
+                          '[()[:space:]]', '', 'g') = 'previous_hashISNOTNULL')
+                       OR
+                       (c.relname = 'gateway_evidence_one_genesis_r02'
+                        AND i.indexprs IS NOT NULL
+                        AND i.indkey[0] = 0
+                        AND regexp_replace(
+                          COALESCE(pg_get_expr(i.indexprs, i.indrelid), ''),
+                          '[()[:space:]]', '', 'g') = '1'
+                        AND regexp_replace(
+                          COALESCE(pg_get_expr(i.indpred, i.indrelid), ''),
+                          '[()[:space:]]', '', 'g') = 'previous_hashISNULL')
+                     ))
             """)
             return all(cur.fetchone())
 
@@ -146,16 +168,24 @@ class PostgresLedger:
                 return _receipt(event, record_hash, previous_hash)
 
             # Replays above are allowed even when new intake is throttled.
+            # Indexed, bounded recent-intent scan before any full spool count.
             cur.execute("""
-                SELECT count(*), count(*) FILTER (
+                SELECT count(*) FROM (
+                    SELECT 1 FROM public.gateway_evidence
                     WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '1 minute'
-                ) FROM public.gateway_evidence
-            """)
-            total, recent = cur.fetchone()
-            if total >= MAX_SPOOL_ROWS:
-                raise CapacityExceeded("EVIDENCE_SPOOL_FULL")
+                    LIMIT %s
+                ) AS recent_events
+            """, (MAX_NEW_INTENTS_PER_MINUTE,))
+            recent = cur.fetchone()[0]
             if recent >= MAX_NEW_INTENTS_PER_MINUTE:
                 raise CapacityExceeded("INTENT_RATE_LIMIT")
+            cur.execute("""
+                SELECT count(*) FROM (
+                    SELECT 1 FROM public.gateway_evidence LIMIT %s
+                ) AS bounded_spool
+            """, (MAX_SPOOL_ROWS,))
+            if cur.fetchone()[0] >= MAX_SPOOL_ROWS:
+                raise CapacityExceeded("EVIDENCE_SPOOL_FULL")
 
             cur.execute("SELECT record_hash FROM public.gateway_evidence ORDER BY seq DESC LIMIT 1")
             row = cur.fetchone()

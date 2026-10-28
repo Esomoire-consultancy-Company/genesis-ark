@@ -166,3 +166,29 @@ def test_readiness_failure_does_not_leak_exception_text(caplog):
     assert response.status_code == 503
     assert KEY not in caplog.text
     assert CFG.database_url not in caplog.text
+
+
+def test_rate_limit_and_full_spool_http_mappings():
+    from genesis_gateway.ledger import CapacityExceeded
+
+    class FullLedger(FakeLedger):
+        def __init__(self, reason):
+            super().__init__()
+            self.reason = reason
+
+        def record_denial(self, entry, issuer):
+            raise CapacityExceeded(self.reason)
+
+    auth = {"Authorization": f"Bearer {KEY}"}
+    rate = TestClient(create_app(CFG, FullLedger("INTENT_RATE_LIMIT"))).post(
+        "/v1/intents", json=intent(), headers=auth
+    )
+    assert rate.status_code == 429
+    assert rate.json()["detail"] == "INTENT_RATE_LIMIT"
+    assert rate.headers["retry-after"] == "60"
+
+    full = TestClient(create_app(CFG, FullLedger("EVIDENCE_SPOOL_FULL"))).post(
+        "/v1/intents", json=intent(), headers=auth
+    )
+    assert full.status_code == 503
+    assert full.json()["detail"] == "EVIDENCE_SPOOL_FULL"

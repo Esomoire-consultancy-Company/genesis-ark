@@ -24,8 +24,11 @@ HARDENING_MIGRATION = Path(__file__).resolve().parent.parent / "migrations" / "0
 def scram_verifier(password: str) -> str:
     """Create a PostgreSQL SCRAM-SHA-256 verifier without logging plaintext.
 
-    A verifier is sensitive if stolen: restrict database statement-log access.
+    Only printable ASCII is supported here: non-ASCII requires SASLprep, which
+    this constrained one-shot provisioner deliberately does not implement.
     """
+    if not password or any(not 33 <= ord(char) <= 126 for char in password):
+        raise ValueError("UNSUPPORTED_RUNTIME_PASSWORD_CHARACTERS")
     salt = secrets.token_bytes(16)
     salted = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 4096)
     client_key = hmac.new(salted, b"Client Key", hashlib.sha256).digest()

@@ -312,6 +312,23 @@ def test_populated_legacy_database_upgrade_and_atomic_rejection():
 
         with psycopg.connect(target) as conn:
             conn.execute("ALTER TABLE public.gateway_evidence DROP COLUMN unexpected")
+            conn.execute("ALTER TABLE public.gateway_evidence ALTER COLUMN created_at DROP DEFAULT")
+        with psycopg.connect(target) as conn:
+            with pytest.raises(psycopg.errors.RaiseException, match="GATEWAY_EVIDENCE_SCHEMA_MISMATCH"):
+                conn.execute(hardening)
+            conn.rollback()
+        with psycopg.connect(target) as conn:
+            conn.execute("ALTER TABLE public.gateway_evidence ALTER COLUMN created_at SET DEFAULT now()")
+            conn.execute("ALTER TABLE public.gateway_evidence ALTER COLUMN seq DROP DEFAULT")
+        with psycopg.connect(target) as conn:
+            with pytest.raises(psycopg.errors.RaiseException, match="GATEWAY_EVIDENCE_SCHEMA_MISMATCH"):
+                conn.execute(hardening)
+            conn.rollback()
+        with psycopg.connect(target) as conn:
+            conn.execute(
+                "ALTER TABLE public.gateway_evidence ALTER COLUMN seq "
+                "SET DEFAULT nextval('public.gateway_evidence_seq_seq'::regclass)"
+            )
             conn.execute(hardening)
         with psycopg.connect(target) as conn:
             assert conn.execute("SELECT count(*) FROM public.gateway_evidence").fetchone()[0] == 1
@@ -327,6 +344,25 @@ def test_populated_legacy_database_upgrade_and_atomic_rejection():
                      json.dumps(second), hash_record(second, None)),
                 )
             conn.rollback()
+            # A fork from the same non-null parent must also be forbidden.
+            conn.execute(
+                "INSERT INTO public.gateway_evidence "
+                "(request_id, event_id, event, previous_hash, record_hash) "
+                "VALUES (%s, %s, %s::jsonb, %s, %s)",
+                (second["intent"]["request_id"], second["event_id"],
+                 json.dumps(second), digest, hash_record(second, digest)),
+            )
+            fork = {**second, "event_id": str(uuid4()),
+                    "intent": {**second["intent"], "request_id": str(uuid4())}}
+            with pytest.raises(psycopg.errors.UniqueViolation):
+                conn.execute(
+                    "INSERT INTO public.gateway_evidence "
+                    "(request_id, event_id, event, previous_hash, record_hash) "
+                    "VALUES (%s, %s, %s::jsonb, %s, %s)",
+                    (fork["intent"]["request_id"], fork["event_id"],
+                     json.dumps(fork), digest, hash_record(fork, digest)),
+                )
+            conn.rollback()
         with psycopg.connect(target) as conn:
             with pytest.raises(psycopg.errors.RaiseException, match="GATEWAY_EVIDENCE_APPEND_ONLY"):
                 conn.execute("DELETE FROM public.gateway_evidence")
@@ -338,3 +374,32 @@ def test_populated_legacy_database_upgrade_and_atomic_rejection():
     finally:
         with psycopg.connect(admin, autocommit=True) as conn:
             conn.execute(sql.SQL("DROP DATABASE {} WITH (FORCE)").format(sql.Identifier(database_name)))
+
+
+def test_runtime_rejects_wrong_named_unique_index(provisioned):
+    admin, runtime, _ = provisioned
+    with psycopg.connect(admin) as conn:
+        conn.execute(
+            "ALTER INDEX public.gateway_evidence_prev_unique_r02 "
+            "RENAME TO gateway_evidence_prev_saved_ci"
+        )
+        conn.execute(
+            "CREATE UNIQUE INDEX gateway_evidence_prev_unique_r02 "
+            "ON public.gateway_evidence (request_id)"
+        )
+    try:
+        assert PostgresLedger(runtime).ready() is False
+    finally:
+        with psycopg.connect(admin) as conn:
+            conn.execute("DROP INDEX public.gateway_evidence_prev_unique_r02")
+            conn.execute(
+                "ALTER INDEX public.gateway_evidence_prev_saved_ci "
+                "RENAME TO gateway_evidence_prev_unique_r02"
+            )
+    assert PostgresLedger(runtime).ready() is True
+
+
+def test_scram_verifier_rejects_unicode_passwords():
+    from genesis_gateway.provision import scram_verifier
+    with pytest.raises(ValueError, match="UNSUPPORTED_RUNTIME_PASSWORD_CHARACTERS"):
+        scram_verifier("anything-not-ascii-\u00e9")

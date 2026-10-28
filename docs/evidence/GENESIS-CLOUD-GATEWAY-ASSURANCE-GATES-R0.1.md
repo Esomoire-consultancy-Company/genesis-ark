@@ -22,8 +22,9 @@ This branch remains deny-only; its PostgreSQL spool is not RiverOS authority.
 
 ## Deployment boundary
 The new migration has not been run against Railway staging or production.
-Complete disposable-database tests, migration review, credential rotation
-evidence, backup/restore drill and security approval before staging changes.
+Disposable PostgreSQL migration rehearsal and integration tests have passed;
+independent migration review, credential rotation evidence, backup/restore
+rehearsal and human security approval remain required before staging changes.
 Do not merge, execute Docker commands, issue Warden PERMIT or settle Silk funds.
 
 
