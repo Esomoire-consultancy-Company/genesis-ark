@@ -141,6 +141,11 @@ class Driver:
         return element[ELEMENT_KEY]
 
     def click(self, selector: str) -> None:
+        # WebDriver scroll-to-click races with the site's smooth-scrolling CSS
+        # on long pages. Use an instant, deterministic scroll before real click.
+        self.js("document.documentElement.style.scrollBehavior = 'auto';"
+                "document.querySelector(" + json.dumps(selector) +
+                ").scrollIntoView({block:'center',behavior:'instant'});")
         element_id = self.element(selector)
         self.call("POST", self.endpoint(f"element/{element_id}/click"), {})
 
