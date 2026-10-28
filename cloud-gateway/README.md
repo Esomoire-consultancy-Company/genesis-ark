@@ -61,6 +61,49 @@ Initial service deployment intentionally fails readiness until provisioned.
 Never attach the host Docker socket, give the gateway Docker administrator
 permissions, or make the local Alpha executor public.
 
+## One-shot staging migration and restricted role
+
+**Never configure the gateway's `DATABASE_URL` from the Postgres service's
+administrator/superuser connection string.** The HTTP service must not hold
+schema-creation privileges. This is an operator-controlled, staging-only
+bootstrap, not a web startup hook.
+
+From a trusted, temporary migration environment that can reach staging
+PostgreSQL, supply secret values as environment variables (not CLI arguments):
+
+- `GENESIS_MIGRATION_ADMIN_DATABASE_URL` — the **staging** PostgreSQL
+  administrator connection string (use only in the temporary migration job)
+- `GENESIS_GATEWAY_RUNTIME_ROLE` — a new dedicated PostgreSQL role named
+  `genesis_gateway_...`
+- `GENESIS_GATEWAY_DB_PASSWORD` — independent random string of at least 32
+  characters; do not print or commit it
+
+Then execute:
+
+```bash
+cd cloud-gateway
+python -m pip install -r requirements.txt
+python -m genesis_gateway.provision
+```
+
+The bootstrap creates `gateway_evidence` and grants the new runtime role
+only schema usage, table SELECT/INSERT, and evidence sequence USAGE. It rejects
+pre-existing role names; it does not alter an existing role or grant UPDATE/
+DELETE/DDL. Provision a new secret for the app and attach a runtime-role
+`DATABASE_URL` to the gateway through Railway variables. Keep the administrator
+URL solely in the short-lived migration environment.
+
+This release does **not** include a remote SQL executor. The migration is
+**not applied** until the one-shot command has actually run against Railway
+staging and its success has been independently checked. The PostgreSQL 18
+contract workflow runs against a disposable CI database, never the user's
+Railway services.
+
+After provisioning: check `GET /readyz` for a 200 response with
+`mode: deny-only`, and exercise `POST /v1/intents` with a scoped staging
+issuer credential, verifying repeat/denial receipts. Never infer these from a
+green image build alone.
+
 ## Known limits / upgrade gates
 
 1. The bearer key authenticates a **single pre-provisioned service issuer**, not
