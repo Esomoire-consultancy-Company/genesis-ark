@@ -117,3 +117,8 @@ def test_rolled_back_sequence_value_does_not_break_a_valid_hash_chain():
     result = verify_rows(pair, expected_head=pair[-1].record_hash)
     assert result["event_count"] == 2
     assert result["last_seq"] == 5
+
+
+def test_sequence_metadata_is_not_claimed_cryptographically_verified():
+    result = verify_rows(rows(), expected_head=rows()[-1].record_hash)
+    assert result["sequence_metadata_authenticated"] is False

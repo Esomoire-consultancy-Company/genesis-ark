@@ -16,7 +16,7 @@ from uuid import UUID
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
-from genesis_gateway.ledger import IntentConflict, PostgresLedger
+from genesis_gateway.ledger import CapacityExceeded, IntentConflict, PostgresLedger
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +101,11 @@ def create_app(settings: Settings | None = None, ledger=None) -> FastAPI:
             return store.record_denial(request, cfg.issuer_id)
         except IntentConflict:
             raise HTTPException(409, detail="REQUEST_ID_CONFLICT") from None
+        except CapacityExceeded as exc:
+            if exc.reason == "INTENT_RATE_LIMIT":
+                raise HTTPException(429, detail=exc.reason,
+                                    headers={"Retry-After": "60"}) from None
+            raise HTTPException(503, detail="EVIDENCE_SPOOL_FULL") from None
         except Exception as exc:
             # Never return a receipt for a failed evidence write; log no secrets.
             logger.error("Gateway evidence write failure: %s", type(exc).__name__)

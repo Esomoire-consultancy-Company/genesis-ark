@@ -6,14 +6,34 @@ without separate migration/change-control review.
 """
 from __future__ import annotations
 
+import base64
+import hashlib
+import hmac
 import os
 import re
+import secrets
 from pathlib import Path
 
 import psycopg
 from psycopg import sql
 
 DEFAULT_MIGRATION = Path(__file__).resolve().parent.parent / "migrations" / "001_gateway_evidence.sql"
+HARDENING_MIGRATION = Path(__file__).resolve().parent.parent / "migrations" / "002_gateway_evidence_hardening.sql"
+
+
+def scram_verifier(password: str) -> str:
+    """Create a PostgreSQL SCRAM-SHA-256 verifier without logging plaintext.
+
+    A verifier is sensitive if stolen: restrict database statement-log access.
+    """
+    salt = secrets.token_bytes(16)
+    salted = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 4096)
+    client_key = hmac.new(salted, b"Client Key", hashlib.sha256).digest()
+    stored_key = hashlib.sha256(client_key).digest()
+    server_key = hmac.new(salted, b"Server Key", hashlib.sha256).digest()
+    b64 = lambda raw: base64.b64encode(raw).decode("ascii")
+    return f"SCRAM-SHA-256$4096:{b64(salt)}${b64(stored_key)}:{b64(server_key)}"
+
 
 
 def provision_staging(
@@ -30,6 +50,8 @@ def provision_staging(
         raise ValueError("ADMIN_DSN_REQUIRED")
 
     migration = migration_path.read_text(encoding="utf-8")
+    hardening = HARDENING_MIGRATION.read_text(encoding="utf-8")
+    password_verifier = scram_verifier(role_password)
     with psycopg.connect(admin_dsn, connect_timeout=8) as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (role_name,))
@@ -38,10 +60,11 @@ def provision_staging(
                 raise ValueError("RUNTIME_ROLE_ALREADY_EXISTS")
 
             cur.execute(migration)
+            cur.execute(hardening)
             role = sql.Identifier(role_name)
             cur.execute(
-                sql.SQL("CREATE ROLE {} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION PASSWORD {}").format(
-                    role, sql.Literal(role_password)
+                sql.SQL("CREATE ROLE {} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD {}").format(
+                    role, sql.Literal(password_verifier)
                 )
             )
             cur.execute("REVOKE ALL ON TABLE public.gateway_evidence FROM PUBLIC")

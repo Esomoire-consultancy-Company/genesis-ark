@@ -11,7 +11,7 @@
 - PR: #15 (draft, not merged at acceptance)
 - Gateway deployed from commit: `4131e9cf3514ed60723dd1afc8ae86180675f8c3`
 - Python: 3.12 (Railpack requirements installation)
-- GitHub Actions: Python 3.11/3.12 unit and PostgreSQL 18 contract checks passed at commit `d8955084859b6c655d595cc8e28165fa05927aa6`: https://github.com/Esomoire-consultancy-Company/genesis-ark/actions/runs/40643665360 .
+- GitHub Actions **historical staging baseline**: Python 3.11/3.12 unit and PostgreSQL 18 contract checks passed at commit `d8955084859b6c655d595cc8e28165fa05927aa6`: https://github.com/Esomoire-consultancy-Company/genesis-ark/actions/runs/40643665360 . This does not cover unmerged PR #24 hardening; consult its separately recorded CI runs.
 - An additional staging-only smoke runner exists in commit `6dcf44fc2307dd816d6301607e81d094d2abda80`, not required by the pinned HTTP gateway.
 
 ## Live Railway observations

@@ -37,6 +37,12 @@ def _send(url: str, *, body: dict | None = None, token: str | None = None):
         return exc.code, json.load(exc)
 
 
+def check(ok: bool, code: str) -> None:
+    """Smoke checks must run even with python -O."""
+    if not ok:
+        raise RuntimeError("SMOKE_CHECK_FAILED:" + code)
+
+
 def main():
     base = os.environ.get("GENESIS_GATEWAY_INTERNAL_URL", "").rstrip("/")
     key = os.environ.get("GENESIS_GATEWAY_API_KEY", "")
@@ -45,10 +51,6 @@ def main():
         raise SystemExit("SMOKE_TARGET_NOT_PRIVATE")
     if len(key) < 32:
         raise SystemExit("SMOKE_API_KEY_MISSING")
-
-    def check(ok: bool, code: str) -> None:
-        if not ok:
-            raise RuntimeError("SMOKE_CHECK_FAILED:" + code)
 
     check(_send(base + "/healthz")[0] == 200, "HEALTH")
     code, ready = _send(base + "/readyz")

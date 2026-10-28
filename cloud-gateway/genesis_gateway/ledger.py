@@ -14,6 +14,8 @@ from datetime import datetime, timezone
 
 LOCK_ID = 72310641  # Serialize this gateway spool's hash chain per database.
 DENIAL = "WARDEN_NOT_PROVISIONED"
+MAX_NEW_INTENTS_PER_MINUTE = 60
+MAX_SPOOL_ROWS = 100_000  # Hard bound for the unanchored local spool.
 
 
 def canonical_json(value: dict) -> str:
@@ -27,6 +29,14 @@ def hash_record(event: dict, previous_hash: str | None) -> str:
 
 class IntentConflict(ValueError):
     """Idempotency key has been reused for a distinct command."""
+
+
+class CapacityExceeded(RuntimeError):
+    """Reject new evidence rather than overload or silently drop it."""
+
+    def __init__(self, reason: str):
+        self.reason = reason
+        super().__init__(reason)
 
 
 class PostgresLedger:
@@ -54,7 +64,7 @@ class PostgresLedger:
                     to_regclass('public.gateway_evidence'), 'INSERT'), false),
                   COALESCE(has_sequence_privilege(current_user,
                     to_regclass('public.gateway_evidence_seq_seq'), 'USAGE'), false),
-                  COALESCE(has_table_privilege(current_user,
+                  COALESCE(has_any_column_privilege(current_user,
                     to_regclass('public.gateway_evidence'), 'UPDATE'), false),
                   COALESCE(has_table_privilege(current_user,
                     to_regclass('public.gateway_evidence'), 'DELETE'), false),
@@ -68,18 +78,47 @@ class PostgresLedger:
                   has_database_privilege(current_user, current_database(), 'CREATE'),
                   pg_has_role(current_user, 'pg_read_all_data', 'member'),
                   pg_has_role(current_user, 'pg_write_all_data', 'member'),
+                  pg_has_role(current_user, 'pg_read_server_files', 'member'),
+                  pg_has_role(current_user, 'pg_write_server_files', 'member'),
+                  pg_has_role(current_user, 'pg_execute_server_program', 'member'),
+                  EXISTS (
+                    SELECT 1 FROM pg_roles r
+                    WHERE (r.rolsuper OR r.rolcreatedb OR r.rolcreaterole
+                           OR r.rolreplication OR r.rolbypassrls)
+                      AND pg_has_role(current_user, r.oid, 'SET')
+                  ),
                   (SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls
                      FROM pg_roles WHERE rolname = current_user)
             """)
             (exists, can_select, can_insert, can_sequence,
              can_update, can_delete, can_truncate, can_trigger,
              can_sequence_update, can_create, can_create_database,
-             broad_read, broad_write, privileged) = cur.fetchone()
-            return all((exists, can_select, can_insert, can_sequence)) and not any(
+             broad_read, broad_write, server_read, server_write,
+             server_execute, set_privileged, privileged) = cur.fetchone()
+            privileges_ok = all((exists, can_select, can_insert, can_sequence)) and not any(
                 (can_update, can_delete, can_truncate, can_trigger,
                  can_sequence_update, can_create, can_create_database,
-                 broad_read, broad_write, privileged)
+                 broad_read, broad_write, server_read, server_write,
+                 server_execute, set_privileged, privileged)
             )
+            if not privileges_ok:
+                return False
+            # Deny readiness until the reviewed hardening migration is present.
+            cur.execute("""
+                SELECT
+                  (SELECT count(*) = 2 FROM pg_trigger
+                    WHERE tgrelid = 'public.gateway_evidence'::regclass
+                    AND tgname IN ('gateway_evidence_no_update_delete',
+                                   'gateway_evidence_no_truncate')
+                    AND tgenabled = 'O'),
+                  (SELECT count(*) = 2 FROM pg_index i
+                    JOIN pg_class c ON c.oid = i.indexrelid
+                   WHERE i.indrelid = 'public.gateway_evidence'::regclass
+                     AND c.relname IN ('gateway_evidence_prev_unique_r02',
+                                       'gateway_evidence_one_genesis_r02')
+                     AND i.indisunique AND i.indisvalid)
+            """)
+            return all(cur.fetchone())
 
     def record_denial(self, intent: dict, issuer: str) -> dict:
         """Record a denial before returning it; never dispatch execution.
@@ -105,6 +144,18 @@ class PostgresLedger:
                 if event["issuer_id"] != issuer or event["intent"] != intent:
                     raise IntentConflict("REQUEST_ID_CONFLICT")
                 return _receipt(event, record_hash, previous_hash)
+
+            # Replays above are allowed even when new intake is throttled.
+            cur.execute("""
+                SELECT count(*), count(*) FILTER (
+                    WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '1 minute'
+                ) FROM public.gateway_evidence
+            """)
+            total, recent = cur.fetchone()
+            if total >= MAX_SPOOL_ROWS:
+                raise CapacityExceeded("EVIDENCE_SPOOL_FULL")
+            if recent >= MAX_NEW_INTENTS_PER_MINUTE:
+                raise CapacityExceeded("INTENT_RATE_LIMIT")
 
             cur.execute("SELECT record_hash FROM public.gateway_evidence ORDER BY seq DESC LIMIT 1")
             row = cur.fetchone()

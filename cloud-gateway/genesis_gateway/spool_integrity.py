@@ -81,6 +81,7 @@ def verify_rows(rows: Iterable[SpoolRow], *, expected_head: str | None = None) -
         "last_seq": last_seq,
         "event_count": count,
         "head_hash": previous,
+        "sequence_metadata_authenticated": False,  # seq is not part of hash_record
         "external_witnessed": False,
         "riveros_receipt": None,
     }
@@ -104,18 +105,37 @@ def verify_database(dsn: str, *, expected_head: str | None = None) -> dict:
                     has_database_privilege(current_user, current_database(), 'CREATE'),
                     pg_has_role(current_user, 'pg_read_all_data', 'member'),
                     pg_has_role(current_user, 'pg_write_all_data', 'member'),
+                    pg_has_role(current_user, 'pg_read_server_files', 'member'),
+                    pg_has_role(current_user, 'pg_write_server_files', 'member'),
+                    pg_has_role(current_user, 'pg_execute_server_program', 'member'),
+                    EXISTS (
+                        SELECT 1 FROM pg_roles r
+                        WHERE (r.rolsuper OR r.rolcreatedb OR r.rolcreaterole
+                               OR r.rolreplication OR r.rolbypassrls)
+                          AND pg_has_role(current_user, r.oid, 'SET')
+                    ),
                     has_table_privilege(current_user, 'public.gateway_evidence', 'SELECT'),
                     has_table_privilege(current_user, 'public.gateway_evidence', 'INSERT'),
-                    has_table_privilege(current_user, 'public.gateway_evidence', 'UPDATE'),
+                    has_any_column_privilege(current_user, 'public.gateway_evidence', 'UPDATE'),
                     has_table_privilege(current_user, 'public.gateway_evidence', 'DELETE'),
                     has_table_privilege(current_user, 'public.gateway_evidence', 'TRUNCATE'),
-                    has_table_privilege(current_user, 'public.gateway_evidence', 'TRIGGER')
+                    has_table_privilege(current_user, 'public.gateway_evidence', 'TRIGGER'),
+                    has_sequence_privilege(current_user,
+                        'public.gateway_evidence_seq_seq', 'USAGE'),
+                    has_sequence_privilege(current_user,
+                        'public.gateway_evidence_seq_seq', 'UPDATE'),
+                    has_sequence_privilege(current_user,
+                        'public.gateway_evidence_seq_seq', 'SELECT')
             """)
             (privileged, create_schema, create_database, broad_read, broad_write,
-             can_select, can_insert, can_update, can_delete, can_truncate, can_trigger) = cur.fetchone()
+             server_read, server_write, server_execute, set_privileged,
+             can_select, can_insert, can_update, can_delete, can_truncate,
+             can_trigger, seq_usage, seq_update, seq_select) = cur.fetchone()
             if not can_select or any((privileged, create_schema, create_database,
-                                     broad_read, broad_write, can_insert, can_update,
-                                     can_delete, can_truncate, can_trigger)):
+                                     broad_read, broad_write, server_read, server_write,
+                                     server_execute, set_privileged, can_insert, can_update,
+                                     can_delete, can_truncate, can_trigger,
+                                     seq_usage, seq_update, seq_select)):
                 raise EvidenceIntegrityError("AUDIT_ROLE_NOT_READONLY")
             cur.execute("SELECT count(*) FROM public.gateway_evidence")
             total = cur.fetchone()[0]

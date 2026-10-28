@@ -116,3 +116,22 @@ def test_non_ascii_bearer_fails_with_401_not_500():
     client = TestClient(create_app(CFG, FakeLedger()))
     res = client.post("/v1/intents", json=intent(), headers={b"authorization": b"Bearer caf\xe9"})
     assert res.status_code == 401
+
+
+
+def test_untrusted_exception_text_never_leaks_credentials(caplog):
+    class LeakingLedger(FakeLedger):
+        def ready(self):
+            raise RuntimeError(f"private {CFG.database_url} {KEY}")
+
+        def record_denial(self, entry, issuer):
+            raise RuntimeError(f"private {CFG.database_url} {KEY}")
+
+    client = TestClient(create_app(CFG, LeakingLedger()))
+    assert client.get("/readyz").status_code == 503
+    assert client.post(
+        "/v1/intents", json=intent(), headers={"Authorization": f"Bearer {KEY}"}
+    ).status_code == 503
+    assert CFG.database_url not in caplog.text
+    assert KEY not in caplog.text
+    assert "RuntimeError" in caplog.text

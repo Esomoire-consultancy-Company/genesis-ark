@@ -32,7 +32,9 @@ Create a PostgreSQL service **in a staging Railway environment**, with a
 separate migration role and restricted runtime role. Apply:
 
 ```bash
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/001_gateway_evidence.sql
+psql "$GENESIS_MIGRATION_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 \
+  -f migrations/001_gateway_evidence.sql \
+  -f migrations/002_gateway_evidence_hardening.sql
 ```
 
 The runtime database user must be restricted to SELECT and INSERT for the
@@ -86,7 +88,8 @@ python -m pip install -r requirements.txt
 python -m genesis_gateway.provision
 ```
 
-The bootstrap creates `gateway_evidence` and grants the new runtime role
+The bootstrap applies the base and the R0.2 hardening migrations, then creates
+`gateway_evidence` privileges for the new runtime role
 only schema usage, table SELECT/INSERT, and evidence sequence USAGE. It rejects
 pre-existing role names; it does not alter an existing role or grant UPDATE/
 DELETE/DDL. Provision a new secret for the app and attach a runtime-role
@@ -116,5 +119,13 @@ green image build alone.
    is not externally witnessed, tamper-proof, or the RiverOS canonical ledger.
 4. The DB migration is manual, and application roles/backup policies must be
    configured by an operator. Run migrations before treating `/readyz` as ready.
-5. No frontend, execution adapters, settlement, or federation endpoints are
+5. New unique intents are limited to 60/minute and 100,000 total local spool
+   rows, with exact idempotent replay preserved. These controls are not edge
+   protection, volume monitoring, retention or independent witnessing.
+6. The hardening migration uses single-genesis and unique-predecessor indexes
+   plus mutation-denial triggers; privileged database owners still require
+   independent monitoring, backups and external witness anchoring.
+7. The provisioning SQL stores a salted SCRAM verifier, not the plaintext
+   runtime password. Restrict SQL log access; verifiers are still sensitive.
+8. No frontend, execution adapters, settlement, or federation endpoints are
    enabled. No production cutover is authorized by this scaffold.
