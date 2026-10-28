@@ -27,7 +27,7 @@ def scram_verifier(password: str) -> str:
     Only printable ASCII is supported here: non-ASCII requires SASLprep, which
     this constrained one-shot provisioner deliberately does not implement.
     """
-    if not password or any(not 33 <= ord(char) <= 126 for char in password):
+    if not password or any(not 32 <= ord(char) <= 126 for char in password):
         raise ValueError("UNSUPPORTED_RUNTIME_PASSWORD_CHARACTERS")
     salt = secrets.token_bytes(16)
     salted = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 4096)

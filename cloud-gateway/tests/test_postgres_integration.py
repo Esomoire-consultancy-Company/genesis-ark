@@ -416,3 +416,13 @@ def test_scram_verifier_rejects_unicode_passwords():
     from genesis_gateway.provision import scram_verifier
     with pytest.raises(ValueError, match="UNSUPPORTED_RUNTIME_PASSWORD_CHARACTERS"):
         scram_verifier("anything-not-ascii-\u00e9")
+
+
+def test_scram_verifier_allows_printable_ascii_spaces():
+    from genesis_gateway.provision import scram_verifier
+
+    spaced = "ci test password with spaces 0123456789"
+    verifier = scram_verifier(spaced)
+    assert verifier.startswith("SCRAM-SHA-256$4096:")
+    assert spaced not in verifier
+    assert verifier != scram_verifier(spaced)  # Independent random salts.
