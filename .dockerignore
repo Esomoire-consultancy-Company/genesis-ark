@@ -1,0 +1,8 @@
+**
+!Dockerfile
+!gateway/
+!gateway/nginx.conf
+!gateway/index.html
+!gateway/portal.js
+!gateway/styles.css
+!gateway/favicon.svg
