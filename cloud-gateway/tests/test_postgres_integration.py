@@ -200,7 +200,16 @@ def test_independent_auditor_rejects_overprivileged_roles(provisioned):
             sql.Identifier(name), sql.Literal(scram_verifier(password))))
         cur.execute(sql.SQL("GRANT USAGE ON SCHEMA public TO {}").format(sql.Identifier(name)))
         cur.execute(sql.SQL("GRANT SELECT ON TABLE public.gateway_evidence TO {}").format(sql.Identifier(name)))
-    auditor = make_conninfo(admin, user=name, password=password)
+    # The verifier deliberately accepts only PostgreSQL URI DSNs, unlike
+    # psycopg.connect(), which also accepts libpq keyword-style DSNs.
+    from urllib.parse import quote
+    from psycopg.conninfo import conninfo_to_dict
+    params = conninfo_to_dict(admin)
+    auditor = (
+        f"postgresql://{quote(name)}:{quote(password)}@"
+        f"{params.get('host', '127.0.0.1')}:{params.get('port', '5432')}/"
+        f"{quote(params.get('dbname', 'postgres'))}"
+    )
     try:
         with pytest.raises(EvidenceIntegrityError, match="AUDIT_ROLE_NOT_READONLY"):
             verify_database(admin)
