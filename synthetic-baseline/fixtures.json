@@ -127,7 +127,7 @@
   ],
   "representations": [
     {
-      "id": "SYN-REP-REP-01",
+      "id": "SYN-REP-01",
       "actor_id": "SYN-ACTOR-REP-01",
       "node_id": "SYN-ORG-BNR-01",
       "state": "ACTIVE",
