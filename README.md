@@ -21,11 +21,11 @@ The Genesis ecosystem is easier to understand when you can explore it through th
 **Try the experience locally:**
 
 ```sh
-python -m http.server 8080 --directory gateway
+python3 -m http.server 8080 --directory gateway
 # Visit http://localhost:8080
 ```
 
-The Gateway lives in `gateway/` and remains an **undepoyed static prototype** until a separately authorised preview release. No live authentication, membership provisioning or privileged execution is available from that interface.
+The Gateway lives in `gateway/` and remains an **undeployed static prototype** until a separately authorised preview release. No live authentication, membership provisioning or privileged execution is available from that interface.
 
 ## Explore the engineering stack
 
@@ -107,7 +107,7 @@ Do not infer deployment state from a feature name or documentation title. Claims
 To run the gateway checks:
 
 ```sh
-python gateway/check.py
+python3 gateway/check.py
 node --check gateway/portal.js
 ```
 
