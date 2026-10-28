@@ -42,7 +42,7 @@ BEGIN
     RAISE EXCEPTION 'GATEWAY_EVIDENCE_DEFAULTS_MISMATCH';
   END IF;
 END
-$;
+$$;
 
 -- Preserve an append-only single chain, including its null predecessor.
 CREATE UNIQUE INDEX IF NOT EXISTS gateway_evidence_prev_unique_r02
