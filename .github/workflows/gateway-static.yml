@@ -31,3 +31,13 @@ jobs:
         run: python3 -m unittest discover -s gateway -p 'test_*.py'
       - name: Static assets and guardrails
         run: python3 gateway/check.py
+      - name: Chromium visual and keyboard smoke tests
+        run: python3 gateway/browser_smoke.py
+      - name: Upload browser screenshots for review
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: gateway-browser-qa
+          path: gateway-qa/screenshots/*.png
+          if-no-files-found: ignore
+          retention-days: 7
