@@ -17,7 +17,7 @@ from typing import Any, Mapping
 
 from genesis_control_plane.canonical import canonical_json, sha256_hex
 from genesis_control_plane.evidence import EvidenceJournal, EvidenceReceipt
-from genesis_control_plane.work_capture import accept_packet
+from genesis_control_plane.work_capture import accept_packet, verify_capture_envelope
 from genesis_control_plane.work_evidence import validate_payload
 
 _AUDIENCE = "genesis-work-intake-alpha"
@@ -163,6 +163,8 @@ class WorkIntakeWarden:
             raise AdmissionDenied("WARDEN_PAYLOAD_DENIED")
         if payload.get("work_id") != grant.work_id:
             raise AdmissionDenied("WARDEN_WORKSTREAM_DENIED")
+        if payload.get("tenant_id") != claims["tenant_id"]:
+            raise AdmissionDenied("WARDEN_TENANT_BINDING_DENIED")
         try:
             validate_payload(packet["kind"], payload)
         except (ValueError, TypeError) as exc:
@@ -236,6 +238,13 @@ class WorkIntakeGateway:
         now = now or datetime.now(timezone.utc)
         claims = verify_local_session(session_token, self.identity_signing_key, now=now)
         self.warden.authorize(claims=claims, packet=packet, now=now)
+        try:
+            verify_capture_envelope(
+                packet, key=self.source_signing_key, expected_station_id=claims["station_id"],
+                expected_principal_id=claims["principal_id"], expected_source=claims["source"], now=now,
+            )
+        except (ValueError, TypeError, KeyError) as exc:
+            raise AdmissionDenied("GATEWAY_SOURCE_PACKET_DENIED") from exc
         capture_id = _check_id(packet["payload"].get("capture_id"), "GATEWAY_CAPTURE_ID_REQUIRED")
         key = (claims["tenant_id"], claims["source"], capture_id)
         fingerprint = self._fingerprint(packet)
@@ -300,8 +309,14 @@ class WorkIntakeGateway:
         with sqlite3.connect(self.ledger_path, timeout=10) as conn:
             rows = conn.execute("SELECT tenant_id, source, capture_id, work_id, event_id, record_hash FROM accepted_work").fetchall()
         missing_receipts = []
+        event_records = {r["event"]["event_id"]: r["event"] for r in records}
         for tenant, source, capture, work, event, expected_hash in rows:
-            if event_hashes.get(event) != expected_hash:
+            stored = event_records.get(event, {})
+            payload = stored.get("payload", {})
+            if (event_hashes.get(event) != expected_hash or
+                stored.get("source") != source or
+                not isinstance(payload, dict) or payload.get("tenant_id") != tenant or
+                payload.get("work_id") != work or payload.get("capture_id") != capture):
                 missing_receipts.append({"tenant_id": tenant, "capture_id": capture, "work_id": work})
         recorded = {(source, capture, event) for _, source, capture, _, event, _ in rows}
         unindexed = []
