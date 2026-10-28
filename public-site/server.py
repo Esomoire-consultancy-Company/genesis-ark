@@ -58,7 +58,7 @@ PAGES = {
             <div><span>02</span><div><h2>Validate</h2><p>Check sources, approval status and whether the claim refers to a proposal, an implementation, a passing test or an operational deployment.</p></div></div>
             <div><span>03</span><div><h2>Publish responsibly</h2><p>Expose only approved metadata. Protected content, member workspaces and credentials require separate authenticated channels.</p></div></div>
             <div><span>04</span><div><h2>Maintain continuity</h2><p>Recheck evidence, mark superseded records, and preserve revision history without silently replacing the source of truth.</p></div></div>
-        </div><div class="link-panel"><div><span class="overline">SOURCE DOCUMENT</span><h2>Knowledge Hub Proxy blueprint</h2><p>Reference architecture in the genesis-ark repository; not a claim of live federation.</p></div><a class="outline-link" href="https://github.com/Esomoire-consultancy-Company/genesis-ark/blob/main/docs/knowledge-hub-proxy.md" rel="noopener noreferrer">Read source document ↗</a></div>"""
+        </div><div class="link-panel"><div><span class="overline">SOURCE DOCUMENT</span><h2>Knowledge Hub Proxy blueprint</h2><p>Reference architecture in the genesis-ark repository; not a claim of live federation.</p></div><a class="outline-link" href="https://github.com/Esomoire-consultancy-Company/genesis-ark/blob/9060824c202f8a020d2565db5db0b256602617b4/docs/knowledge-hub-proxy.md" rel="noopener noreferrer">Read source document ↗</a></div>"""
     },
     "/evidence": {
         "label": "TRACEABILITY · RECEIPTS",
