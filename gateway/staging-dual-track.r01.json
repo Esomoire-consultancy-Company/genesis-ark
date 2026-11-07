@@ -57,11 +57,32 @@
     "provider_settings_changed": false,
     "ready_when": [
       "Owner identifies actual authorized public preview surface",
-      "External GET and headers checked without login or writes",
+      "External GET confirmed for both public landing pages; header analysis remains incomplete",
       "Routes, source commit, and privacy statement match accepted preview purpose",
       "No private backend or customer information exposed",
       "Owner records region, ingress, resource, retention and billing review"
-    ]
+    ],
+    "http_verification": {
+      "verified_at": "2026-11-07",
+      "method": "READ_ONLY_PUBLIC_CLOUD_BROWSER",
+      "living_gateway": {
+        "url": "https://genesis-living-gateway-preview-r01-staging.up.railway.app/",
+        "http_status": 200,
+        "title": "Genesis ARK — The Living Gateway",
+        "visible_heading": "A network of possibility. A system of trust.",
+        "login_required": false
+      },
+      "public_site": {
+        "url": "https://genesis-public-site-preview-staging.up.railway.app/",
+        "http_status": 200,
+        "title": "Overview — Genesis ARK",
+        "visible_heading": "Network control for the physical and digital world.",
+        "login_required": false
+      },
+      "scope": "PUBLIC_LANDING_PAGE_ONLY",
+      "private_gateway_or_database_inspected": false,
+      "cross_host_authorization_verified": false
+    }
   },
   "new_static_target": {
     "track": "B_INDEPENDENT",
@@ -90,7 +111,23 @@
       "No private volume or privileged environment variables are attached",
       "Independent domain/TLS, content and fail-closed inspection passes",
       "Rollback/shutdown path documented"
-    ]
+    ],
+    "staging_acceptance_plan": {
+      "provisioning_decision": "NOT_YET_AUTHORIZED",
+      "reuse_preferred": "YES_UNTIL_GENUINE_ISOLATION_NEED_ESTABLISHED",
+      "single_authorized_candidate": "GENESIS_STATIC_PREVIEW_IMAGE",
+      "provider_target_status": "NOT_CREATED",
+      "change_window": "NOT_BOOKED",
+      "financial_cap": "NOT_APPROVED",
+      "acceptance_checks": [
+        "Owner-approved isolated ingress and data-residency",
+        "Explicit opt-in only in assigned preview environment",
+        "GET /healthz passes and index is publicly readable only when authorized",
+        "No control-plane, scripts, database or security-internal paths are served",
+        "No Warden/Registry/RiverOS or payment permissions",
+        "Rollback and shutdown rehearsed with RiverOS receipt only if independently implemented"
+      ]
+    }
   },
   "cost_control": {
     "existing_stage_keep_unmodified": true,
