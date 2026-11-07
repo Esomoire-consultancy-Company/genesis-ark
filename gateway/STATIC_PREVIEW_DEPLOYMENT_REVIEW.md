@@ -55,3 +55,21 @@ This is a suggested local command, **not a claim it was run**. A provider deploy
 7. Keep VSR issue [#221](https://github.com/Esomoire-consultancy-Company/virtual-silk-road-platform/issues/221) separately blocked for real DigitalMe Recovery/Warden authorization. Nothing in this static preview touches those RPCs.
 
 **Release decision: BUILD/TEST REVIEW ONLY. NO CLOUD DEPLOYMENT, DNS, CREDENTIAL, CUSTOMER OR BILLING CHANGE.**
+
+
+## Dual-track acceptance decision — preserve both
+
+The user has selected **both** controlled paths. A machine-readable, evidence-labelled agreement is recorded in `gateway/staging-dual-track.r01.json` and guarded by `gateway/test_staging_dual_track.py`.
+
+**Track A / reuse:** Keep the existing `genesis-ark-gateway-staging` environment unchanged, with four currently online Railway services: `genesis-living-gateway-preview-r01`, `genesis-public-site-preview`, private `genesis-cloud-gateway-r01`, and private Postgres. A read-only external browser checked the two published preview landing pages on **7 November 2026** and observed HTTP 200, with no login. The observed public URLs were:
+
+- `https://genesis-living-gateway-preview-r01-staging.up.railway.app/` — Living Gateway, title `Genesis ARK — The Living Gateway`.
+- `https://genesis-public-site-preview-staging.up.railway.app/` — public site, title `Overview — Genesis ARK`.
+
+This confirms reachability of the public landing pages only. It does not grant or verify private gateway, database, VSR identity or Warden permissions; HTTP header and accessibility end-to-end acceptance remains separate from this observation.
+
+**Track B / independent static container:** Retain this PR's standalone, non-root, default-off image as an independently testable release candidate. CI building it does not mean a second Railway service exists. Before creating a provider target, the accountable operator must choose an isolated review environment, sign off its incremental billing cap, ingress restrictions and shutdown procedure, and confirm that existing staging assets cannot fulfil the same test requirement. No deployment, external domain, environment variable or paid resource was created as part of this decision.
+
+**Reconciliation:** The public previews and independent image may coexist as **one operating reference + one separately versioned candidate**. They are not interchangeable evidence of production maturity. Both remain excluded from privileged control-plane execution; neither adds customer/merchant access. Keep the old `zoological-recreation` failed CLI deployment untouched until its actual owner approves its disposition.
+
+**Decision:** BOTH TRACKS SELECTED FOR ENGINEERING REVIEW. TRACK A ONLINE AND PUBLIC LANDING PAGES VERIFIED. TRACK B CODE AND CONTAINER CI QUALIFIED ONLY. REAL SERVICE CREATION / RELEASE HOLD.
