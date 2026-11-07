@@ -1,0 +1,148 @@
+{
+  "schema_version": "GENESIS-GATEWAY-DUAL-TRACK-R0.1",
+  "captured_at": "2026-11-07",
+  "decision": "BOTH_TRACKS_SELECTED_FOR_CONTROLLED_ENGINEERING_REVIEW",
+  "authority_status": "NO_CLOUD_DEPLOYMENT_OR_FINANCIAL_APPROVAL_IN_THIS_RECORD",
+  "release_gate": "HOLD",
+  "original_railway_service": "zoological-recreation/genesis-ark",
+  "existing_staging": {
+    "track": "A_REUSE",
+    "mode": "READ_ONLY_DISCOVERY_AND_EXISTING_WORKLOAD_REUSE",
+    "project_id": "8726797b-7388-4de2-92ce-def1d0e608cd",
+    "project_name": "genesis-ark-gateway-staging",
+    "environment_id": "8b94b23c-cf29-4daa-a121-56bd196ba89a",
+    "environment": "staging",
+    "region_observed": "us-east4-eqdc4a",
+    "observed_services": [
+      {
+        "id": "2e974f4f-99f4-4a9f-97f5-0b5d933bb6cc",
+        "name": "genesis-living-gateway-preview-r01",
+        "state": "online",
+        "source_branch": "preview/genesis-living-gateway-staging-r01",
+        "public_domain": "genesis-living-gateway-preview-r01-staging.up.railway.app",
+        "port": 8080,
+        "purpose": "existing static/exploration preview"
+      },
+      {
+        "id": "bf2f1b95-66f8-4f96-8f8b-c80ef18a0fab",
+        "name": "genesis-public-site-preview",
+        "state": "online",
+        "source_branch": "feat/genesis-digital-physical-r01",
+        "public_domain": "genesis-public-site-preview-staging.up.railway.app",
+        "port": 8080,
+        "purpose": "existing site preview"
+      },
+      {
+        "id": "122d4054-e775-47bf-bfc8-08d652883e01",
+        "name": "genesis-cloud-gateway-r01",
+        "state": "online",
+        "source_branch": "feat/genesis-ark-cloud-gateway-r01",
+        "public_domain": null,
+        "port": null,
+        "purpose": "private gateway; must not bridge to public prototype"
+      },
+      {
+        "id": "f1968286-aad1-429e-9aad-8741f11dcae4",
+        "name": "Postgres",
+        "state": "online",
+        "source_branch": null,
+        "public_domain": null,
+        "port": null,
+        "purpose": "private database; must not be connected to static preview"
+      }
+    ],
+    "static_preview_customer_data_allowed": false,
+    "privileged_gateway_interface_allowed": false,
+    "automatic_rollout": false,
+    "provider_settings_changed": false,
+    "ready_when": [
+      "Owner identifies actual authorized public preview surface",
+      "External GET confirmed for both public landing pages; header analysis remains incomplete",
+      "Routes, source commit, and privacy statement match accepted preview purpose",
+      "No private backend or customer information exposed",
+      "Owner records region, ingress, resource, retention and billing review"
+    ],
+    "http_verification": {
+      "verified_at": "2026-11-07",
+      "method": "READ_ONLY_PUBLIC_CLOUD_BROWSER",
+      "living_gateway": {
+        "url": "https://genesis-living-gateway-preview-r01-staging.up.railway.app/",
+        "http_status": 200,
+        "title": "Genesis ARK — The Living Gateway",
+        "visible_heading": "A network of possibility. A system of trust.",
+        "login_required": false
+      },
+      "public_site": {
+        "url": "https://genesis-public-site-preview-staging.up.railway.app/",
+        "http_status": 200,
+        "title": "Overview — Genesis ARK",
+        "visible_heading": "Network control for the physical and digital world.",
+        "login_required": false
+      },
+      "scope": "PUBLIC_LANDING_PAGE_ONLY",
+      "private_gateway_or_database_inspected": false,
+      "cross_host_authorization_verified": false
+    }
+  },
+  "new_static_target": {
+    "track": "B_INDEPENDENT",
+    "mode": "CI_IMAGE_BUILD_AND_DISPOSABLE_ACCEPTANCE_CANDIDATE",
+    "source_branch": "review/genesis-static-gateway-railway-target-r01-20261107",
+    "dockerfile": "gateway/Dockerfile.preview",
+    "docker_context": "gateway",
+    "server": "gateway/preview_server.py",
+    "tests": "gateway/test_preview_server.py",
+    "environment_exists": false,
+    "provisioned": false,
+    "deployed": false,
+    "dns_or_domain_changed": false,
+    "port": 8080,
+    "required_opt_in": "GENESIS_STATIC_PREVIEW_ENABLE=true",
+    "default_start": "HOLD_EXIT_78",
+    "secret_requirement": "NONE",
+    "registry_access": false,
+    "warden_capability": false,
+    "river_connection": false,
+    "commercial_rights": false,
+    "ready_when": [
+      "CI image and isolation tests pass",
+      "Separate preview target and cost cap approved before provisioning",
+      "Owner selects isolated region and ingress policy",
+      "No private volume or privileged environment variables are attached",
+      "Independent domain/TLS, content and fail-closed inspection passes",
+      "Rollback/shutdown path documented"
+    ],
+    "staging_acceptance_plan": {
+      "provisioning_decision": "NOT_YET_AUTHORIZED",
+      "reuse_preferred": "YES_UNTIL_GENUINE_ISOLATION_NEED_ESTABLISHED",
+      "single_authorized_candidate": "GENESIS_STATIC_PREVIEW_IMAGE",
+      "provider_target_status": "NOT_CREATED",
+      "change_window": "NOT_BOOKED",
+      "financial_cap": "NOT_APPROVED",
+      "acceptance_checks": [
+        "Owner-approved isolated ingress and data-residency",
+        "Explicit opt-in only in assigned preview environment",
+        "GET /healthz passes and index is publicly readable only when authorized",
+        "No control-plane, scripts, database or security-internal paths are served",
+        "No Warden/Registry/RiverOS or payment permissions",
+        "Rollback and shutdown rehearsed with RiverOS receipt only if independently implemented"
+      ]
+    }
+  },
+  "cost_control": {
+    "existing_stage_keep_unmodified": true,
+    "new_service_cost": "NOT_QUOTED",
+    "no_duplicate_gateway_or_postgres": true,
+    "creation_approval": "REQUIRED",
+    "data_region_acceptance": "REQUIRED"
+  },
+  "conflicts": [
+    "The CLI control-plane is not a server or public endpoint",
+    "Do not replace the already-running gateway with the preview image",
+    "Do not route static preview to private gateway or PostgreSQL",
+    "Railway health does not establish HTTP availability or release authority",
+    "Two preview tracks are complementary, not two production sites"
+  ],
+  "staging_decision": "REVIEW_ONLY_NOT_PRODUCTION",
+  "human_release_authorization": false
+}
