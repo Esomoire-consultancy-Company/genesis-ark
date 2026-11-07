@@ -1,0 +1,8 @@
+# Build context must be exactly gateway/; never send control-plane or repository root.
+*
+!Dockerfile.preview
+!index.html
+!styles.css
+!portal.js
+!favicon.svg
+!preview_server.py
