@@ -1,0 +1,71 @@
+name: Genesis Lobby - Sprint-0 Mock Regression
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/genesis-lobby-regression.yml'
+      - 'scripts/run-genesis-lobby.sh'
+  pull_request:
+    paths:
+      - '.github/workflows/genesis-lobby-regression.yml'
+      - 'scripts/run-genesis-lobby.sh'
+      - 'docs/ci/genesis-lobby-sprint0.md'
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: genesis-lobby-ci-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  syntax:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check runner syntax (no credentials)
+        run: bash -n scripts/run-genesis-lobby.sh
+
+  regression:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      vars.GENESIS_LOBBY_CI_ENABLED == 'true' &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+      POSTMAN_COLLECTION_ID: ${{ vars.POSTMAN_COLLECTION_ID }}
+      POSTMAN_SPRINT0_FOLDER_UID: ${{ vars.POSTMAN_SPRINT0_FOLDER_UID }}
+      POSTMAN_MOCK_URL: ${{ vars.POSTMAN_MOCK_URL }}
+      POSTMAN_MOCK_SESSION_ID: ci-genesis-lobby-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check required CI inputs
+        shell: bash
+        run: |
+          test -n "$POSTMAN_API_KEY" || { echo 'Missing POSTMAN_API_KEY secret'; exit 2; }
+          test -n "$POSTMAN_COLLECTION_ID" || { echo 'Missing POSTMAN_COLLECTION_ID variable'; exit 2; }
+          test -n "$POSTMAN_SPRINT0_FOLDER_UID" || { echo 'Missing POSTMAN_SPRINT0_FOLDER_UID variable'; exit 2; }
+          test -n "$POSTMAN_MOCK_URL" || { echo 'Missing POSTMAN_MOCK_URL variable'; exit 2; }
+          bash -n scripts/run-genesis-lobby.sh
+      - name: Install Postman CLI
+        uses: postmanlabs/postman-cli-action@v1
+        with:
+          command: '--version'
+      - name: Execute isolated mock Sprint-0 regression
+        run: bash scripts/run-genesis-lobby.sh
+      - name: Archive JUnit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: genesis-lobby-junit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: results/genesis-lobby-junit.xml
+          if-no-files-found: warn
+          retention-days: 14
