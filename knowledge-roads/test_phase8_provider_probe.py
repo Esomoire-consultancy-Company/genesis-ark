@@ -50,7 +50,7 @@ class PreflightTests(unittest.TestCase):
     def setUp(self):
         self.keys = {role: Ed25519PrivateKey.generate() for role in ROLES}
         self.providers = {
-            role: Provider(role, f"https://{role.lower()}.staging.example.org{PATH}",
+            role: Provider(role, f"https://{role.lower().replace('_', '-')}.staging.example.org{PATH}",
                            role.lower() + "-key", role.lower() + ".issuer")
             for role in ROLES
         }
@@ -59,7 +59,7 @@ class PreflightTests(unittest.TestCase):
             (role, self.providers[role].key_id): self.keys[role].public_key()
             for role in ROLES
         }
-        self.hosts = frozenset(f"{role.lower()}.staging.example.org" for role in ROLES)
+        self.hosts = frozenset(f"{role.lower().replace('_', '-')}.staging.example.org" for role in ROLES)
 
     def probe(self, **overrides):
         params = dict(providers=self.providers, anchors=self.anchors,
