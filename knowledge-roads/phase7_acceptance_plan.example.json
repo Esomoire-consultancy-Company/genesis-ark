@@ -1,0 +1,18 @@
+{
+  "schema": "VSR-FOR-001-R0.7-ACCEPTANCE-PLAN",
+  "status": "EXAMPLE_ONLY_UNREGISTERED",
+  "notes": "Replace commit and route placeholders with their actual scoped hashes for fixture tests; this does not create live authority.",
+  "environment": "staging",
+  "action": "navigate.readonly",
+  "execute": false,
+  "mutation": false,
+  "promotion_requested": false,
+  "pilot_id": "PILOT-EXAMPLE-001",
+  "run_id": "RUN-EXAMPLE-001",
+  "station_id": "VSR-KS-ENGINEERING",
+  "estate_id": "ESTATE-EXAMPLE-NOT-REAL",
+  "purpose": "review-only-framework-navigation",
+  "commit_sha": "0000000000000000000000000000000000000000",
+  "route_digest": "0000000000000000000000000000000000000000000000000000000000000000",
+  "source_registry_status": "UNREGISTERED_PROPOSALS"
+}
