@@ -148,6 +148,12 @@ def evaluate(proposals: Mapping[str,Any], topology: Mapping[str,Any], dossier: M
             return stop('UNVERIFIED_QUALIFICATION_CLAIM')
         if r['origin_class'] in PRIMARY_CLASSES and (not author_credit or not urls):
             return stop('NAMED_PRIMARY_SOURCE_MISSING_CREDIT')
+        if r['origin_class'] in PRIMARY_CLASSES and (
+            not _txt(r.get('original_work_title'))
+            or not isinstance(r.get('publication_year'),int)
+            or isinstance(r.get('publication_year'),bool)
+            or not 1600 <= r['publication_year'] <= 2026):
+            return stop('ORIGINAL_PUBLICATION_METADATA_MISSING')
         if r['origin_class'] in INTERNAL_CLASSES and author_credit:
             return stop('INTERNAL_ORIGINATOR_UNATTESTED')
         if (urls and r['source_review_status']!='CITATION_IDENTIFIED_UNAUDITED'
