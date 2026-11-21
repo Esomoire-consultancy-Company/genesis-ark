@@ -1,0 +1,490 @@
+{
+  "manifest_id": "VSR-FOR-001-QUAL-R10",
+  "schema_version": "1.0",
+  "status": "SOURCE_AND_EDGE_REVIEW_ONLY",
+  "source_framework_manifest_id": "VSR-FOR-001-PHASE4-HANDOFF",
+  "source_edges_manifest_id": "VSR-FOR-001-EDGES-R0.9",
+  "reviewed_as_of": "2026-11-21",
+  "review_scope": "Metadata sources identified; no reviewer has certified origin, rights, applicability, links or execution.",
+  "object_count": 14,
+  "edge_count": 13,
+  "objects": [
+    {
+      "framework_id": "FOR-0001",
+      "origin_class": "EVOLVED_STRATEGY_METHOD",
+      "author_credit": [],
+      "source_urls": [
+        "https://books.google.com/books/about/Scanning_the_Business_Environment_Franci.html?id=0KkuwAEACAAJ",
+        "https://doi.org/10.1002/ev.20633"
+      ],
+      "attribution_note": "Aguilar 1967 provides an environmental-scanning precursor; do not assign sole authorship of the later PESTEL acronym.",
+      "applicability_conditions": [
+        "Use for structured external context across political, economic, social, technological, environmental and legal factors."
+      ],
+      "non_applicability": [
+        "Cannot replace jurisdiction-specific law, evidence or a financial feasibility model."
+      ],
+      "source_review_status": "CITATION_IDENTIFIED_UNAUDITED",
+      "original_attribution_approved": false,
+      "rights_review": "NOT_COMPLETED",
+      "technical_qualification": "NOT_COMPLETED",
+      "genesis_registration_authorized": false,
+      "execution_qualified": false,
+      "original_author_claim_type": "NO_SINGLE_ORIGINATOR_ASSERTED"
+    },
+    {
+      "framework_id": "FOR-0002",
+      "origin_class": "NAMED_MATHEMATICAL_THEOREM",
+      "author_credit": [
+        "Thomas Bayes"
+      ],
+      "source_urls": [
+        "https://www.jstor.org/stable/105741",
+        "https://plato.stanford.edu/entries/bayes-theorem/"
+      ],
+      "attribution_note": "Richard Price communicated Bayes's posthumously published work; later modern formulations developed further.",
+      "applicability_conditions": [
+        "Use when conditional probabilities, priors and likelihoods are defined and testable."
+      ],
+      "non_applicability": [
+        "Do not infer causal relationships or independently verified probabilities from a formula."
+      ],
+      "source_review_status": "CITATION_IDENTIFIED_UNAUDITED",
+      "original_attribution_approved": false,
+      "rights_review": "NOT_COMPLETED",
+      "technical_qualification": "NOT_COMPLETED",
+      "genesis_registration_authorized": false,
+      "execution_qualified": false,
+      "original_author_claim_type": "NAMED_CREDIT_NOT_OWNERSHIP"
+    },
+    {
+      "framework_id": "FOR-0003",
+      "origin_class": "GENERAL_RESEARCH_METHOD",
+      "author_credit": [],
+      "source_urls": [],
+      "attribution_note": "Historical comparison has no single canonical inventor in this record.",
+      "applicability_conditions": [
+        "Use only with documented comparability variables, dates and counterexamples."
+      ],
+      "non_applicability": [
+        "Analogies across settings do not establish causal transfer or investment success."
+      ],
+      "source_review_status": "SOURCE_IDENTIFICATION_REQUIRED",
+      "original_attribution_approved": false,
+      "rights_review": "NOT_COMPLETED",
+      "technical_qualification": "NOT_COMPLETED",
+      "genesis_registration_authorized": false,
+      "execution_qualified": false,
+      "original_author_claim_type": "NO_SINGLE_ORIGINATOR_ASSERTED"
+    },
+    {
+      "framework_id": "FOR-0004",
+      "origin_class": "GENERAL_FINANCIAL_METHOD",
+      "author_credit": [],
+      "source_urls": [],
+      "attribution_note": "NPV/discounted cash flow is a broad class of financial methods; original authorship unresolved.",
+      "applicability_conditions": [
+        "Use with dated cash flows, discount-rate basis and scenario sensitivity."
+      ],
+      "non_applicability": [
+        "Outputs depend on speculative inputs and are not transaction or investment approval."
+      ],
+      "source_review_status": "SOURCE_IDENTIFICATION_REQUIRED",
+      "original_attribution_approved": false,
+      "rights_review": "NOT_COMPLETED",
+      "technical_qualification": "NOT_COMPLETED",
+      "genesis_registration_authorized": false,
+      "execution_qualified": false,
+      "original_author_claim_type": "NO_SINGLE_ORIGINATOR_ASSERTED"
+    },
+    {
+      "framework_id": "FOR-0005",
+      "origin_class": "INTERNAL_WORKFLOW_PATTERN",
+      "author_credit": [],
+      "source_urls": [],
+      "attribution_note": "VSR working pattern. Human originator and dated internal design evidence not yet attested.",
+      "applicability_conditions": [
+        "Use as sequential separation of planning, independent checking and authorized approval."
+      ],
+      "non_applicability": [
+        "A role label is not a signed mandate, policy permission or independent reviewer."
+      ],
+      "source_review_status": "SOURCE_IDENTIFICATION_REQUIRED",
+      "original_attribution_approved": false,
+      "rights_review": "NOT_COMPLETED",
+      "technical_qualification": "NOT_COMPLETED",
+      "genesis_registration_authorized": false,
+      "execution_qualified": false,
+      "original_author_claim_type": "NO_SINGLE_ORIGINATOR_ASSERTED"
+    },
+    {
+      "framework_id": "FOR-0006",
+      "origin_class": "INTERNAL_CHANGE_WORKFLOW",
+      "author_credit": [],
+      "source_urls": [],
+      "attribution_note": "VSR change-scoped methodology; provenance and originator evidence pending.",
+      "applicability_conditions": [
+        "Use sensing and relevance evaluation before matching a change to qualified evidence."
+      ],
+      "non_applicability": [
+        "Must not be mistaken for universal sensing or substitute for all River evidence."
+      ],
+      "source_review_status": "SOURCE_IDENTIFICATION_REQUIRED",
+      "original_attribution_approved": false,
+      "rights_review": "NOT_COMPLETED",
+      "technical_qualification": "NOT_COMPLETED",
+      "genesis_registration_authorized": false,
+      "execution_qualified": false,
+      "original_author_claim_type": "NO_SINGLE_ORIGINATOR_ASSERTED"
+    },
+    {
+      "framework_id": "FOR-0007",
+      "origin_class": "GENERAL_CONSERVATION_PRINCIPLE",
+      "author_credit": [],
+      "source_urls": [],
+      "attribution_note": "Mass-conservation and balance methods have no single attributed author in this record.",
+      "applicability_conditions": [
+        "Use in clearly defined systems with calibrated input, output, inventory, losses and units."
+      ],
+      "non_applicability": [
+        "Measurement drift, refills, evaporation, waste and unobserved material invalidate naïve estimates."
+      ],
+      "source_review_status": "SOURCE_IDENTIFICATION_REQUIRED",
+      "original_attribution_approved": false,
+      "rights_review": "NOT_COMPLETED",
+      "technical_qualification": "NOT_COMPLETED",
+      "genesis_registration_authorized": false,
+      "execution_qualified": false,
+      "original_author_claim_type": "NO_SINGLE_ORIGINATOR_ASSERTED"
+    },
+    {
+      "framework_id": "FOR-0008",
+      "origin_class": "GENERAL_CONTROL_THEORY_CONCEPT",
+      "author_credit": [],
+      "source_urls": [
+        "https://doi.org/10.1115/1.3662552"
+      ],
+      "attribution_note": "Kalman's 1960 filtering paper is a relevant historical example, not sole invention of all state observers.",
+      "applicability_conditions": [
+        "Use with observable state model, sensor/noise assumptions and validated estimation error."
+      ],
+      "non_applicability": [
+        "Unobservable states or misspecified sensors do not become measured facts."
+      ],
+      "source_review_status": "CITATION_IDENTIFIED_UNAUDITED",
+      "original_attribution_approved": false,
+      "rights_review": "NOT_COMPLETED",
+      "technical_qualification": "NOT_COMPLETED",
+      "genesis_registration_authorized": false,
+      "execution_qualified": false,
+      "original_author_claim_type": "NO_SINGLE_ORIGINATOR_ASSERTED"
+    },
+    {
+      "framework_id": "FOR-0009",
+      "origin_class": "GENERAL_CONTROL_TECHNIQUE",
+      "author_credit": [],
+      "source_urls": [
+        "https://learn.mit.edu/c/unit/ocw?resource=5472"
+      ],
+      "attribution_note": "Feedback control is a long-established engineering discipline, not attributable to a single source here.",
+      "applicability_conditions": [
+        "Use with a controlled plant, feedback sensor, stable control law, sampling and constraints."
+      ],
+      "non_applicability": [
+        "No authority to actuate devices; instability, saturation and safety risks need engineering review."
+      ],
+      "source_review_status": "CITATION_IDENTIFIED_UNAUDITED",
+      "original_attribution_approved": false,
+      "rights_review": "NOT_COMPLETED",
+      "technical_qualification": "NOT_COMPLETED",
+      "genesis_registration_authorized": false,
+      "execution_qualified": false,
+      "original_author_claim_type": "NO_SINGLE_ORIGINATOR_ASSERTED"
+    },
+    {
+      "framework_id": "FOR-0010",
+      "origin_class": "PRIMARY_SCIENTIFIC_PUBLICATION",
+      "author_credit": [
+        "Albert Einstein",
+        "Boris Podolsky",
+        "Nathan Rosen"
+      ],
+      "source_urls": [
+        "https://doi.org/10.1103/PhysRev.47.777"
+      ],
+      "attribution_note": "1935 Physical Review paper; preserve original title and authors.",
+      "applicability_conditions": [
+        "Scholarly examination of quantum-theoretical completeness, locality and correlations."
+      ],
+      "non_applicability": [
+        "No claim of physical travel, classical faster-than-light messaging or executable infrastructure."
+      ],
+      "source_review_status": "CITATION_IDENTIFIED_UNAUDITED",
+      "original_attribution_approved": false,
+      "rights_review": "NOT_COMPLETED",
+      "technical_qualification": "NOT_COMPLETED",
+      "genesis_registration_authorized": false,
+      "execution_qualified": false,
+      "original_author_claim_type": "NAMED_CREDIT_NOT_OWNERSHIP"
+    },
+    {
+      "framework_id": "FOR-0011",
+      "origin_class": "PRIMARY_SCIENTIFIC_PUBLICATION",
+      "author_credit": [
+        "Veronika E. Hubeny",
+        "Mukund Rangamani",
+        "Tadashi Takayanagi"
+      ],
+      "source_urls": [
+        "https://arxiv.org/abs/0705.0016",
+        "https://doi.org/10.1088/1126-6708/2007/07/062"
+      ],
+      "attribution_note": "Covariant holographic entanglement entropy proposal (2007).",
+      "applicability_conditions": [
+        "Research on holographic entanglement in settings subject to the formalism's assumptions."
+      ],
+      "non_applicability": [
+        "Not an operational transport engine; not an automatic derivation from EPR."
+      ],
+      "source_review_status": "CITATION_IDENTIFIED_UNAUDITED",
+      "original_attribution_approved": false,
+      "rights_review": "NOT_COMPLETED",
+      "technical_qualification": "NOT_COMPLETED",
+      "genesis_registration_authorized": false,
+      "execution_qualified": false,
+      "original_author_claim_type": "NAMED_CREDIT_NOT_OWNERSHIP"
+    },
+    {
+      "framework_id": "FOR-0012",
+      "origin_class": "PRIMARY_SCIENTIFIC_PUBLICATION",
+      "author_credit": [
+        "Ping Gao",
+        "Daniel Louis Jafferis",
+        "Aron C. Wall"
+      ],
+      "source_urls": [
+        "https://arxiv.org/abs/1608.05687"
+      ],
+      "attribution_note": "2016 preprint on a specific double-trace-deformed holographic model; later journal publication.",
+      "applicability_conditions": [
+        "Theoretical study of traversability under specially specified model conditions."
+      ],
+      "non_applicability": [
+        "Not experimental transportation, a commercial wormhole, or a proof that HRT implies GJW."
+      ],
+      "source_review_status": "CITATION_IDENTIFIED_UNAUDITED",
+      "original_attribution_approved": false,
+      "rights_review": "NOT_COMPLETED",
+      "technical_qualification": "NOT_COMPLETED",
+      "genesis_registration_authorized": false,
+      "execution_qualified": false,
+      "original_author_claim_type": "NAMED_CREDIT_NOT_OWNERSHIP"
+    },
+    {
+      "framework_id": "FOR-0013",
+      "origin_class": "PRIMARY_SCIENTIFIC_PUBLICATION",
+      "author_credit": [
+        "Leslie Lamport",
+        "Robert Shostak",
+        "Marshall Pease"
+      ],
+      "source_urls": [
+        "https://www.microsoft.com/en-us/research/publication/byzantine-generals-problem/"
+      ],
+      "attribution_note": "ACM TOPLAS paper, July 1982.",
+      "applicability_conditions": [
+        "Reasoning about agreement under Byzantine faults and explicit system assumptions."
+      ],
+      "non_applicability": [
+        "Does not make an arbitrary network or Warden decision fault-tolerant without a protocol and threat model."
+      ],
+      "source_review_status": "CITATION_IDENTIFIED_UNAUDITED",
+      "original_attribution_approved": false,
+      "rights_review": "NOT_COMPLETED",
+      "technical_qualification": "NOT_COMPLETED",
+      "genesis_registration_authorized": false,
+      "execution_qualified": false,
+      "original_author_claim_type": "NAMED_CREDIT_NOT_OWNERSHIP"
+    },
+    {
+      "framework_id": "FOR-0014",
+      "origin_class": "GENERAL_MATHEMATICAL_CLASS",
+      "author_credit": [],
+      "source_urls": [
+        "https://ocw.mit.edu/courses/18-03sc-differential-equations-fall-2011/"
+      ],
+      "attribution_note": "Differential equations are a broad mathematical discipline with multiple historical contributors.",
+      "applicability_conditions": [
+        "Model rates of change with correctly defined variables, initial/boundary conditions and units."
+      ],
+      "non_applicability": [
+        "A solvable equation is not a calibrated prediction or an authorized physical controller."
+      ],
+      "source_review_status": "CITATION_IDENTIFIED_UNAUDITED",
+      "original_attribution_approved": false,
+      "rights_review": "NOT_COMPLETED",
+      "technical_qualification": "NOT_COMPLETED",
+      "genesis_registration_authorized": false,
+      "execution_qualified": false,
+      "original_author_claim_type": "NO_SINGLE_ORIGINATOR_ASSERTED"
+    }
+  ],
+  "edges": [
+    {
+      "edge_id": "VIL-01",
+      "relationship_class": "WORKFLOW_SEQUENCE",
+      "semantic_claim": "Environmental analysis can inform precedent selection.",
+      "review_condition": "Require explicit context comparison and documented case selection.",
+      "review_status": "UNQUALIFIED_PROPOSAL",
+      "scientific_derivation_claim": false,
+      "technical_review_completed": false,
+      "bridge_approved": false,
+      "auth_grant": false,
+      "engine_execution_allowed": false
+    },
+    {
+      "edge_id": "VIL-02",
+      "relationship_class": "WORKFLOW_SEQUENCE",
+      "semantic_claim": "Comparable cases may inform finance assumptions.",
+      "review_condition": "Require temporal and geographic adjustment, counterexamples and cash-flow sensitivity.",
+      "review_status": "UNQUALIFIED_PROPOSAL",
+      "scientific_derivation_claim": false,
+      "technical_review_completed": false,
+      "bridge_approved": false,
+      "auth_grant": false,
+      "engine_execution_allowed": false
+    },
+    {
+      "edge_id": "VIL-03",
+      "relationship_class": "GOVERNANCE_HANDOFF",
+      "semantic_claim": "Financial model is offered for independent checking and authorized approval.",
+      "review_condition": "Require distinct named accountable checker/approver and review packet.",
+      "review_status": "UNQUALIFIED_PROPOSAL",
+      "scientific_derivation_claim": false,
+      "technical_review_completed": false,
+      "bridge_approved": false,
+      "auth_grant": false,
+      "engine_execution_allowed": false
+    },
+    {
+      "edge_id": "VIL-04",
+      "relationship_class": "EVIDENCE_HANDOFF",
+      "semantic_claim": "An approval event is a possible input to a change-scoped evidence workflow.",
+      "review_condition": "Require actual qualified change event, not a fictitious automatic matching event.",
+      "review_status": "UNQUALIFIED_PROPOSAL",
+      "scientific_derivation_claim": false,
+      "technical_review_completed": false,
+      "bridge_approved": false,
+      "auth_grant": false,
+      "engine_execution_allowed": false
+    },
+    {
+      "edge_id": "BUF-01",
+      "relationship_class": "ENGINEERING_HANDOFF",
+      "semantic_claim": "State estimates are inputs to mass-balance reconciliation.",
+      "review_condition": "Require observable quantities, time basis, sensor calibration and mass units.",
+      "review_status": "UNQUALIFIED_PROPOSAL",
+      "scientific_derivation_claim": false,
+      "technical_review_completed": false,
+      "bridge_approved": false,
+      "auth_grant": false,
+      "engine_execution_allowed": false
+    },
+    {
+      "edge_id": "BUF-02",
+      "relationship_class": "ENGINEERING_HANDOFF",
+      "semantic_claim": "Material balance may indicate replenishment demand.",
+      "review_condition": "Require measurement uncertainty, evaporation/refill/waste discrimination and stable control assumptions.",
+      "review_status": "UNQUALIFIED_PROPOSAL",
+      "scientific_derivation_claim": false,
+      "technical_review_completed": false,
+      "bridge_approved": false,
+      "auth_grant": false,
+      "engine_execution_allowed": false
+    },
+    {
+      "edge_id": "BUF-03",
+      "relationship_class": "GOVERNANCE_HANDOFF",
+      "semantic_claim": "A control recommendation may require human authorization.",
+      "review_condition": "Require separate checker/approver and no device actuation without approved policy.",
+      "review_status": "UNQUALIFIED_PROPOSAL",
+      "scientific_derivation_claim": false,
+      "technical_review_completed": false,
+      "bridge_approved": false,
+      "auth_grant": false,
+      "engine_execution_allowed": false
+    },
+    {
+      "edge_id": "QNT-01",
+      "relationship_class": "PEDAGOGICAL_SEQUENCE_NOT_DERIVATION",
+      "semantic_claim": "EPR can introduce entanglement questions before studying HRT.",
+      "review_condition": "No implied derivation or universal equivalence of the papers' frameworks.",
+      "review_status": "UNQUALIFIED_PROPOSAL",
+      "scientific_derivation_claim": false,
+      "technical_review_completed": false,
+      "bridge_approved": false,
+      "auth_grant": false,
+      "engine_execution_allowed": false
+    },
+    {
+      "edge_id": "QNT-02",
+      "relationship_class": "PEDAGOGICAL_SEQUENCE_NOT_DERIVATION",
+      "semantic_claim": "HRT may precede study of GJW in a graduate research journey.",
+      "review_condition": "No implied causal mechanism or physical transit between the cited constructions.",
+      "review_status": "UNQUALIFIED_PROPOSAL",
+      "scientific_derivation_claim": false,
+      "technical_review_completed": false,
+      "bridge_approved": false,
+      "auth_grant": false,
+      "engine_execution_allowed": false
+    },
+    {
+      "edge_id": "QNT-03",
+      "relationship_class": "GOVERNANCE_HANDOFF",
+      "semantic_claim": "Research discussion may enter a bounded human review process.",
+      "review_condition": "No quantum-to-governance theorem, physical device or engine capability.",
+      "review_status": "UNQUALIFIED_PROPOSAL",
+      "scientific_derivation_claim": false,
+      "technical_review_completed": false,
+      "bridge_approved": false,
+      "auth_grant": false,
+      "engine_execution_allowed": false
+    },
+    {
+      "edge_id": "DST-01",
+      "relationship_class": "CROSS_DOMAIN_ANALOGY",
+      "semantic_claim": "Distributed agreement considerations may inform design of supervised control systems.",
+      "review_condition": "Different models; Byzantine agreement is not a feedback-control theorem.",
+      "review_status": "UNQUALIFIED_PROPOSAL",
+      "scientific_derivation_claim": false,
+      "technical_review_completed": false,
+      "bridge_approved": false,
+      "auth_grant": false,
+      "engine_execution_allowed": false
+    },
+    {
+      "edge_id": "ALT-01",
+      "relationship_class": "CROSS_DOMAIN_ANALOGY",
+      "semantic_claim": "Macro-environmental factors may influence control objectives in planning.",
+      "review_condition": "Not a validated automatic PESTEL-to-control transform.",
+      "review_status": "UNQUALIFIED_PROPOSAL",
+      "scientific_derivation_claim": false,
+      "technical_review_completed": false,
+      "bridge_approved": false,
+      "auth_grant": false,
+      "engine_execution_allowed": false
+    },
+    {
+      "edge_id": "ALT-02",
+      "relationship_class": "ENGINEERING_HANDOFF",
+      "semantic_claim": "Feedback results may be sensed and evaluated under scoped change management.",
+      "review_condition": "Require evidence contract, data provenance and actual changed state.",
+      "review_status": "UNQUALIFIED_PROPOSAL",
+      "scientific_derivation_claim": false,
+      "technical_review_completed": false,
+      "bridge_approved": false,
+      "auth_grant": false,
+      "engine_execution_allowed": false
+    }
+  ]
+}
