@@ -1,0 +1,302 @@
+{
+  "manifest_id": "VSR-FOR-001-PHASE4-HANDOFF",
+  "schema_version": "0.4.0",
+  "status": "PROPOSAL_ONLY_NOT_REGISTERED",
+  "registration_count": 0,
+  "required_external_registrar": "AUTHORIZED_GENESIS_FRAMEWORK_REGISTRAR",
+  "registration_action_requested": false,
+  "objects": [
+    {
+      "source_framework_id": "FOR-0001",
+      "proposed_genesis_object_id": "urn:genesis:framework:FOR-0001:v0.1.0",
+      "canonical_name": "PESTEL analysis",
+      "framework_version": "0.1.0",
+      "knowledge_station_ids": [
+        "VSR-KS-PLANNING",
+        "VSR-KS-GOVERNANCE"
+      ],
+      "transport_roles": [
+        "road",
+        "navigation"
+      ],
+      "registration_state": "PROPOSED_LOCAL_ONLY",
+      "external_registry_id": null,
+      "attestation_ref": null,
+      "source_ref": null,
+      "engine_qualification": "NONE",
+      "engine_execution_authorized": false,
+      "authority_grant": false
+    },
+    {
+      "source_framework_id": "FOR-0002",
+      "proposed_genesis_object_id": "urn:genesis:framework:FOR-0002:v0.1.0",
+      "canonical_name": "Bayes' theorem",
+      "framework_version": "0.1.0",
+      "knowledge_station_ids": [
+        "VSR-KS-MATHEMATICS",
+        "VSR-KS-INFERENCE"
+      ],
+      "transport_roles": [
+        "road",
+        "navigation",
+        "engine"
+      ],
+      "registration_state": "PROPOSED_LOCAL_ONLY",
+      "external_registry_id": null,
+      "attestation_ref": null,
+      "source_ref": null,
+      "engine_qualification": "LOCAL_DEMONSTRATOR_ONLY",
+      "engine_execution_authorized": false,
+      "authority_grant": false
+    },
+    {
+      "source_framework_id": "FOR-0003",
+      "proposed_genesis_object_id": "urn:genesis:framework:FOR-0003:v0.1.0",
+      "canonical_name": "Historical precedent comparison",
+      "framework_version": "0.1.0",
+      "knowledge_station_ids": [
+        "VSR-KS-HISTORY",
+        "VSR-KS-PLANNING"
+      ],
+      "transport_roles": [
+        "road",
+        "navigation"
+      ],
+      "registration_state": "PROPOSED_LOCAL_ONLY",
+      "external_registry_id": null,
+      "attestation_ref": null,
+      "source_ref": null,
+      "engine_qualification": "NONE",
+      "engine_execution_authorized": false,
+      "authority_grant": false
+    },
+    {
+      "source_framework_id": "FOR-0004",
+      "proposed_genesis_object_id": "urn:genesis:framework:FOR-0004:v0.1.0",
+      "canonical_name": "Discounted cash flow / net present value",
+      "framework_version": "0.1.0",
+      "knowledge_station_ids": [
+        "VSR-KS-ECONOMICS",
+        "VSR-KS-PLANNING"
+      ],
+      "transport_roles": [
+        "road",
+        "engine"
+      ],
+      "registration_state": "PROPOSED_LOCAL_ONLY",
+      "external_registry_id": null,
+      "attestation_ref": null,
+      "source_ref": null,
+      "engine_qualification": "LOCAL_DEMONSTRATOR_ONLY",
+      "engine_execution_authorized": false,
+      "authority_grant": false
+    },
+    {
+      "source_framework_id": "FOR-0005",
+      "proposed_genesis_object_id": "urn:genesis:framework:FOR-0005:v0.1.0",
+      "canonical_name": "Planner–Checker–Approver",
+      "framework_version": "0.1.0",
+      "knowledge_station_ids": [
+        "VSR-KS-GOVERNANCE"
+      ],
+      "transport_roles": [
+        "checkpoint",
+        "road"
+      ],
+      "registration_state": "PROPOSED_LOCAL_ONLY",
+      "external_registry_id": null,
+      "attestation_ref": null,
+      "source_ref": null,
+      "engine_qualification": "NONE",
+      "engine_execution_authorized": false,
+      "authority_grant": false
+    },
+    {
+      "source_framework_id": "FOR-0006",
+      "proposed_genesis_object_id": "urn:genesis:framework:FOR-0006:v0.1.0",
+      "canonical_name": "Sensing → Relevance → Matching",
+      "framework_version": "0.1.0",
+      "knowledge_station_ids": [
+        "VSR-KS-OBSERVABILITY",
+        "VSR-KS-GOVERNANCE"
+      ],
+      "transport_roles": [
+        "road",
+        "checkpoint"
+      ],
+      "registration_state": "PROPOSED_LOCAL_ONLY",
+      "external_registry_id": null,
+      "attestation_ref": null,
+      "source_ref": null,
+      "engine_qualification": "NONE",
+      "engine_execution_authorized": false,
+      "authority_grant": false
+    },
+    {
+      "source_framework_id": "FOR-0007",
+      "proposed_genesis_object_id": "urn:genesis:framework:FOR-0007:v0.1.0",
+      "canonical_name": "Mass balance / inventory conservation",
+      "framework_version": "0.1.0",
+      "knowledge_station_ids": [
+        "VSR-KS-ENGINEERING",
+        "VSR-KS-INVENTORY"
+      ],
+      "transport_roles": [
+        "road",
+        "engine"
+      ],
+      "registration_state": "PROPOSED_LOCAL_ONLY",
+      "external_registry_id": null,
+      "attestation_ref": null,
+      "source_ref": null,
+      "engine_qualification": "LOCAL_DEMONSTRATOR_ONLY",
+      "engine_execution_authorized": false,
+      "authority_grant": false
+    },
+    {
+      "source_framework_id": "FOR-0008",
+      "proposed_genesis_object_id": "urn:genesis:framework:FOR-0008:v0.1.0",
+      "canonical_name": "State observer",
+      "framework_version": "0.1.0",
+      "knowledge_station_ids": [
+        "VSR-KS-ENGINEERING",
+        "VSR-KS-OBSERVABILITY"
+      ],
+      "transport_roles": [
+        "road",
+        "navigation"
+      ],
+      "registration_state": "PROPOSED_LOCAL_ONLY",
+      "external_registry_id": null,
+      "attestation_ref": null,
+      "source_ref": null,
+      "engine_qualification": "NONE",
+      "engine_execution_authorized": false,
+      "authority_grant": false
+    },
+    {
+      "source_framework_id": "FOR-0009",
+      "proposed_genesis_object_id": "urn:genesis:framework:FOR-0009:v0.1.0",
+      "canonical_name": "Feedback control",
+      "framework_version": "0.1.0",
+      "knowledge_station_ids": [
+        "VSR-KS-ENGINEERING",
+        "VSR-KS-CONTROL"
+      ],
+      "transport_roles": [
+        "road",
+        "navigation",
+        "engine"
+      ],
+      "registration_state": "PROPOSED_LOCAL_ONLY",
+      "external_registry_id": null,
+      "attestation_ref": null,
+      "source_ref": null,
+      "engine_qualification": "LOCAL_DEMONSTRATOR_ONLY",
+      "engine_execution_authorized": false,
+      "authority_grant": false
+    },
+    {
+      "source_framework_id": "FOR-0010",
+      "proposed_genesis_object_id": "urn:genesis:framework:FOR-0010:v0.1.0",
+      "canonical_name": "Einstein–Podolsky–Rosen (EPR) paper",
+      "framework_version": "0.1.0",
+      "knowledge_station_ids": [
+        "VSR-KS-QUANTUM_PHYSICS"
+      ],
+      "transport_roles": [
+        "road",
+        "navigation"
+      ],
+      "registration_state": "PROPOSED_LOCAL_ONLY",
+      "external_registry_id": null,
+      "attestation_ref": null,
+      "source_ref": null,
+      "engine_qualification": "NONE",
+      "engine_execution_authorized": false,
+      "authority_grant": false
+    },
+    {
+      "source_framework_id": "FOR-0011",
+      "proposed_genesis_object_id": "urn:genesis:framework:FOR-0011:v0.1.0",
+      "canonical_name": "Hubeny–Rangamani–Takayanagi (HRT) proposal",
+      "framework_version": "0.1.0",
+      "knowledge_station_ids": [
+        "VSR-KS-QUANTUM_PHYSICS"
+      ],
+      "transport_roles": [
+        "road",
+        "navigation"
+      ],
+      "registration_state": "PROPOSED_LOCAL_ONLY",
+      "external_registry_id": null,
+      "attestation_ref": null,
+      "source_ref": null,
+      "engine_qualification": "NONE",
+      "engine_execution_authorized": false,
+      "authority_grant": false
+    },
+    {
+      "source_framework_id": "FOR-0012",
+      "proposed_genesis_object_id": "urn:genesis:framework:FOR-0012:v0.1.0",
+      "canonical_name": "Gao–Jafferis–Wall traversable wormhole construction",
+      "framework_version": "0.1.0",
+      "knowledge_station_ids": [
+        "VSR-KS-QUANTUM_PHYSICS"
+      ],
+      "transport_roles": [
+        "road",
+        "navigation"
+      ],
+      "registration_state": "PROPOSED_LOCAL_ONLY",
+      "external_registry_id": null,
+      "attestation_ref": null,
+      "source_ref": null,
+      "engine_qualification": "NONE",
+      "engine_execution_authorized": false,
+      "authority_grant": false
+    },
+    {
+      "source_framework_id": "FOR-0013",
+      "proposed_genesis_object_id": "urn:genesis:framework:FOR-0013:v0.1.0",
+      "canonical_name": "The Byzantine Generals Problem",
+      "framework_version": "0.1.0",
+      "knowledge_station_ids": [
+        "VSR-KS-DISTRIBUTED_SYSTEMS",
+        "VSR-KS-GOVERNANCE"
+      ],
+      "transport_roles": [
+        "road",
+        "navigation"
+      ],
+      "registration_state": "PROPOSED_LOCAL_ONLY",
+      "external_registry_id": null,
+      "attestation_ref": null,
+      "source_ref": null,
+      "engine_qualification": "NONE",
+      "engine_execution_authorized": false,
+      "authority_grant": false
+    },
+    {
+      "source_framework_id": "FOR-0014",
+      "proposed_genesis_object_id": "urn:genesis:framework:FOR-0014:v0.1.0",
+      "canonical_name": "Differential equations",
+      "framework_version": "0.1.0",
+      "knowledge_station_ids": [
+        "VSR-KS-MATHEMATICS",
+        "VSR-KS-ENGINEERING"
+      ],
+      "transport_roles": [
+        "road",
+        "navigation"
+      ],
+      "registration_state": "PROPOSED_LOCAL_ONLY",
+      "external_registry_id": null,
+      "attestation_ref": null,
+      "source_ref": null,
+      "engine_qualification": "NONE",
+      "engine_execution_authorized": false,
+      "authority_grant": false
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VSR Knowledge Roads · Review Preview</title>
+<style>
+:root{font:16px system-ui,sans-serif;color:#18283b;background:#f3f6fa}*{box-sizing:border-box}
+body{max-width:1060px;margin:0 auto;padding:24px}header{margin-bottom:20px}
+h1{font-size:clamp(24px,4vw,34px);margin:8px 0}h2{font-size:18px}
+.layout{display:grid;grid-template-columns:290px minmax(0,1fr);gap:18px}
+.panel{background:#fff;border:1px solid #dbe3ed;border-radius:12px;padding:20px}
+.muted{color:#55667b}p{line-height:1.5}
+.pill{display:inline-block;border:1px solid #b7c8d9;border-radius:20px;padding:5px 11px;font-size:12px}
+button{width:100%;padding:11px;text-align:left;border-radius:8px;background:#fbfcfe;border:1px solid #d5deea;margin-bottom:8px;cursor:pointer}
+button[aria-pressed=true]{background:#e7f7f3;border-color:#16897a;font-weight:bold}
+input{width:100%;padding:10px;border:1px solid #b5c5d4;border-radius:8px}
+.step{padding:12px;margin:9px 0;border-left:3px solid #16897a;background:#f6f9fc}
+small{color:#617084;display:block}.framework{padding:8px 0;border-bottom:1px solid #e8edf2;font-size:13px}
+.warning{padding:12px;background:#fff8eb;border:1px solid #e6c77b;border-radius:8px;margin-top:18px}
+@media(max-width:720px){.layout{grid-template-columns:1fr}body{padding:14px}}
+</style></head><body>
+<header><span class="pill">VSR-FOR-001 · Phase 3 · Unregistered public preview</span><h1>Knowledge Roads</h1><p class="muted">Browse provisional framework references as roads, navigational methods, checkpoints and possible future engines. No live account, Warden admission or engine is connected.</p></header>
+<div class="layout"><aside class="panel"><h2>Sample destinations</h2><div id="destinations"></div><h2>Framework catalogue</h2><input id="search" aria-label="Search framework references" placeholder="Search framework or ID"><div id="frameworks"></div></aside><main class="panel" id="journey" aria-live="polite"></main></div>
+<script>
+const references=[
+["FOR-0001","PESTEL analysis","road, navigation"],
+["FOR-0002","Bayes' theorem","road, navigation, possible engine"],
+["FOR-0003","Historical precedent comparison","road, navigation"],
+["FOR-0004","Discounted cash flow / NPV","road, possible engine"],
+["FOR-0005","Planner–Checker–Approver","checkpoint, road"],
+["FOR-0006","Sensing → Relevance → Matching","checkpoint, road"],
+["FOR-0007","Mass balance / inventory conservation","road, possible engine"],
+["FOR-0008","State observer","road, navigation"],
+["FOR-0009","Feedback control","road, navigation, possible engine"],
+["FOR-0010","Einstein–Podolsky–Rosen","research navigation"],
+["FOR-0011","Hubeny–Rangamani–Takayanagi","research navigation"],
+["FOR-0012","Gao–Jafferis–Wall","research navigation"],
+["FOR-0013","Byzantine Generals Problem","road, navigation"],
+["FOR-0014","Differential equations","road, navigation"]];
+const routes=[
+["Village development",["FOR-0001","FOR-0003","FOR-0004","FOR-0005","FOR-0006"]],
+["Buffet replenishment",["FOR-0008","FOR-0007","FOR-0009","FOR-0005","FOR-0006"]],
+["Quantum research",["FOR-0010","FOR-0011","FOR-0012","FOR-0005"]],
+["Distributed-system design",["FOR-0013","FOR-0009","FOR-0005","FOR-0006"]]];
+const index=new Map(references.map(r=>[r[0],r]));let active=0;
+function node(tag,cls,value){const el=document.createElement(tag);if(cls)el.className=cls;if(value!==undefined)el.textContent=value;return el}
+function showRoute(){
+ const controls=document.querySelector("#destinations");controls.replaceChildren();
+ routes.forEach((route,i)=>{const b=node("button","",route[0]);b.setAttribute("aria-pressed",String(i===active));b.onclick=()=>{active=i;showRoute()};controls.append(b)});
+ const view=document.querySelector("#journey"),chosen=routes[active];
+ view.replaceChildren(node("h2","",chosen[0]),node("p","muted","Example reference route only; these links are intellectual paths, not physical roads or qualified execution plans."));
+ chosen[1].forEach((id,i)=>{const item=node("section","step");item.append(node("small","",`Step ${i+1} · ${id}`),node("strong","",index.get(id)[1]));view.append(item)});
+ view.append(node("p","warning","DRAFT · Framework IDs unregistered · Warden admission not granted · RiverOS receipt not emitted · Execution disabled."));
+}
+function search(){const val=document.querySelector("#search").value.trim().toLowerCase();const out=document.querySelector("#frameworks");out.replaceChildren();
+references.filter(x=>(x[0]+" "+x[1]).toLowerCase().includes(val)).forEach(r=>{const item=node("div","framework");item.append(node("strong","",r[0]+" · "+r[1]),node("small","",r[2]));out.append(item)});}
+document.querySelector("#search").addEventListener("input",search);showRoute();search();
+</script></body></html>

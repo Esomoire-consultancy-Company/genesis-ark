@@ -1,0 +1,2 @@
+# Local test dependency only. Production dependencies need independently reviewed pins.
+cryptography>=42,<47

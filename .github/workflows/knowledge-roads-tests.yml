@@ -1,0 +1,28 @@
+name: VSR Knowledge Roads contract tests
+on:
+  pull_request:
+    paths:
+      - 'knowledge-roads/**'
+      - '.github/workflows/knowledge-roads-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  readonly-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout proposed code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install isolated test dependency
+        run: python -m pip install -r knowledge-roads/requirements-phase7.txt
+      - name: Python compile check
+        run: python -m compileall -q knowledge-roads
+      - name: Fail-closed contract regression suite
+        run: python -m unittest discover -s knowledge-roads -p 'test_*.py' -v
