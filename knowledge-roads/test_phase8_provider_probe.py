@@ -117,6 +117,16 @@ class PreflightTests(unittest.TestCase):
         self._set_endpoint(ROLES[0], f"https://127.0.0.1{PATH}")
         self.assertEqual(self.probe().reason, "PROVIDER_URL_OUTSIDE_APPROVED_HTTPS_ORIGIN")
 
+    def test_even_explicitly_allowlisted_ip_is_denied(self):
+        self._set_endpoint(ROLES[0], f"https://127.0.0.1{PATH}")
+        self.hosts = self.hosts | frozenset(("127.0.0.1",))
+        self.assertEqual(self.probe().reason, "PROVIDER_URL_OUTSIDE_APPROVED_HTTPS_ORIGIN")
+
+    def test_local_network_suffix_denied_even_when_approved(self):
+        self._set_endpoint(ROLES[0], f"https://private.internal{PATH}")
+        self.hosts = self.hosts | frozenset(("private.internal",))
+        self.assertEqual(self.probe().reason, "PROVIDER_URL_OUTSIDE_APPROVED_HTTPS_ORIGIN")
+
     def test_unapproved_hostname_denied(self):
         self._set_endpoint(ROLES[0], f"https://other.staging.example.org{PATH}")
         self.assertEqual(self.probe().reason, "PROVIDER_URL_OUTSIDE_APPROVED_HTTPS_ORIGIN")
