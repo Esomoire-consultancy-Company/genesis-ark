@@ -37,7 +37,7 @@ class AdmissionTests(unittest.TestCase):
             self.prepared if prepared is None else prepared,
             self.route if route is None else route,
             self.claims if claims is None else claims,
-            self.signed() if signed is None else signed, self.now)
+            self.signed(self.claims if claims is None else claims) if signed is None else signed, self.now)
 
     def test_preparation_never_grants_authority(self):
         self.assertEqual(self.prepared.disposition, "READY_FOR_SANDBOX")
