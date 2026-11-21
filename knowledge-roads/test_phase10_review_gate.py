@@ -135,6 +135,19 @@ class ReviewTests(unittest.TestCase):
         self.obj('FOR-0010')['source_urls']=[]
         self.obj('FOR-0010')['source_review_status']='SOURCE_IDENTIFICATION_REQUIRED'
         self.check('NAMED_PRIMARY_SOURCE_MISSING_CREDIT')
+    def test_missing_original_paper_title(self):
+        self.obj('FOR-0010').pop('original_work_title')
+        self.check('ORIGINAL_PUBLICATION_METADATA_MISSING')
+    def test_missing_original_publication_year(self):
+        self.obj('FOR-0012').pop('publication_year')
+        self.check('ORIGINAL_PUBLICATION_METADATA_MISSING')
+    def test_future_publication_year_unacceptable(self):
+        self.obj('FOR-0010')['publication_year']=2099
+        self.check('ORIGINAL_PUBLICATION_METADATA_MISSING')
+    def test_original_source_titles_preserved(self):
+        self.assertEqual(self.obj('FOR-0010')['original_work_title'],
+            'Can Quantum-Mechanical Description of Physical Reality Be Considered Complete?')
+        self.assertEqual(self.obj('FOR-0013')['publication_year'],1982)
     def test_internal_originator_not_assumed(self):
         self.obj('FOR-0005')['author_credit']=['Unknown invented person']
         self.check('INTERNAL_ORIGINATOR_UNATTESTED')
