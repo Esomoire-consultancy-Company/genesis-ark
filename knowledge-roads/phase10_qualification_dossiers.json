@@ -55,7 +55,9 @@
       "technical_qualification": "NOT_COMPLETED",
       "genesis_registration_authorized": false,
       "execution_qualified": false,
-      "original_author_claim_type": "NAMED_CREDIT_NOT_OWNERSHIP"
+      "original_author_claim_type": "NAMED_CREDIT_NOT_OWNERSHIP",
+      "original_work_title": "An Essay towards solving a Problem in the Doctrine of Chances",
+      "publication_year": 1763
     },
     {
       "framework_id": "FOR-0003",
@@ -184,7 +186,7 @@
       "origin_class": "GENERAL_CONTROL_TECHNIQUE",
       "author_credit": [],
       "source_urls": [
-        "https://learn.mit.edu/c/unit/ocw?resource=5472"
+        "https://ocw.mit.edu/courses/2-14-analysis-and-design-of-feedback-control-systems-spring-2014/pages/syllabus/"
       ],
       "attribution_note": "Feedback control is a long-established engineering discipline, not attributable to a single source here.",
       "applicability_conditions": [
@@ -225,7 +227,9 @@
       "technical_qualification": "NOT_COMPLETED",
       "genesis_registration_authorized": false,
       "execution_qualified": false,
-      "original_author_claim_type": "NAMED_CREDIT_NOT_OWNERSHIP"
+      "original_author_claim_type": "NAMED_CREDIT_NOT_OWNERSHIP",
+      "original_work_title": "Can Quantum-Mechanical Description of Physical Reality Be Considered Complete?",
+      "publication_year": 1935
     },
     {
       "framework_id": "FOR-0011",
@@ -252,7 +256,9 @@
       "technical_qualification": "NOT_COMPLETED",
       "genesis_registration_authorized": false,
       "execution_qualified": false,
-      "original_author_claim_type": "NAMED_CREDIT_NOT_OWNERSHIP"
+      "original_author_claim_type": "NAMED_CREDIT_NOT_OWNERSHIP",
+      "original_work_title": "A Covariant Holographic Entanglement Entropy Proposal",
+      "publication_year": 2007
     },
     {
       "framework_id": "FOR-0012",
@@ -278,7 +284,9 @@
       "technical_qualification": "NOT_COMPLETED",
       "genesis_registration_authorized": false,
       "execution_qualified": false,
-      "original_author_claim_type": "NAMED_CREDIT_NOT_OWNERSHIP"
+      "original_author_claim_type": "NAMED_CREDIT_NOT_OWNERSHIP",
+      "original_work_title": "Traversable Wormholes via a Double Trace Deformation",
+      "publication_year": 2016
     },
     {
       "framework_id": "FOR-0013",
@@ -304,7 +312,9 @@
       "technical_qualification": "NOT_COMPLETED",
       "genesis_registration_authorized": false,
       "execution_qualified": false,
-      "original_author_claim_type": "NAMED_CREDIT_NOT_OWNERSHIP"
+      "original_author_claim_type": "NAMED_CREDIT_NOT_OWNERSHIP",
+      "original_work_title": "The Byzantine Generals Problem",
+      "publication_year": 1982
     },
     {
       "framework_id": "FOR-0014",
