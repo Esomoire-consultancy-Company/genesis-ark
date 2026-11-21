@@ -106,7 +106,7 @@ class PreflightTests(unittest.TestCase):
         self.providers[role] = Provider(role, url, p.key_id, p.issuer)
 
     def test_http_endpoint_denied(self):
-        self._set_endpoint(ROLES[0], f"http://genesis_registrar.staging.example.org{PATH}")
+        self._set_endpoint(ROLES[0], f"http://genesis-registrar.staging.example.org{PATH}")
         self.assertEqual(self.probe().reason, "PROVIDER_URL_OUTSIDE_APPROVED_HTTPS_ORIGIN")
 
     def test_localhost_endpoint_denied(self):
@@ -132,19 +132,19 @@ class PreflightTests(unittest.TestCase):
         self.assertEqual(self.probe().reason, "PROVIDER_URL_OUTSIDE_APPROVED_HTTPS_ORIGIN")
 
     def test_unexpected_port_denied(self):
-        self._set_endpoint(ROLES[0], f"https://genesis_registrar.staging.example.org:8443{PATH}")
+        self._set_endpoint(ROLES[0], f"https://genesis-registrar.staging.example.org:8443{PATH}")
         self.assertEqual(self.probe().reason, "PROVIDER_URL_OUTSIDE_APPROVED_HTTPS_ORIGIN")
 
     def test_path_denied(self):
-        self._set_endpoint(ROLES[0], "https://genesis_registrar.staging.example.org/admin")
+        self._set_endpoint(ROLES[0], "https://genesis-registrar.staging.example.org/admin")
         self.assertEqual(self.probe().reason, "PROVIDER_URL_OUTSIDE_APPROVED_HTTPS_ORIGIN")
 
     def test_query_denied(self):
-        self._set_endpoint(ROLES[0], f"https://genesis_registrar.staging.example.org{PATH}?token=abc")
+        self._set_endpoint(ROLES[0], f"https://genesis-registrar.staging.example.org{PATH}?token=abc")
         self.assertEqual(self.probe().reason, "PROVIDER_URL_OUTSIDE_APPROVED_HTTPS_ORIGIN")
 
     def test_userinfo_denied(self):
-        self._set_endpoint(ROLES[0], f"https://user:pass@genesis_registrar.staging.example.org{PATH}")
+        self._set_endpoint(ROLES[0], f"https://user:pass@genesis-registrar.staging.example.org{PATH}")
         self.assertEqual(self.probe().reason, "PROVIDER_URL_OUTSIDE_APPROVED_HTTPS_ORIGIN")
 
     def test_duplicate_issuer_denied(self):
