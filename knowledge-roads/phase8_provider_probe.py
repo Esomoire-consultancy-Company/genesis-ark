@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
+import ipaddress
 import re
 import secrets
 import ssl
@@ -142,6 +143,16 @@ class ProviderPreflight:
                 host, port = parts.hostname, parts.port
             except (ValueError, TypeError):
                 return "INVALID_PROVIDER_URL"
+            # A hostname allowlist cannot approve direct IP literals.
+            if host is not None:
+                try:
+                    ipaddress.ip_address(host)
+                except ValueError:
+                    pass
+                else:
+                    return "PROVIDER_URL_OUTSIDE_APPROVED_HTTPS_ORIGIN"
+                if host.endswith((".localhost", ".local", ".internal")):
+                    return "PROVIDER_URL_OUTSIDE_APPROVED_HTTPS_ORIGIN"
             if (parts.scheme != "https" or host is None or host != host.lower()
                     or not HOST.fullmatch(host) or host not in self.approved_hosts
                     or port not in (None, 443) or parts.username is not None
